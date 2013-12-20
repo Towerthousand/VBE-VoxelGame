@@ -1,0 +1,3 @@
+[submodule "VBE"]
+	path = VBE
+	url = git@github.com:Towerthousand/VBE.git
