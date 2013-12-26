@@ -159,7 +159,7 @@ void SceneMain::update(float deltaTime) {
 	++fpsCount;
 	debugCounter += deltaTime;
 	if (debugCounter > 1) {
-		VBE_LOG("FPS: " << fpsCount << " GameObjects: " << getGame()->getObjectCount());
+		VBE_LOG("FPS: " << fpsCount);
 		debugCounter--;
 		fpsCount = 0;
 	}

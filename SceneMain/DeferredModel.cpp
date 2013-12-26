@@ -3,7 +3,7 @@
 #include "Camera.hpp"
 
 DeferredModel::DeferredModel(const std::string& meshID, const std::string& texID, float ambient, float specular) :
-	pos(0.0f), scale(1.0f), ambient(ambient), specular(specular), lookAt(0),
+	pos(0.0f), lookAt(0), scale(1.0f), ambient(ambient), specular(specular),
 	renderer((DeferredContainer*)getGame()->getObjectByName("deferred")), tex(texID) {
 	model.mesh = Meshes.get(meshID);
 	model.program = Programs.get("deferredModel");
