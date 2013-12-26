@@ -22,10 +22,6 @@ class DeferredContainer : public ContainerObject {
 
 	private:
 		RenderTarget* gBuffer;
-		RenderTarget* noBlur;
-		RenderTarget* blurMask;
-		RenderTarget* horitzontalBlurred;
-		RenderTarget* blurred;
         mutable DrawMode drawMode;
 		mutable Model quad;
 };

@@ -3,6 +3,7 @@
 #include "DeferredContainer.hpp"
 #include "DeferredModel.hpp"
 #include "DeferredLight.hpp"
+#include "BlurContainer.hpp"
 
 SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
@@ -25,9 +26,13 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	pCam->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
 	pCam->addTo(this);
 
+	//Add blur
+	BlurContainer* blur = new BlurContainer();
+	blur->addTo(this);
+
 	//add deferred renderer
 	DeferredContainer* renderer = new DeferredContainer();
-	renderer->addTo(this);
+	renderer->addTo(blur);
 
     DeferredModel* ball = new DeferredModel("ball", "lava");
 	ball->addTo(renderer);
