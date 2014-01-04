@@ -6,27 +6,28 @@ SOURCES += main.cpp \
     SceneMain/SceneMain.cpp \
     SceneMain/Camera.cpp \
     SceneMain/PlayerCamera.cpp \
-    SceneMain/DeferredModel.cpp \
     SceneMain/DeferredContainer.cpp \
 	SceneMain/DeferredLight.cpp \
-    SceneMain/World.cpp \
-    SceneMain/BlurContainer.cpp
+	SceneMain/world/World.cpp \
+    SceneMain/BlurContainer.cpp \
+	SceneMain/world/Column.cpp \
+	SceneMain/world/Chunk.cpp
 
 HEADERS += \
     commons.hpp \
     SceneMain/SceneMain.hpp \
     SceneMain/Camera.hpp \
     SceneMain/PlayerCamera.hpp \
-    SceneMain/DeferredModel.hpp \
     SceneMain/DeferredContainer.hpp \
 	SceneMain/DeferredLight.hpp \
-    SceneMain/World.hpp \
-    SceneMain/BlurContainer.hpp
+	SceneMain/world/World.hpp \
+    SceneMain/BlurContainer.hpp \
+	SceneMain/world/Column.hpp \
+	SceneMain/world/Chunk.hpp \
+    SceneMain/world/Cube.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \
-    data/shaders/standardDeferred.frag \
-    data/shaders/standardDeferred.vert \
     data/shaders/light.frag \
     data/shaders/particles.frag \
     data/shaders/particles.vert \
@@ -37,5 +38,7 @@ OTHER_FILES += \
     data/shaders/quad.frag \
     data/shaders/blurMaskPass.frag \
     data/shaders/depth.frag \
-    data/shaders/depth.vert
+    data/shaders/depth.vert \
+    data/shaders/chunkDeferred.vert \
+    data/shaders/chunkDeferred.frag
 

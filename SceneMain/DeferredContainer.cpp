@@ -4,7 +4,7 @@
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
     setName("deferred");
-    gBuffer = new RenderTarget(SCRWIDTH, SCRHEIGHT);
+	gBuffer = new RenderTarget();
     gBuffer->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
     gBuffer->addTexture(RenderTarget::COLOR0, Texture::RGB8); //COLOR
     gBuffer->addTexture(RenderTarget::COLOR1, Texture::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
@@ -27,13 +27,12 @@ void DeferredContainer::update(float deltaTime) {
 void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
 	RenderTarget* screen = RenderTarget::getCurrent();
-
     //G BUFFER
     glDisable(GL_ALPHA_TEST);
     glDisable(GL_BLEND);
 
     drawMode = Deferred;
-    RenderTarget::bind(gBuffer);
+	RenderTarget::bind(gBuffer);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	ContainerObject::draw();
 

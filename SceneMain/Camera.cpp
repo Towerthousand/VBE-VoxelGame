@@ -6,6 +6,9 @@ Camera::Camera(const std::string& cameraName, const vec3f& pos, const vec3f& rot
 	this->setUpdatePriority(2);
 }
 
+Camera::~Camera() {
+}
+
 void Camera::update(float deltaTime) {
 	(void) deltaTime;
 	for(int i = 0; i < 3; ++i) {

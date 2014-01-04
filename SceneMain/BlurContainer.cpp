@@ -1,29 +1,27 @@
 #include "BlurContainer.hpp"
 
 BlurContainer::BlurContainer() {
-	setName("blur");
-
 	noBlur = new RenderTarget(SCRWIDTH, SCRHEIGHT);
 	noBlur->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	noBlur->build();
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
 
-	float blurSize = 2;
+	float blurSize = 3;
 	float blurSizeDivisor = std::pow(2,blurSize);
 
-	blurMask = new RenderTarget(SCRWIDTH, SCRHEIGHT);
+	blurMask = new RenderTarget();
 	blurMask->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	blurMask->build();
 	blurMask->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_LINEAR, GL_LINEAR);
 	blurMask->getTextureForAttachment(RenderTarget::COLOR0)->setWrap(GL_CLAMP_TO_EDGE);
 
-	horitzontalBlurred = new RenderTarget(SCRWIDTH/blurSizeDivisor, SCRHEIGHT/blurSizeDivisor);
+	horitzontalBlurred = new RenderTarget(1.0f/blurSizeDivisor);
 	horitzontalBlurred->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	horitzontalBlurred->build();
 	horitzontalBlurred->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_LINEAR, GL_LINEAR);
 	horitzontalBlurred->getTextureForAttachment(RenderTarget::COLOR0)->setWrap(GL_CLAMP_TO_EDGE);
 
-	blurred = new RenderTarget(SCRWIDTH/blurSizeDivisor, SCRHEIGHT/blurSizeDivisor);
+	blurred = new RenderTarget(1.0f/blurSizeDivisor);
 	blurred->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	blurred->build();
 	blurred->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_LINEAR, GL_LINEAR);

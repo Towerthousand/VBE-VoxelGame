@@ -2,6 +2,7 @@
 #define SCENEMAIN_HPP
 #include "commons.hpp"
 
+class Chunk;
 class SceneMain : public GameObject {
 	public:
 		SceneMain();
