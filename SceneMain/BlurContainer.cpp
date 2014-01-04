@@ -1,7 +1,7 @@
 #include "BlurContainer.hpp"
 
 BlurContainer::BlurContainer() {
-	noBlur = new RenderTarget(SCRWIDTH, SCRHEIGHT);
+	noBlur = new RenderTarget();
 	noBlur->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	noBlur->build();
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
