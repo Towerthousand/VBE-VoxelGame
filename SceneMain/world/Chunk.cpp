@@ -90,7 +90,6 @@ void Chunk::update(float deltaTime) {
 		}
 	}
 	model.mesh->setVertexData(&renderData[0],renderData.size());
-	VBE_LOG(renderData.size() << " " << XPOS << " " << YPOS <<  " " << ZPOS);
 }
 
 void Chunk::draw() const {

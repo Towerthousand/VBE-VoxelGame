@@ -2,6 +2,7 @@
 #define WORLD_HPP
 #include "commons.hpp"
 #include "Cube.hpp"
+#include "generator/ColumnGenerator.hpp"
 
 class Column;
 class Camera;
@@ -19,10 +20,11 @@ class World : public GameObject {
 		Column* getColumn(int x, int y, int z) const;
 		Camera* getCamera() const;
 
-		void setCubeLight(unsigned char light);
+		void setCubeLight(int x, unsigned int y, int z, unsigned char light);
 		void setCubeID(int x, unsigned int y, int z, unsigned char ID);
 	private:
 		Column* columns[WORLDSIZE][WORLDSIZE];
+		ColumnGenerator generator;
 		DeferredContainer* renderer;
 };
 

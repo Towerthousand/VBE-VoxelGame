@@ -4,12 +4,12 @@
 #include "../DeferredContainer.hpp"
 #include "../Camera.hpp"
 
-World::World() : renderer(nullptr) {
+World::World() : generator(1), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	setName("World");
 	for(int x = 0; x < WORLDSIZE; ++x)
 		for(int z = 0; z < WORLDSIZE; ++z)
-			columns[x][z] = new Column(x,z);
+			columns[x][z] = generator.getColumn(x,z);
 }
 
 World::~World() {
@@ -58,6 +58,6 @@ void World::setCubeID(int x, unsigned int y, int z, unsigned char ID) {
 
 }
 
-void World::setCubeLight(unsigned char light) {
+void World::setCubeLight(int x, unsigned int y, int z, unsigned char light) {
 
 }

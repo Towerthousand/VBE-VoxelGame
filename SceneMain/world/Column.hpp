@@ -23,6 +23,8 @@ class Column {
 		int ZPOS; //in chunks
 		std::vector<Chunk*> chunks;
 		unsigned int skyLevel[CHUNKSIZE][CHUNKSIZE];
+
+		friend class ColumnGenerator;
 };
 
 #endif // COLUMN_HPP

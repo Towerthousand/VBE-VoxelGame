@@ -45,6 +45,7 @@ class Chunk {
 		bool markedForRedraw;
 		World* world;
 
+		friend class ColumnGenerator;
 		friend class Column;
 };
 

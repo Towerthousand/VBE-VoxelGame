@@ -2,16 +2,6 @@
 #include "Chunk.hpp"
 
 Column::Column(int x, int z) : XPOS(x), ZPOS(z) {
-	for(int i = 0; i < 8; ++i)
-		chunks.push_back(new Chunk(XPOS,i,ZPOS));
-	for(int i = 0; i < 8; ++i)
-		for(int x = 0; x < CHUNKSIZE; ++x)
-			for(int y = 0; y < CHUNKSIZE; ++y)
-				for(int z = 0; z < CHUNKSIZE; ++z)
-					chunks[i]->cubes[x][y][z].ID = (rand()%9);
-	for(int x = 0; x < CHUNKSIZE; ++x)
-		for(int z = 0; z < CHUNKSIZE; ++z)
-			skyLevel[x][z] = CHUNKSIZE*8;
 }
 
 Column::~Column() {
