@@ -11,7 +11,8 @@ SOURCES += main.cpp \
 	SceneMain/world/World.cpp \
     SceneMain/BlurContainer.cpp \
 	SceneMain/world/Column.cpp \
-	SceneMain/world/Chunk.cpp
+	SceneMain/world/Chunk.cpp \
+    SceneMain/Frustum.cpp
 
 HEADERS += \
     commons.hpp \
@@ -24,7 +25,8 @@ HEADERS += \
     SceneMain/BlurContainer.hpp \
 	SceneMain/world/Column.hpp \
 	SceneMain/world/Chunk.hpp \
-    SceneMain/world/Cube.hpp
+    SceneMain/world/Cube.hpp \
+    SceneMain/Frustum.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \

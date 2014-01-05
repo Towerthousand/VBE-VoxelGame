@@ -1,6 +1,6 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
-#include "commons.hpp"
+#include "Frustum.hpp"
 
 class Camera : public GameObject {
 	public:
@@ -15,6 +15,10 @@ class Camera : public GameObject {
 		vec3f rot;
 		mat4f projection;
 		mat4f view;
+
+		const Frustum& getFrustum() const;
+	private:
+		Frustum frustum;
 };
 
 #endif // CAMERA_HPP

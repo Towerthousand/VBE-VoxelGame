@@ -2,6 +2,7 @@
 #include "Column.hpp"
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
+#include "../Camera.hpp"
 
 World::World() : renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -23,10 +24,14 @@ void World::update(float deltaTime) {
 
 void World::draw() const{
 	if(renderer->getMode() != DeferredContainer::Deferred) return;
+	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	for(unsigned int x = 0; x < WORLDSIZE; ++x)
 		for(unsigned int z = 0; z < WORLDSIZE; ++z)
-			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y)
-				columns[x][z]->getChunks()[y]->draw();
+			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
+				Chunk* actual = columns[x][z]->getChunks()[y];
+				if(cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE))
+					actual->draw();
+			}
 }
 
 bool World::outOfBounds(int x, int y, int z) const {

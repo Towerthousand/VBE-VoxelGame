@@ -20,7 +20,9 @@ void Camera::update(float deltaTime) {
 	view = glm::rotate(view, rot.x, vec3f(1, 0, 0));
 	view = glm::rotate(view, rot.y, vec3f(0, 1, 0));
 	view = glm::rotate(view, rot.z, vec3f(0, 0, 1));
-	view = glm::translate(view, -pos);
+	view = glm::translate(view, -getWorldPos());
+
+	frustum.calculate(view);
 }
 
 vec3f Camera::getWorldPos() {
@@ -30,4 +32,8 @@ vec3f Camera::getWorldPos() {
 vec3f Camera::getForward() {
 	mat4f m = view*fullTransform;
 	return -glm::normalize(vec3f(m[0][2],m[1][2],m[2][2]));
+}
+
+const Frustum&Camera::getFrustum() const {
+	return frustum;
 }

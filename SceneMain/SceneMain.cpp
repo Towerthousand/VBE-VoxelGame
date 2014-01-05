@@ -19,7 +19,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	glEnable(GL_CULL_FACE); //enable backface culling
 	glCullFace(GL_BACK);
 
-    getGame()->getWindow().setVerticalSyncEnabled(true);
+	//getGame()->getWindow().setVerticalSyncEnabled(true);
 
 	//add player cam
 	PlayerCamera* pCam = new PlayerCamera("playerCam", vec3f(0, 10, 15), vec3f(45, 0, 0));
