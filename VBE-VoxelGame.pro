@@ -69,5 +69,7 @@ OTHER_FILES += \
     data/shaders/depth.frag \
     data/shaders/depth.vert \
     data/shaders/chunkDeferred.vert \
-    data/shaders/chunkDeferred.frag
+    data/shaders/chunkDeferred.frag \
+    data/shaders/occlusionQuery.vert \
+    data/shaders/occlusionQuery.frag
 

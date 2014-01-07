@@ -50,6 +50,7 @@ void main(void) {
 	float cosTheta = max(dot(normalVector, lightVector), 0.0f);
 	float attenuationFactor = max(0.0, 1 - length(fragmentPos-lightPos) / lightRadius);
 
+	gl_FragDepth = texture(depth, vTexCoord).x;
 	color = vec4(matDiffuseColor * lightColor * cosTheta * attenuationFactor +
 				 matSpecularColor * lightColor * pow(cosAlpha, 1000) * cosTheta * attenuationFactor, 1.0f);
 }

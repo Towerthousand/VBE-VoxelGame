@@ -4,7 +4,7 @@
 #include "../DeferredContainer.hpp"
 #include "../Camera.hpp"
 
-World::World() : generator(1), renderer(nullptr) {
+World::World() : generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	setName("World");
 	for(int x = 0; x < WORLDSIZE; ++x)
@@ -18,8 +18,11 @@ World::~World() {
 void World::update(float deltaTime) {
 	for(unsigned int x = 0; x < WORLDSIZE; ++x)
 		for(unsigned int z = 0; z < WORLDSIZE; ++z)
-			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y)
-				columns[x][z]->getChunks()[y]->update(deltaTime);
+			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y){
+				Chunk* actual = columns[x][z]->getChunks()[y];
+				if(actual == nullptr) continue;
+				actual->update(deltaTime);
+			}
 }
 
 void World::draw() const{
@@ -29,6 +32,7 @@ void World::draw() const{
 		for(unsigned int z = 0; z < WORLDSIZE; ++z)
 			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
 				Chunk* actual = columns[x][z]->getChunks()[y];
+				if(actual == nullptr) continue;
 				if(cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE))
 					actual->draw();
 			}

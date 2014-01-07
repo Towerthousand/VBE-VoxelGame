@@ -2,6 +2,7 @@
 
 BlurContainer::BlurContainer() {
 	noBlur = new RenderTarget();
+	noBlur->addRenderBuffer(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32);
 	noBlur->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	noBlur->build();
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
@@ -43,6 +44,8 @@ void BlurContainer::draw() const {
 	RenderTarget::bind(noBlur);
 
 	ContainerObject::draw();
+
+	glBlendFunc(GL_ONE,GL_ONE);
 
 	//BLUR MASK BUILDING
 	RenderTarget::bind(blurMask);

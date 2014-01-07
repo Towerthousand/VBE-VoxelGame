@@ -22,7 +22,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	//getGame()->getWindow().setVerticalSyncEnabled(true);
 
 	//add player cam
-	PlayerCamera* pCam = new PlayerCamera("playerCam", vec3f(0, 10, 15), vec3f(45, 0, 0));
+	PlayerCamera* pCam = new PlayerCamera("playerCam", vec3f(0, 100, 0), vec3f(0));
 	pCam->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
 	pCam->addTo(this);
 
@@ -59,6 +59,27 @@ void SceneMain::loadResources() {
 	quad->setPrimitiveType(Mesh::TRIANGLES);
 	Meshes.add("quad", quad);
 
+	std::vector<vec3f> cubeVertices = {
+		vec3f(0.0, 0.0, 1.0),
+		vec3f(1.0, 0.0, 1.0),
+		vec3f(0.0, 1.0, 1.0),
+		vec3f(1.0, 1.0, 1.0),
+		vec3f(0.0, 0.0, 0.0),
+		vec3f(1.0, 0.0, 0.0),
+		vec3f(0.0, 1.0, 0.0),
+		vec3f(1.0, 1.0, 0.0),
+	};
+
+	std::vector<unsigned int> cubeIndices = {
+		0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
+	};
+
+	Mesh* cube = Mesh::loadEmpty(Vertex::Format(elems),Mesh::STATIC,true);
+	cube->setPrimitiveType(Mesh::TRIANGLE_STRIP);
+	cube->setVertexData(&cubeVertices[0],cubeVertices.size());
+	cube->setVertexIndices(&cubeIndices[0],cubeIndices.size());
+	Meshes.add("1x1Cube",cube);
+
 	//textures
 	char pixels[4] = {char(200), char(20), char(20), char(255)};
 	Textures.add("nullRed", Texture::createFromRaw(pixels, 1, 1));
@@ -82,6 +103,7 @@ void SceneMain::loadResources() {
 	Programs.add("blurMaskPass", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/blurMaskPass.frag"));
 	Programs.add("depthShader", ShaderProgram::loadFromFile("data/shaders/depth.vert","data/shaders/depth.frag"));
 	Programs.add("deferredChunk", ShaderProgram::loadFromFile("data/shaders/chunkDeferred.vert", "data/shaders/chunkDeferred.frag"));
+	Programs.add("occlusionQuery", ShaderProgram::loadFromFile("data/shaders/occlusionQuery.vert", "data/shaders/occlusionQuery.frag"));
 }
 
 void SceneMain::update(float deltaTime) {

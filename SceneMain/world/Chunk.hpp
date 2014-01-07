@@ -3,20 +3,6 @@
 #include "commons.hpp"
 #include "Cube.hpp"
 
-struct ChunkVertex {
-		ChunkVertex(unsigned char vx = 0, unsigned char vy = 0, unsigned char vz = 0,
-					unsigned char n = 0,
-					unsigned short tx = 0, unsigned short ty = 0,
-					unsigned char cr = 255, unsigned char cg = 255, unsigned char cb = 255, unsigned char ca = 255) :
-			vx(vx), vy(vy), vz(vz),
-			n(n),
-			tx(tx), ty(ty),
-			cr(cr), cg(cg), cb(cb), ca(ca) {}
-		unsigned char vx,vy,vz,n;
-		unsigned short tx,ty;
-		unsigned char cr,cg,cb,ca;
-};
-
 class World;
 class Chunk {
 	public:
@@ -33,8 +19,22 @@ class Chunk {
 		vec3i getAbsolutePos(); //in cubes
 
 	private:
+		struct Vert {
+				Vert(unsigned char vx = 0, unsigned char vy = 0, unsigned char vz = 0,
+							unsigned char n = 0,
+							unsigned short tx = 0, unsigned short ty = 0,
+							unsigned char cr = 255, unsigned char cg = 255, unsigned char cb = 255, unsigned char ca = 255) :
+					vx(vx), vy(vy), vz(vz),
+					n(n),
+					tx(tx), ty(ty),
+					cr(cr), cg(cg), cb(cb), ca(ca) {}
+				unsigned char vx,vy,vz,n;
+				unsigned short tx,ty;
+				unsigned char cr,cg,cb,ca;
+		};
+
 		Cube getCube(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
-		void pushCubeToArray(short x, short y, short z, std::vector<ChunkVertex>& renderData);
+		void pushCubeToArray(short x, short y, short z, std::vector<Vert>& renderData);
 
 		Cube cubes[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 		const int XPOS; //in chunks
@@ -42,6 +42,7 @@ class Chunk {
 		const int ZPOS; //in chunks
 		mat4f modelMatrix;
 		Model model;
+		Model boundingBox;
 		bool markedForRedraw;
 		World* world;
 

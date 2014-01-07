@@ -28,8 +28,9 @@ void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
 	RenderTarget* screen = RenderTarget::getCurrent();
     //G BUFFER
+	glEnable(GL_DEPTH_TEST);
     glDisable(GL_ALPHA_TEST);
-    glDisable(GL_BLEND);
+	glDisable(GL_BLEND); //no transparency whatsoever
 
     drawMode = Deferred;
 	RenderTarget::bind(gBuffer);
@@ -39,26 +40,25 @@ void DeferredContainer::draw() const {
 	RenderTarget::bind(screen);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    //DEFERRED LIGHTS
+	//DEFERRED LIGHTS
 	glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glBlendFunc(GL_ONE, GL_ONE);
-    glDepthMask(GL_FALSE);
-    drawMode = Light;
-    ContainerObject::draw();
+	glBlendFunc(GL_ONE, GL_ONE); //additive
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_ALWAYS);
+	drawMode = Light;
+	ContainerObject::draw();
 
 	//AMBIENT LIGHT
-    quad.program = Programs.get("ambientPass");
+	quad.program = Programs.get("ambientPass");
 	quad.program->uniform("MVP")->set(mat4f(1.0f));
-    quad.program->uniform("color0")->set(getColor0());
+	quad.program->uniform("color0")->set(getColor0());
 	quad.program->uniform("color1")->set(getColor1());
+	quad.program->uniform("depth")->set(getDepth());
 	quad.program->uniform("invResolution")->set(vec2f(1.0f/SCRWIDTH, 1.0f/SCRHEIGHT));
 	quad.draw();
 
-	glDepthMask(GL_TRUE);
-	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_ALPHA_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //forward rendering blending
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

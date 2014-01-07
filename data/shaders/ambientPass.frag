@@ -2,6 +2,7 @@
 
 uniform sampler2D color0;
 uniform sampler2D color1;
+uniform sampler2D depth;
 
 uniform vec2 invResolution;
 
@@ -12,5 +13,6 @@ void main(void) {
 	vec4 valColor0 = texture(color0, vTexCoord);
 	vec4 valColor1 = texture(color1, vTexCoord);
 
+	gl_FragDepth = texture(depth,vTexCoord).x;
 	finalColor = vec4(valColor0.xyz *(0.05 + valColor1.z), 1.0);
 }

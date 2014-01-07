@@ -65,6 +65,8 @@ Column* ColumnGenerator::getColumn(int x, int z) {
 	for(int i = 15; i >= 0; --i) {
 		if(col->chunks[i] == nullptr)
 			col->chunks.resize(i);
+		else
+			break;
 	}
 	return col;
 }
