@@ -17,6 +17,7 @@ class Chunk {
 		unsigned int getY() { return YPOS; }
 		int getZ() { return ZPOS; }
 		vec3i getAbsolutePos(); //in cubes
+		unsigned int getVertexCount() const { return vertexCount; }
 
 	private:
 		struct Vert {
@@ -40,6 +41,7 @@ class Chunk {
 		const int XPOS; //in chunks
 		const unsigned int YPOS; //in chunks
 		const int ZPOS; //in chunks
+		unsigned int vertexCount;
 		mat4f modelMatrix;
 		Model model;
 		Model boundingBox;

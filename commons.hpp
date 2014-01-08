@@ -3,6 +3,7 @@
 #include "VBE/includes.hpp"
 #include "glm/gtc/random.hpp"
 #include "glm/gtc/noise.hpp"
+#include <queue>
 
 #define CHUNKSIZE_POW2 4 //CHUNKSIZE must be 1 << CHUNKSIZE_POW2
 #define CHUNKSIZE 16 //in voxels

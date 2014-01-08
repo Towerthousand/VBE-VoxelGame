@@ -14,7 +14,7 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 								   {9,9,9,9,9,9}  //8 = sand
 								 };
 
-Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), modelMatrix(mat4f(1.0f)), markedForRedraw(true), world((World*)Game::i()->getObjectByName("World")) {
+Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), vertexCount(0), modelMatrix(mat4f(1.0f)), markedForRedraw(true), world((World*)Game::i()->getObjectByName("World")) {
 	modelMatrix = glm::translate(modelMatrix,vec3f(XPOS*CHUNKSIZE,YPOS*CHUNKSIZE,ZPOS*CHUNKSIZE));
 	modelMatrix = glm::scale(modelMatrix,vec3f(0.5,0.5,0.5));
 	model.program = Programs.get("deferredChunk");
@@ -54,6 +54,7 @@ void Chunk::update(float deltaTime) {
 				if (cubes[x][y][z].ID != 0)  // only draw if it's not air
 					pushCubeToArray(x,y,z,renderData);
 	model.mesh->setVertexData(&renderData[0],renderData.size());
+	vertexCount = renderData.size();
 }
 
 void Chunk::draw() const {

@@ -28,14 +28,65 @@ void World::update(float deltaTime) {
 void World::draw() const{
 	if(renderer->getMode() != DeferredContainer::Deferred) return;
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-	for(unsigned int x = 0; x < WORLDSIZE; ++x)
-		for(unsigned int z = 0; z < WORLDSIZE; ++z)
-			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
-				Chunk* actual = columns[x][z]->getChunks()[y];
-				if(actual == nullptr) continue;
-				if(cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE))
-					actual->draw();
+
+	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
+
+		for(unsigned int x = 0; x < WORLDSIZE; ++x)
+			for(unsigned int z = 0; z < WORLDSIZE; ++z)
+				for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
+					Chunk* actual = columns[x][z]->getChunks()[y];
+				if(actual == nullptr || actual->getVertexCount() == 0 || !cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE)) continue;
+				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
 			}
+
+	//do occlusion culling here!
+	int layers = 10;
+	int chunksPerLayer = queryList.size()/layers + int(queryList.size()%layers > 0); //chunks per pass
+	//first layer is always drawn
+	for(int i = 0; i < chunksPerLayer && queryList.size() > 0; i++) {
+		std::pair<float,Chunk*> c = queryList.top();
+		queryList.pop();
+		c.second->draw();
+	}
+	//Query other layers
+	for(int currLayer = 1; currLayer < layers && queryList.size() > 0; ++currLayer) {
+		std::vector<GLuint> queries(chunksPerLayer,0);
+		std::vector<Chunk*> chunkPointers(chunksPerLayer,nullptr);
+
+		//disable rendering state
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glDepthMask(GL_FALSE);
+
+		//generate and send the queries
+		int queriesSent = 0;
+		glGenQueries(chunksPerLayer, &queries[0]);
+		for (int i = 0; i < chunksPerLayer && queryList.size() > 0; ++i) {
+			Chunk* currChunk = queryList.top().second;
+			chunkPointers[i] = currChunk;
+			queryList.pop();
+
+			glBeginQuery(GL_ANY_SAMPLES_PASSED,queries[i]);
+			currChunk->drawBoundingBox();
+			glEndQuery(GL_ANY_SAMPLES_PASSED);
+			++queriesSent;
+		}
+
+		//enable rendering state
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+
+		//collect query results
+		for (int i = 0; i < queriesSent; ++i) {
+			//if we have pending query, get result
+			GLint seen;
+			glGetQueryObjectiv(queries[i],GL_QUERY_RESULT, &seen);
+			//if seen, draw it
+			if (seen > 0)
+				chunkPointers[i]->draw();
+		}
+		//delete the queries
+		glDeleteQueries(queries.size(),&queries[0]);
+	}
 }
 
 bool World::outOfBounds(int x, int y, int z) const {
