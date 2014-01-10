@@ -114,14 +114,13 @@ void SceneMain::update(float deltaTime) {
 		debugCounter--;
 		fpsCount = 0;
 	}
-	if(Input::isMouseDown(sf::Mouse::Left)) {
-		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
+	for(int i = 0; i < 1; ++i){
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		vec3f color = glm::abs(glm::sphericalRand(1.0f));
 		DeferredLight* l = new DeferredLight();
 		l->addTo(renderer);
-		l->vel = cam->getForward()*100.0f;
-		l->pos = cam->pos;
+		l->vel = vec3f(0,-100.0f,0);
+		l->pos = vec3f(rand()%(CHUNKSIZE*WORLDSIZE),16*CHUNKSIZE,rand()%(CHUNKSIZE*WORLDSIZE));
 		l->color = color;
 		l->radius = 30;
 	}
