@@ -20,8 +20,8 @@ class World : public GameObject {
 		Column* getColumn(int x, int y, int z) const;
 		Camera* getCamera() const;
 
-		void setCubeLight(int x, unsigned int y, int z, unsigned char light);
-		void setCubeID(int x, unsigned int y, int z, unsigned char ID);
+		void setCubeLight(int x, int y, int z, unsigned char light);
+		void setCubeID(int x, int y, int z, unsigned char ID);
 	private:
 		Column* columns[WORLDSIZE][WORLDSIZE];
 		ColumnGenerator generator;

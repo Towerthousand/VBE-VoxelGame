@@ -5,7 +5,6 @@ SOURCES += main.cpp \
     commons.cpp \
     SceneMain/SceneMain.cpp \
     SceneMain/Camera.cpp \
-    SceneMain/PlayerCamera.cpp \
     SceneMain/DeferredContainer.cpp \
 	SceneMain/DeferredLight.cpp \
 	SceneMain/world/World.cpp \
@@ -24,13 +23,15 @@ SOURCES += main.cpp \
     SceneMain/world/generator/FunctionTerrainJoin.cpp \
     SceneMain/world/generator/FunctionTerrainOverlay.cpp \
     SceneMain/world/generator/FunctionTerrrainVolume.cpp \
-    SceneMain/world/generator/ColumnGenerator.cpp
+    SceneMain/world/generator/ColumnGenerator.cpp \
+    SceneMain/Entity.cpp \
+    SceneMain/Player.cpp \
+    SceneMain/Hitbox.cpp
 
 HEADERS += \
     commons.hpp \
     SceneMain/SceneMain.hpp \
     SceneMain/Camera.hpp \
-    SceneMain/PlayerCamera.hpp \
     SceneMain/DeferredContainer.hpp \
 	SceneMain/DeferredLight.hpp \
 	SceneMain/world/World.hpp \
@@ -53,7 +54,10 @@ HEADERS += \
     SceneMain/world/generator/FunctionTerrainJoin.hpp \
     SceneMain/world/generator/FunctionTerrainOverlay.hpp \
     SceneMain/world/generator/FunctionTerrrainVolume.hpp \
-    SceneMain/world/generator/ColumnGenerator.hpp
+    SceneMain/world/generator/ColumnGenerator.hpp \
+    SceneMain/Entity.hpp \
+    SceneMain/Player.hpp \
+    SceneMain/Hitbox.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \

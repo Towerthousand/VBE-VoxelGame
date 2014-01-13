@@ -16,4 +16,6 @@
 
 #define TEXSIZE 8
 
+#define DEG_TO_RAD ((2*M_PI)/360.0f)
+
 #endif // COMMONS_HPP

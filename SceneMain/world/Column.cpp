@@ -34,6 +34,7 @@ void Column::setCubeID(unsigned int x, unsigned int y, unsigned int z, unsigned 
 	if(chunks[chunk] == nullptr)
 		chunks[chunk] = new Chunk(x >> CHUNKSIZE_POW2,chunk, z >> CHUNKSIZE_POW2);
 	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z].ID = ID;
+	chunks[chunk]->markedForRedraw = true;
 }
 
 void Column::setCubeLight(unsigned int x, unsigned int y, unsigned int z, unsigned char light) {

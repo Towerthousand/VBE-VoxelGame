@@ -16,6 +16,7 @@ void Camera::update(float deltaTime) {
 		else if(rot[i] >= 360.0f) rot[i] = rot[i]-360;
 	}
 
+	transform = glm::translate(mat4f(1.0f),pos);
 	view = mat4f(1.0f);
 	view = glm::rotate(view, rot.x, vec3f(1, 0, 0));
 	view = glm::rotate(view, rot.y, vec3f(0, 1, 0));
@@ -25,7 +26,7 @@ void Camera::update(float deltaTime) {
 }
 
 vec3f Camera::getWorldPos() {
-	return vec3f(fullTransform*vec4f(pos,1.0));
+	return vec3f(fullTransform*vec4f(0,0,0,1));
 }
 
 vec3f Camera::getForward() {

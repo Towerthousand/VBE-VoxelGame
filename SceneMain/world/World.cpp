@@ -95,8 +95,8 @@ bool World::outOfBounds(int x, int y, int z) const {
 }
 
 Column* World::getColumn(int x, int y, int z) const {
-	if(outOfBounds(x,y,z)) return nullptr;
-	return columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
+	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
+	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0)? nullptr:c;
 }
 
 Camera* World::getCamera() const {
@@ -105,14 +105,17 @@ Camera* World::getCamera() const {
 
 Cube World::getCube(int x, int y, int z) const {
 	Column* c = getColumn(x,y,z);
-	if(c == nullptr) return Cube(0,MINLIGHT);
-	return c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
+	return (c == nullptr)? Cube(0,MINLIGHT):c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
 }
 
-void World::setCubeID(int x, unsigned int y, int z, unsigned char ID) {
-
+void World::setCubeID(int x, int y, int z, unsigned char ID) {
+	Column* c = getColumn(x,y,z);
+	if(c == nullptr) return;
+	c->setCubeID(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, ID);
 }
 
-void World::setCubeLight(int x, unsigned int y, int z, unsigned char light) {
-
+void World::setCubeLight(int x, int y, int z, unsigned char light) {
+	Column* c = getColumn(x,y,z);
+	if(c == nullptr) return;
+	c->setCubeLight(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, light);
 }

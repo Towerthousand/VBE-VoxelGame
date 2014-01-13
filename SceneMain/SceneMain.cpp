@@ -1,5 +1,6 @@
 #include "SceneMain.hpp"
-#include "PlayerCamera.hpp"
+#include "Player.hpp"
+#include "Camera.hpp"
 #include "DeferredContainer.hpp"
 #include "DeferredLight.hpp"
 #include "BlurContainer.hpp"
@@ -22,9 +23,9 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	//getGame()->getWindow().setVerticalSyncEnabled(true);
 
 	//add player cam
-	PlayerCamera* pCam = new PlayerCamera("playerCam", vec3f(0, 100, 0), vec3f(0));
-	pCam->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
-	pCam->addTo(this);
+	Player* player = new Player();
+	player->getCam()->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
+	player->addTo(this);
 
 	//Add blur
 	BlurContainer* blur = new BlurContainer();
@@ -114,14 +115,14 @@ void SceneMain::update(float deltaTime) {
 		debugCounter--;
 		fpsCount = 0;
 	}
-	for(int i = 0; i < 1; ++i){
+	if(Input::isMousePressed(sf::Mouse::Left)){
+		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
-		vec3f color = glm::abs(glm::sphericalRand(1.0f));
 		DeferredLight* l = new DeferredLight();
 		l->addTo(renderer);
-		l->vel = vec3f(0,-100.0f,0);
-		l->pos = vec3f(rand()%(CHUNKSIZE*WORLDSIZE),16*CHUNKSIZE,rand()%(CHUNKSIZE*WORLDSIZE));
-		l->color = color;
+		l->vel = cam->getForward()*10.0f;
+		l->pos = cam->getWorldPos();
+		l->color = glm::abs(glm::sphericalRand(1.0f));
 		l->radius = 30;
 	}
 }
