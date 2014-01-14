@@ -40,7 +40,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 }
 
 SceneMain::~SceneMain() {
-	Textures.clear();
+	Textures2D.clear();
 	Meshes.clear();
 	Programs.clear();
 	AudioManager::clear();
@@ -83,17 +83,17 @@ void SceneMain::loadResources() {
 
 	//textures
 	char pixels[4] = {char(200), char(20), char(20), char(255)};
-	Textures.add("nullRed", Texture::createFromRaw(pixels, 1, 1));
+	Textures2D.add("nullRed", Texture2D::createFromRaw(pixels, 1, 1));
 	char pixels2[4] = {char(20), char(200), char(20), char(255)};
-	Textures.add("nullGreen", Texture::createFromRaw(pixels2, 1, 1));
+	Textures2D.add("nullGreen", Texture2D::createFromRaw(pixels2, 1, 1));
 	char pixels3[4] = {char(20), char(20), char(200), char(255)};
-	Textures.add("nullBlue", Texture::createFromRaw(pixels3, 1, 1));
+	Textures2D.add("nullBlue", Texture2D::createFromRaw(pixels3, 1, 1));
 	char pixels4[4] = {char(70), char(30), char(80), char(255)};
-	Textures.add("nullBlack", Texture::createFromRaw(pixels4, 1, 1));
+	Textures2D.add("nullBlack", Texture2D::createFromRaw(pixels4, 1, 1));
 	char pixels5[4] = {char(255), char(255), char(255), char(255)};
-	Textures.add("nullWhite", Texture::createFromRaw(pixels5, 1, 1));
-	Textures.add("blocks",Texture::createFromFile("data/textures/blocks8.png"));
-	Textures.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
+	Textures2D.add("nullWhite", Texture2D::createFromRaw(pixels5, 1, 1));
+	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/blocks8.png"));
+	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program
 	Programs.add("deferredLight", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/light.frag"));
@@ -120,7 +120,7 @@ void SceneMain::update(float deltaTime) {
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		DeferredLight* l = new DeferredLight();
 		l->addTo(renderer);
-		l->vel = cam->getForward()*10.0f;
+		l->vel = cam->getForward()*0.1f;
 		l->pos = cam->getWorldPos();
 		l->color = glm::abs(glm::sphericalRand(1.0f));
 		l->radius = 30;

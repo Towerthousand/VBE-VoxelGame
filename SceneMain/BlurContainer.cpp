@@ -82,7 +82,7 @@ void BlurContainer::draw() const {
 	glClear(GL_COLOR_BUFFER_BIT);
 	quad.program = Programs.get("textureToScreen");
 	quad.program->uniform("MVP")->set(mat4f(1.0f));
-	quad.program->uniform("tex1")->set(noBlur->getTextureForAttachment(RenderTarget::COLOR0));
+    quad.program->uniform("tex1")->set(noBlur->getTextureForAttachment(RenderTarget::COLOR0));
 	quad.program->uniform("tex2")->set(blurred->getTextureForAttachment(RenderTarget::COLOR0));
 	quad.program->uniform("invResolution")->set(vec2f(1.0f/(SCRWIDTH), 1.0f/(SCRHEIGHT)));
 	quad.draw();

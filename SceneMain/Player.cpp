@@ -67,7 +67,7 @@ void Player::processKeys() {
 		cam->rot += vec3f(Input::getMouseDisplacement().y*0.1f, Input::getMouseDisplacement().x*0.1f, 0);
 	Input::setMousePos(SCRWIDTH/2, SCRHEIGHT/2, getGame()->getWindow());
 	//put/take block
-	if(Input::isMousePressed(sf::Mouse::Left))
+    if(Input::isMousePressed(sf::Mouse::Right))
 		if(targetsBlock) {
 			w->setCubeID(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			w->setCubeLight(targetedBlock.x,targetedBlock.y,targetedBlock.z,MINLIGHT);
@@ -76,7 +76,7 @@ void Player::processKeys() {
 
 void Player::traceView() {
 	World* w = (World*)getGame()->getObjectByName("World");
-	float tMax = 100; //View radius
+    float tMax = 10; //View radius
 	vec3f   cpos(cam->getWorldPos()),
 			dir(cos(-cam->rot.x*DEG_TO_RAD)*(-sin(-cam->rot.y*DEG_TO_RAD)),
 				sin(-cam->rot.x*DEG_TO_RAD),

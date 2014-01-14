@@ -62,7 +62,7 @@ void Chunk::draw() const {
 	model.program->uniform("MVP")->set(cam->projection*cam->view*modelMatrix);
 	model.program->uniform("M")->set(modelMatrix);
 	model.program->uniform("V")->set(cam->view);
-	model.program->uniform("diffuseTex")->set(Textures.get("blocks"));
+	model.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
 	model.draw();
 }
 

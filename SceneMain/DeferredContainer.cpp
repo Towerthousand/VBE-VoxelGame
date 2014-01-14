@@ -65,15 +65,15 @@ DeferredContainer::DrawMode DeferredContainer::getMode() const {
     return drawMode;
 }
 
-Texture *DeferredContainer::getColor0() const {
+Texture2D *DeferredContainer::getColor0() const {
     return gBuffer->getTextureForAttachment(RenderTarget::COLOR0);
 }
 
-Texture *DeferredContainer::getColor1() const {
+Texture2D *DeferredContainer::getColor1() const {
     return gBuffer->getTextureForAttachment(RenderTarget::COLOR1);
 }
 
-Texture *DeferredContainer::getDepth() const {
+Texture2D* DeferredContainer::getDepth() const {
     return gBuffer->getTextureForAttachment(RenderTarget::DEPTH);
 }
 
