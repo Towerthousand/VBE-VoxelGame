@@ -31,10 +31,10 @@ void World::draw() const{
 
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
 
-		for(unsigned int x = 0; x < WORLDSIZE; ++x)
-			for(unsigned int z = 0; z < WORLDSIZE; ++z)
-				for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
-					Chunk* actual = columns[x][z]->getChunks()[y];
+	for(unsigned int x = 0; x < WORLDSIZE; ++x)
+		for(unsigned int z = 0; z < WORLDSIZE; ++z)
+			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
+				Chunk* actual = columns[x][z]->getChunks()[y];
 				if(actual == nullptr || actual->getVertexCount() == 0 || !cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE)) continue;
 				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
 			}
