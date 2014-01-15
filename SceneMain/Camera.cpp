@@ -25,11 +25,11 @@ void Camera::update(float deltaTime) {
 	frustum.calculate(view);
 }
 
-vec3f Camera::getWorldPos() {
+vec3f Camera::getWorldPos() const {
 	return vec3f(fullTransform*vec4f(0,0,0,1));
 }
 
-vec3f Camera::getForward() {
+vec3f Camera::getForward() const {
 	mat4f m = view*fullTransform;
 	return -glm::normalize(vec3f(m[0][2],m[1][2],m[2][2]));
 }

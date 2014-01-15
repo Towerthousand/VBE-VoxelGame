@@ -30,7 +30,7 @@ class World : public GameObject {
 			
 			vec3i pos;
 			vec3i radius;
-		}
+		};
 
 		Column* columns[WORLDSIZE][WORLDSIZE];
 		std::list<LightJob> lightJobs;

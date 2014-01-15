@@ -23,6 +23,7 @@ class Frustum {
 				bool sphereInside(vec3f p, float r) const;
 				bool pointInside(vec3f p) const;
 
+			private:
 				vec3f n;
 				float d;
 		};

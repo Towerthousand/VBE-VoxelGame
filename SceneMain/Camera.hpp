@@ -8,8 +8,8 @@ class Camera : public GameObject {
 		virtual ~Camera();
 
 		void update(float deltaTime);
-		vec3f getWorldPos();
-		vec3f getForward();
+		vec3f getWorldPos() const;
+		vec3f getForward() const;
 
 		vec3f pos;
 		vec3f rot;

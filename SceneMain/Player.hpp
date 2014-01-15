@@ -9,7 +9,7 @@ class Player : public Entity {
 		~Player();
 
 		void update(float deltaTime);
-		Camera* getCam() { return cam; }
+		Camera* getCam() const { return cam; }
 
 	private:
 		void processKeys();

@@ -13,10 +13,10 @@ class Chunk {
 		void draw() const;
 		void drawBoundingBox() const;
 
-		int getX() { return XPOS; }
-		unsigned int getY() { return YPOS; }
-		int getZ() { return ZPOS; }
-		vec3i getAbsolutePos(); //in cubes
+		int getX() const { return XPOS; }
+		unsigned int getY() const { return YPOS; }
+		int getZ() const { return ZPOS; }
+		vec3i getAbsolutePos() const; //in cubes
 		unsigned int getVertexCount() const { return vertexCount; }
 
 	private:

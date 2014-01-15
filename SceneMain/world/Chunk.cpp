@@ -39,7 +39,7 @@ Cube Chunk::getCube(int x, int y, int z) const { //in local space
 	return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
 }
 
-vec3i Chunk::getAbsolutePos() {
+vec3i Chunk::getAbsolutePos() const {
 	return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
 }
 
