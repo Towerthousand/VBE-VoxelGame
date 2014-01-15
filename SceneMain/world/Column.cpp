@@ -48,6 +48,6 @@ void Column::setCubeLight(unsigned int x, unsigned int y, unsigned int z, unsign
 	chunks[chunk]->markedForRedraw = true;
 }
 
-vec3i Column::getAbolutePos() {
+vec3i Column::getAbolutePos() const {
 	return vec3i(XPOS*CHUNKSIZE,0,ZPOS*CHUNKSIZE);
 }

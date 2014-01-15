@@ -1,29 +1,28 @@
-#include "DeferredLight.hpp"
-#include "DeferredContainer.hpp"
-#include "Camera.hpp"
+#include "DeferredCubeLight.hpp"
+#include "World.hpp"
+#include "../Camera.hpp"
 
-DeferredLight::DeferredLight() : pos(0.0f), color(1.0f), vel(0.0f), radius(30.0f), renderer((DeferredContainer*)getGame()->getObjectByName("deferred")) {
-	quad.mesh = Meshes.get("quad");
-	quad.program = Programs.get("deferredLight");
+DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), tex(nullptr), renderer(nullptr), world(nullptr) {
+	tex = Texture3D::createEmpty(32,32,32,Texture::R8,15);
+	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
+	world = (World*)getGame()->getObjectByName("World");
 }
 
-DeferredLight::~DeferredLight() {
+DeferredCubeLight::~DeferredCubeLight() {
 }
 
-void DeferredLight::update(float deltaTime) {
-	(void) deltaTime;
-	pos += vel*deltaTime;
+void DeferredCubeLight::update(float deltaTime) {
 	transform = glm::translate(mat4f(1.0f), pos);
 }
 
-void DeferredLight::draw() const{
+void DeferredCubeLight::draw() const {
 	if(renderer->getMode() != DeferredContainer::Light) return;
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec3f posWorldSpace = vec3f(fullTransform*vec4f(0,0,0,1));
 	vec3f posViewSpace = vec3f(cam->view*vec4f(posWorldSpace,1.0));
 
 	mat4f t(1.0);
-	if(glm::length(posViewSpace) > radius) {
+	if(glm::length(posViewSpace) > 36.0f) {
 		vec3f front = cam->getWorldPos()-posWorldSpace;
 		front = glm::normalize(front);
 		vec3f dummyUp(0, 1, 0);
@@ -49,6 +48,5 @@ void DeferredLight::draw() const{
 	quad.program->uniform("lightPos")->set(posViewSpace);
 	quad.program->uniform("invProj")->set(glm::inverse(cam->projection));
 	quad.program->uniform("lightColor")->set(color);
-	quad.program->uniform("lightRadius")->set(radius);
 	quad.draw();
 }

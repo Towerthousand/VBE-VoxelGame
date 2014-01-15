@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \
-    SceneMain/Hitbox.cpp
+    SceneMain/Hitbox.cpp \
+    SceneMain/world/DeferredCubeLight.cpp
 
 HEADERS += \
     commons.hpp \
@@ -57,7 +58,8 @@ HEADERS += \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \
-    SceneMain/Hitbox.hpp
+    SceneMain/Hitbox.hpp \
+    SceneMain/world/DeferredCubeLight.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \

@@ -15,9 +15,6 @@ class DeferredLight : public GameObject{
 		vec3f vel;
         float radius;
 
-	protected:
-		virtual void drawDeferredLight() const;
-
 	private:
 		DeferredContainer* renderer;
         Model quad;
