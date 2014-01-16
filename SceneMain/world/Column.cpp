@@ -32,7 +32,7 @@ void Column::setCubeID(unsigned int x, unsigned int y, unsigned int z, unsigned 
 	if((int)chunks.size() <= chunk)
 		chunks.resize(chunk+1,nullptr);
 	if(chunks[chunk] == nullptr)
-		chunks[chunk] = new Chunk(x >> CHUNKSIZE_POW2,chunk, z >> CHUNKSIZE_POW2);
+		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
 	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z].ID = ID;
 	chunks[chunk]->markedForRedraw = true;
 }
@@ -43,7 +43,7 @@ void Column::setCubeLight(unsigned int x, unsigned int y, unsigned int z, unsign
 	if((int)chunks.size() <= chunk)
 		chunks.resize(chunk+1,nullptr);
 	if(chunks[chunk] == nullptr)
-		chunks[chunk] = new Chunk(x >> CHUNKSIZE_POW2,chunk, z >> CHUNKSIZE_POW2);
+		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
 	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z].light = light;
 	chunks[chunk]->markedForRedraw = true;
 }
