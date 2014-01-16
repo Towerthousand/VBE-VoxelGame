@@ -117,11 +117,4 @@ void SceneMain::update(float deltaTime) {
 		debugCounter--;
 		fpsCount = 0;
 	}
-	if(Input::isMousePressed(sf::Mouse::Left)){
-		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
-		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);
-		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
-		l->addTo(renderer);
-	}
 }

@@ -1,6 +1,8 @@
 #include "Player.hpp"
 #include "Camera.hpp"
 #include "world/World.hpp"
+#include "world/DeferredCubeLight.hpp"
+#include "DeferredContainer.hpp"
 
 Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
 	setName("Player");
@@ -62,16 +64,44 @@ void Player::processKeys() {
 	if(Input::isKeyDown(sf::Keyboard::Space))
 		if (onFloor && !isJumping)
 			vel.y = 15;
+
 	//look around
 	if(Input::getMouseDisplacement() != vec2i(0, 0))
 		cam->rot += vec3f(Input::getMouseDisplacement().y*0.1f, Input::getMouseDisplacement().x*0.1f, 0);
 	Input::setMousePos(SCRWIDTH/2, SCRHEIGHT/2, getGame()->getWindow());
-	//put/take block
-    if(Input::isMousePressed(sf::Mouse::Right))
+
+	bool recalc = false;
+	//take block
+	if(Input::isMousePressed(sf::Mouse::Left))
 		if(targetsBlock) {
 			w->setCubeID(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			w->setCubeLight(targetedBlock.x,targetedBlock.y,targetedBlock.z,MINLIGHT);
+			recalc = true;
 		}
+
+	//put block
+	if(Input::isMousePressed(sf::Mouse::Right))
+		if(targetsBlock) {
+			w->setCubeID(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
+			w->setCubeLight(targetedBlock.x,targetedBlock.y,targetedBlock.z,MINLIGHT);
+			recalc = true;
+		}
+
+	if(recalc)
+	{
+		std::vector<DeferredCubeLight*> lights;
+		getGame()->getAllObjectsOfType(lights);
+		for(int i = 0; i < lights.size(); i++)
+			lights[i]->calcLight();
+	}
+
+	if(Input::isKeyPressed(sf::Keyboard::L)) {
+		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
+		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
+		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);
+		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
+		l->addTo(renderer);
+	}
 }
 
 void Player::traceView() {

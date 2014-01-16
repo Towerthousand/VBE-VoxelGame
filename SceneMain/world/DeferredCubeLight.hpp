@@ -12,8 +12,9 @@ class DeferredCubeLight : public GameObject {
 		void update(float deltaTime);
 		void draw() const;
 
-	private:
 		void calcLight();
+	private:
+		void count(float light[32][32][32], std::pair<double, double>& p, double px, double py, double pz, int x, int y, int z);
 		vec3f pos;
 		vec3f color;
 		Model quad;
