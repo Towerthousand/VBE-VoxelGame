@@ -47,17 +47,15 @@ void main(void) {
         vec3 lightVector = normalize(lightPos - fragmentPos); //view space
         vec3 normalVector = decodeNormal(valColor1.xy);  //view space
 
-        vec4 fragmentWorldPos = invView * vec4(fragmentPos+normalVector*0.1, 1.0f);
-        vec3 posRelativeToLight =
-                (invView * vec4(fragmentPos+normalVector*0.1, 1.0f)).xyz -
-                (invView * vec4(lightPos, 1.0f)).xyz;
-
+        vec3 posRelativeToLight = (invView * vec4(fragmentPos+normalVector*0.1 - lightPos, 0.0f)).xyz;
         float blockLight = texture(tex, (posRelativeToLight+0.5)/32.0f+0.5f).r;
+        if(blockLight < 0.01)
+            discard;
 
         //Blinn-Phong shading
         vec3 E = normalize(-fragmentPos);
         vec3 H = normalize(lightVector + E);
-        float cosAlpha = clamp(dot(normalVector, H), 0.0f, 1.0f);
+        float cosAlpha = max(dot(normalVector, H), 0.0f);
         float cosTheta = max(dot(normalVector, lightVector), 0.0f);
         float attenuationFactor = max(0.0, 1 - length(fragmentPos-lightPos) / lightRadius);
 
