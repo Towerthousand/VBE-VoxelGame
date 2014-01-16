@@ -33,8 +33,13 @@ void main(void) {
         vec2 vTexCoord = gl_FragCoord.xy * invResolution;
         vec3 fragmentPos = getFragPos(vTexCoord); //view space
 
-        if(length(fragmentPos - lightPos) > lightRadius)
-                discard;
+        //fragment light parameters
+        vec3 lightVector = lightPos - fragmentPos; //view space
+        float lightDist = length(lightVector);
+        lightVector /= lightDist;
+
+        if(lightDist > lightRadius)
+            discard;
 
         vec4 valColor0 = texture(color0, vTexCoord);
         vec4 valColor1 = texture(color1, vTexCoord);
@@ -42,12 +47,6 @@ void main(void) {
         //material properties
         vec3 matDiffuseColor = valColor0.xyz;
         vec3 matSpecularColor = vec3(valColor1.w);
-
-        //fragment light parameters
-        vec3 lightVector = lightPos - fragmentPos; //view space
-        float lightDist = length(lightVector);
-        lightVector /= lightDist;
-
         vec3 normalVector = decodeNormal(valColor1.xy);  //view space
 
         vec3 posRelativeToLight = (invView * vec4(fragmentPos+normalVector*0.1 - lightPos, 0.0f)).xyz;
@@ -60,7 +59,7 @@ void main(void) {
         vec3 H = normalize(lightVector + E);
         float cosAlpha = max(dot(normalVector, H), 0.0f);
         float cosTheta = max(dot(normalVector, lightVector), 0.0f);
-        float attenuationFactor = max(0.0, 1 - lightDist / lightRadius);
+        float attenuationFactor = 1 - lightDist / lightRadius;
 
         gl_FragDepth = texture(depth, vTexCoord).x;
 
