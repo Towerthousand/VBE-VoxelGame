@@ -7,7 +7,7 @@ Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlo
 	cam = new Camera("playerCam", vec3f(0,1.5,0));
 	cam->addTo(this);
 	acc = vec3f(0,-40,0);
-	pos = vec3f(100,110,100);
+	pos = vec3f(16,110,16);
 	hitbox.type = Hitbox::BOX;
 	hitbox.radius = vec3f(0.6*scale.x,1.6*scale.y,0.6*scale.z);
 }

@@ -5,6 +5,7 @@
 #include "DeferredLight.hpp"
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
+#include "world/DeferredCubeLight.hpp"
 
 SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
@@ -97,6 +98,7 @@ void SceneMain::loadResources() {
 
 	//program
 	Programs.add("deferredLight", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/light.frag"));
+	Programs.add("deferredCubeLight", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/cubeLight.frag"));
 	Programs.add("ambientPass", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/ambientPass.frag"));
 	Programs.add("blurPassVertical", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/blurPassVertical.frag"));
 	Programs.add("blurPassHoritzontal", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/blurPassHoritzontal.frag"));
@@ -118,11 +120,8 @@ void SceneMain::update(float deltaTime) {
 	if(Input::isMousePressed(sf::Mouse::Left)){
 		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
-		DeferredLight* l = new DeferredLight();
+		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);
+		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
 		l->addTo(renderer);
-		l->vel = cam->getForward()*0.1f;
-		l->pos = cam->getWorldPos();
-		l->color = glm::abs(glm::sphericalRand(1.0f));
-		l->radius = 30;
 	}
 }

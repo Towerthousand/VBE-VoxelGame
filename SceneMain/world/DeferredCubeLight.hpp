@@ -13,12 +13,14 @@ class DeferredCubeLight : public GameObject {
 		void draw() const;
 
 	private:
+		void calcLight();
 		vec3f pos;
 		vec3f color;
 		Model quad;
-		Texture3D* tex;
+		Texture3D tex;
 		DeferredContainer* renderer;
 		World* world;
+
 };
 
 #endif // DEFERREDCUBELIGHT_HPP

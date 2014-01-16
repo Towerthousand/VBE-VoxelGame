@@ -77,5 +77,6 @@ OTHER_FILES += \
     data/shaders/chunkDeferred.vert \
     data/shaders/chunkDeferred.frag \
     data/shaders/occlusionQuery.vert \
-    data/shaders/occlusionQuery.frag
+    data/shaders/occlusionQuery.frag \
+    data/shaders/cubeLight.frag
 
