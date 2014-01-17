@@ -16,7 +16,7 @@ class Player : public Entity {
 		void traceView();
 
 		Camera* cam;
-		unsigned char selectedID; //current blockID, used to place blocks
+		unsigned int selectedID; //current blockID, used to place blocks
 		vec3i targetedBlock;
 		vec3i targetedBlockEnter;
 		bool onFloor;

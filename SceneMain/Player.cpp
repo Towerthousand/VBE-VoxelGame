@@ -81,6 +81,7 @@ void Player::processKeys() {
 	//put block
 	if(Input::isMousePressed(sf::Mouse::Right))
 		if(targetsBlock) {
+			VBE_LOG(targetedBlockEnter.x << " " << targetedBlockEnter.y << " " << targetedBlockEnter.z);
 			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
 			recalc = true;
 		}

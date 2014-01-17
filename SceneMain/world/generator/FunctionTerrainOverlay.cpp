@@ -1,6 +1,6 @@
 #include "FunctionTerrainOverlay.hpp"
 
-FunctionTerrainOverlay::FunctionTerrainOverlay(FunctionTerrain *source, char overlayID, char surfaceID, int depth) :
+FunctionTerrainOverlay::FunctionTerrainOverlay(FunctionTerrain *source, unsigned int overlayID, unsigned int surfaceID, unsigned int depth) :
 	source(source), overlayID(overlayID), surfaceID(surfaceID), depth(depth) {
 }
 

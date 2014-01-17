@@ -12,7 +12,7 @@ FunctionTerrainJoin::~FunctionTerrainJoin() {
 ID3Data FunctionTerrainJoin::getID3Data(int x, int y, int z, int sx, int sy, int sz) { //x, y, z are chunkgrid coords
 	ID3Data dataA = funcA->getID3Data(x,y,z,sx,sy,sz);
 	ID3Data dataB = funcB->getID3Data(x,y,z,sx,sy,sz);
-	ID3Data result(sx,std::vector<std::vector<char> >(sy,std::vector<char>(sz,0)));
+	ID3Data result(sx,std::vector<std::vector<unsigned int> >(sy,std::vector<unsigned int>(sz,0)));
 	for(int i = 0; i < sx; ++i)
 		for(int j = 0; j < sy; ++j)
 			for(int k = 0; k < sz; ++k) {

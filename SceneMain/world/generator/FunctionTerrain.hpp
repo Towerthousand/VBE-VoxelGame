@@ -2,7 +2,7 @@
 #define FUNCTIONTERRAIN_HPP
 #include "tools.hpp"
 
-typedef std::vector<std::vector<std::vector<char> > > ID3Data;
+typedef std::vector<std::vector<std::vector<unsigned int> > > ID3Data;
 
 class FunctionTerrain {//abstract
 		public:

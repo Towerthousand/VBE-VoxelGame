@@ -25,6 +25,7 @@ Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), vertexCo
 	model.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
 	boundingBox.mesh = Meshes.get("1x1Cube");
 	boundingBox.program = Programs.get("occlusionQuery");
+	memset(cubes,0,sizeof(cubes));
 }
 
 Chunk::~Chunk() {
@@ -76,17 +77,15 @@ void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> 
 	short absZ = z;
 	short texY, texX;
 	unsigned int cubeID = cubes[x][y][z];
-	//STRUCTURE PER VERTEX: Vx, Vy, Vz,
-	//						Tx, Ty,
-	//						Cr, Cg, Cb, Ca
+
 	if(getCube(x, y, z+1) == 0) { // front face
 		texX = (textureIndexes[cubeID][0] % (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
 		texY = (textureIndexes[cubeID][0] / (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
-		//t1
+
 		renderData.push_back(Chunk::Vert(absX+1, absY+1, absZ+1, 0, texX          , texY          ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ+1, 0, texX+TEXSIZE  , texY          ));
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ+1, 0, texX          , texY+TEXSIZE  ));
-		//t2
+
 		renderData.push_back(Chunk::Vert(absX  , absY  , absZ+1, 0, texX+TEXSIZE  , texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ+1, 0, texX          , texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ+1, 0, texX+TEXSIZE  , texY          ));
@@ -94,11 +93,11 @@ void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> 
 	if(getCube(x, y, z-1) == 0) { // back face
 		texX = (textureIndexes[cubeID][1] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][1] / (512/TEXSIZE))*TEXSIZE;
-		//t1
+
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ, 1, texX          , texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ, 1, texX+TEXSIZE  , texY          ));
 		renderData.push_back(Chunk::Vert(absX+1, absY+1, absZ, 1, texX          , texY          ));
-		//t2
+
 		renderData.push_back(Chunk::Vert(absX  , absY  , absZ, 1, texX+TEXSIZE  , texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ, 1, texX+TEXSIZE  , texY          ));
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ, 1, texX          , texY+TEXSIZE  ));
@@ -106,11 +105,11 @@ void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> 
 	if(getCube(x+1, y, z) == 0) { // left face
 		texX = (textureIndexes[cubeID][2] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][2] / (512/TEXSIZE))*TEXSIZE;
-		//t1
+
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ+1, 2, texX        , texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX+1, absY+1, absZ+1, 2, texX        , texY          ));
-		//t2
+
 		renderData.push_back(Chunk::Vert(absX+1, absY  , absZ  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
 		renderData.push_back(Chunk::Vert(absX+1, absY+1, absZ  , 2, texX+TEXSIZE, texY));
 		renderData.push_back(Chunk::Vert(absX+1, absY+1, absZ+1, 2, texX        , texY          ));
@@ -118,11 +117,11 @@ void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> 
 	if(getCube(x-1, y, z) == 0) { // right face
 		texX = (textureIndexes[cubeID][3] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][3] / (512/TEXSIZE))*TEXSIZE;
-		//t1
+
 		renderData.push_back(Chunk::Vert(absX  , absY  , absZ+1, 3, texX, texY+TEXSIZE          ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ+1, 3, texX        , texY          ));
 		renderData.push_back(Chunk::Vert(absX  , absY  , absZ  , 3, texX+TEXSIZE, texY+TEXSIZE));
-		//t2
+
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ+1, 3, texX        , texY          ));
 		renderData.push_back(Chunk::Vert(absX  , absY+1, absZ  , 3, texX+TEXSIZE, texY          ));
 		renderData.push_back(Chunk::Vert(absX  , absY  , absZ  , 3, texX+TEXSIZE, texY+TEXSIZE			));
