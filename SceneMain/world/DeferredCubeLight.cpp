@@ -3,8 +3,6 @@
 #include "../Camera.hpp"
 #include "../DeferredContainer.hpp"
 
-
-
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	world = (World*)getGame()->getObjectByName("World");
@@ -41,7 +39,6 @@ void DeferredCubeLight::count(float light[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2]
 inline int sign(int n) {
 	return n<0?-1:1;
 }
-
 
 void DeferredCubeLight::calcLight() {
 

@@ -8,8 +8,8 @@ Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlo
 	setName("Player");
 	cam = new Camera("playerCam", vec3f(0,1.5,0));
 	cam->addTo(this);
-	acc = vec3f(0,-40,0);
-	pos = vec3f(16,110,16);
+	acc = vec3f(0,-10,0);
+	pos = vec3f(8,110,8);
 	hitbox.type = Hitbox::BOX;
 	hitbox.radius = vec3f(0.6*scale.x,1.6*scale.y,0.6*scale.z);
 }
@@ -65,6 +65,12 @@ void Player::processKeys() {
 		if (onFloor && !isJumping)
 			vel.y = 15;
 
+	if(Input::isKeyDown(sf::Keyboard::C)) {
+		cam->pos.y = 0.5;
+	}
+	else {
+		cam->pos.y = 1.5;
+	}
 	//look around
 	if(Input::getMouseDisplacement() != vec2i(0, 0))
 		cam->rot += vec3f(Input::getMouseDisplacement().y*0.1f, Input::getMouseDisplacement().x*0.1f, 0);

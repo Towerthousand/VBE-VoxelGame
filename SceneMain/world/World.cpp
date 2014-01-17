@@ -16,13 +16,23 @@ World::~World() {
 }
 
 void World::update(float deltaTime) {
-	for(unsigned int x = 0; x < WORLDSIZE; ++x)
-		for(unsigned int z = 0; z < WORLDSIZE; ++z)
-			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y){
-				Chunk* actual = columns[x][z]->getChunks()[y];
-				if(actual == nullptr) continue;
-				actual->update(deltaTime);
+	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
+	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
+	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
+		for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
+			vec2f colPos = playerChunkPos + vec2f(x,z);
+			Column* actual = getColumn(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE);
+			if(actual == nullptr || actual->getX() != colPos.x || actual->getZ() != colPos.y) {
+				delete actual;
+				actual = generator.getColumn(colPos.x,colPos.y);
+				columns[int(colPos.x)&WORLDSIZE_MASK][int(colPos.y)&WORLDSIZE_MASK] = actual;
 			}
+			for(unsigned int y = 0; y < actual->getChunks().size(); ++y){
+				Chunk* c = actual->getChunks()[y];
+				if(c == nullptr) continue;
+				c->update(deltaTime);
+			}
+		}
 }
 
 void World::draw() const{

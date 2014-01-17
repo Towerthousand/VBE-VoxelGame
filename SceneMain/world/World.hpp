@@ -22,17 +22,7 @@ class World : public GameObject {
 
 		void setCube(int x, int y, int z, unsigned int cube);
 	private:
-		
-		struct LightJob {
-			LightJob(const vec3i& pos, const vec3i& radius) : pos(pos), radius(radius) {}
-			~LightJob() {}
-			
-			vec3i pos;
-			vec3i radius;
-		};
-
 		Column* columns[WORLDSIZE][WORLDSIZE];
-		std::list<LightJob> lightJobs;
 		ColumnGenerator generator;
 		DeferredContainer* renderer;
 };
