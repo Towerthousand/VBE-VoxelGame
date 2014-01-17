@@ -40,7 +40,7 @@ vec3f Hitbox::getWorldPos() const {
 
 bool Hitbox::pointCollidesWithWorld(const vec3f& point) const {
 	World* world = (World*)getGame()->getObjectByName("World");
-	if(world->getCube(floor(point.x),floor(point.y),floor(point.z)).ID != 0)
+	if(world->getCube(floor(point.x),floor(point.y),floor(point.z)) != 0)
 		return true;
 	return false;
 }

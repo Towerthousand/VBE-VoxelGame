@@ -51,11 +51,9 @@ Column* ColumnGenerator::getColumn(int x, int z) {
 		for(int x = 0; x < CHUNKSIZE; ++x)
 			for(int y = 0; y < CHUNKSIZE; ++y)
 				for(int z = 0; z < CHUNKSIZE; ++z) {
-					if(data[x][i*CHUNKSIZE+y][z] != 0) {
+					if(data[x][i*CHUNKSIZE+y][z] != 0)
 						full = true;
-						col->skyLevel[x][z] = i*CHUNKSIZE+y;
-					}
-					col->chunks[i]->cubes[x][y][z] = Cube(data[x][i*CHUNKSIZE+y][z],MINLIGHT);
+					col->chunks[i]->cubes[x][y][z] = data[x][i*CHUNKSIZE+y][z];
 				}
 		if(!full) {
 			delete col->chunks[i];

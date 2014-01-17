@@ -16,12 +16,11 @@ class World : public GameObject {
 		void draw() const;
 
 		bool outOfBounds(int x, int y, int z) const;
-		Cube getCube(int x, int y, int z) const;
+		unsigned int getCube(int x, int y, int z) const;
 		Column* getColumn(int x, int y, int z) const;
 		Camera* getCamera() const;
 
-		void setCubeLight(int x, int y, int z, unsigned char light);
-		void setCubeID(int x, int y, int z, unsigned char ID);
+		void setCube(int x, int y, int z, unsigned int cube);
 	private:
 		
 		struct LightJob {

@@ -11,40 +11,22 @@ Column::~Column() {
 	chunks.resize(0);
 }
 
-unsigned int Column::getSkyLevel(unsigned int x, unsigned int z) const {
-	VBE_ASSERT(x < CHUNKSIZE && z < CHUNKSIZE, "Invalid Column::getSkyLevel() parameters");
-	return skyLevel[x][z];
-}
-
-Cube Column::getCube(unsigned int x, unsigned int y, unsigned int z) const {
+unsigned int Column::getCube(unsigned int x, unsigned int y, unsigned int z) const {
 	VBE_ASSERT(x < CHUNKSIZE && z < CHUNKSIZE, "Invalid Column::getCube() parameters");
 	int chunk = y >> CHUNKSIZE_POW2;
-	if((int)chunks.size() <= chunk)
-		return Cube(0,MAXLIGHT);
-	if(chunks[chunk] == nullptr)
-		return (skyLevel[x][z] > y? Cube(0,MINLIGHT) : Cube(0,MINLIGHT), Cube(0,MAXLIGHT));
+	if((int)chunks.size() <= chunk || chunks[chunk] == nullptr)
+		return 0;
 	return chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z];
 }
 
-void Column::setCubeID(unsigned int x, unsigned int y, unsigned int z, unsigned char ID) {
+void Column::setCube(unsigned int x, unsigned int y, unsigned int z, unsigned int cube) {
 	VBE_ASSERT(x < CHUNKSIZE && z < CHUNKSIZE, "Invalid Column::setCubeID() parameters");
 	int chunk = y >> CHUNKSIZE_POW2;
 	if((int)chunks.size() <= chunk)
 		chunks.resize(chunk+1,nullptr);
 	if(chunks[chunk] == nullptr)
 		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
-	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z].ID = ID;
-	chunks[chunk]->markedForRedraw = true;
-}
-
-void Column::setCubeLight(unsigned int x, unsigned int y, unsigned int z, unsigned char light) {
-	VBE_ASSERT(x < CHUNKSIZE && z < CHUNKSIZE, "Invalid Column::setCubeID() parameters");
-	int chunk = y >> CHUNKSIZE_POW2;
-	if((int)chunks.size() <= chunk)
-		chunks.resize(chunk+1,nullptr);
-	if(chunks[chunk] == nullptr)
-		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
-	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z].light = light;
+	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z] = cube;
 	chunks[chunk]->markedForRedraw = true;
 }
 

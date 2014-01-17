@@ -74,16 +74,14 @@ void Player::processKeys() {
 	//take block
 	if(Input::isMousePressed(sf::Mouse::Left))
 		if(targetsBlock) {
-			w->setCubeID(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
-			w->setCubeLight(targetedBlock.x,targetedBlock.y,targetedBlock.z,MINLIGHT);
+			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			recalc = true;
 		}
 
 	//put block
 	if(Input::isMousePressed(sf::Mouse::Right))
 		if(targetsBlock) {
-			w->setCubeID(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
-			w->setCubeLight(targetedBlock.x,targetedBlock.y,targetedBlock.z,MINLIGHT);
+			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
 			recalc = true;
 		}
 
@@ -118,7 +116,7 @@ void Player::traceView() {
 			tDelta(tMax,tMax,tMax);
 
 	if (!w->outOfBounds(cpos.x,cpos.y,cpos.z) &&
-		w->getCube(cpos.x,cpos.y,cpos.z).ID != 0) {
+		w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
 		targetsBlock = true;
 		targetedBlock = vec3f(floor(cpos.x),floor(cpos.y),floor(cpos.z));
 		return;
@@ -175,7 +173,7 @@ void Player::traceView() {
 				tMaxc.z= tMaxc.z + tDelta.z;
 			}
 		}
-		if(!w->outOfBounds(vox.x,vox.y,vox.z) && w->getCube(vox.x,vox.y,vox.z).ID != 0) {
+		if(!w->outOfBounds(vox.x,vox.y,vox.z) && w->getCube(vox.x,vox.y,vox.z) != 0) {
 			targetsBlock = true;
 			targetedBlock = vox;
 			return;

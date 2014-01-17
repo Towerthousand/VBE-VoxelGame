@@ -25,6 +25,5 @@ const vec3[6] normals = {
 void main(void) {
 	v_normal = normalize(vec4(V*M*vec4(normals[a_normal], 0.0)).xyz);
 	v_texCoord = a_texCoord/512;
-	gl_Position = MVP * vec4(a_position, 1.0);
-	v_color = a_color;
+        gl_Position = MVP * vec4(a_position, 1.0);
 }

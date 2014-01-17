@@ -50,7 +50,7 @@ void main(void) {
         vec3 normalVector = decodeNormal(valColor1.xy);  //view space
 
         vec3 posRelativeToLight = (invView * vec4(fragmentPos+normalVector*0.1 - lightPos, 0.0f)).xyz;
-        float blockLight = texture(tex, (posRelativeToLight+0.5)/32.0f+0.5f).r;
+        float blockLight = texture(tex, (posRelativeToLight+0.5)/(2*lightRadius) + 0.5f).r;
         if(blockLight < 0.01)
             discard;
 

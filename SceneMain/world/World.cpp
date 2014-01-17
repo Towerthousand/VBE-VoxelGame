@@ -103,19 +103,13 @@ Camera* World::getCamera() const {
 	return (Camera*)getGame()->getObjectByName("playerCam");
 }
 
-Cube World::getCube(int x, int y, int z) const {
+unsigned int World::getCube(int x, int y, int z) const {
 	Column* c = getColumn(x,y,z);
-	return (c == nullptr)? Cube(0,MINLIGHT):c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
+	return (c == nullptr)? 0 : c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
 }
 
-void World::setCubeID(int x, int y, int z, unsigned char ID) {
+void World::setCube(int x, int y, int z, unsigned int cube) {
 	Column* c = getColumn(x,y,z);
 	if(c == nullptr) return;
-	c->setCubeID(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, ID);
-}
-
-void World::setCubeLight(int x, int y, int z, unsigned char light) {
-	Column* c = getColumn(x,y,z);
-	if(c == nullptr) return;
-	c->setCubeLight(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, light);
+	c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
 }
