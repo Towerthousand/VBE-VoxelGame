@@ -16,9 +16,6 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 
 Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), vertexCount(0), modelMatrix(mat4f(1.0f)), markedForRedraw(true), world((World*)Game::i()->getObjectByName("World")) {
 	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
-	model.program = Programs.get("deferredChunk");
-	boundingBox.mesh = Meshes.get("1x1Cube");
-	boundingBox.program = Programs.get("occlusionQuery");
 	memset(cubes,0,sizeof(cubes));
 }
 
@@ -33,6 +30,9 @@ void Chunk::initMesh() {
 		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat)
 	};
 	model.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
+	model.program = Programs.get("deferredChunk");
+	boundingBox.mesh = Meshes.get("1x1Cube");
+	boundingBox.program = Programs.get("occlusionQuery");
 }
 
 unsigned int Chunk::getCube(int x, int y, int z) const { //in local space

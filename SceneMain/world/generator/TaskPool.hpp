@@ -12,42 +12,35 @@
 #include <stdexcept>
 
 
-class TaskPool
-{
-public:
-	TaskPool(size_t threads);
-	TaskPool(size_t threads, std::function<void()>);
-	~TaskPool();
+class TaskPool {
+	public:
+		TaskPool(size_t threads);
+		TaskPool(size_t threads, std::function<void()>);
+		~TaskPool();
 
-	template<class F, class... Args>
-	auto enqueue(F&& f, Args&&... args)
-	-> std::future<typename std::result_of<F(Args...)>::type>;
+		template<class F, class... Args>
+		auto enqueue(F&& f, Args&&... args)
+		-> std::future<typename std::result_of<F(Args...)>::type>;
 
-	void discard();
+		void discard();
 
-private:
-	std::vector< std::thread > workers;
-	std::queue< std::function<void()> > tasks;
+	private:
+		std::vector< std::thread > workers;
+		std::queue< std::function<void()> > tasks;
 
-	std::mutex queue_mutex;
-	std::condition_variable condition;
-	bool stop;
+		std::mutex queue_mutex;
+		std::condition_variable condition;
+		bool stop;
 };
 
-inline TaskPool::TaskPool(size_t threads) : TaskPool(threads, [](){})
-{
-
+inline TaskPool::TaskPool(size_t threads) : TaskPool(threads, [](){}) {
 }
 
-inline TaskPool::TaskPool(size_t threads, std::function<void()> init) : stop(false)
-{
+inline TaskPool::TaskPool(size_t threads, std::function<void()> init) : stop(false) {
 	for(size_t i = 0;i<threads;++i)
-		workers.emplace_back( [this, init]
-		{
+		workers.emplace_back( [this, init] {
 			init();
-
-			for(;;)
-			{
+			for(;;) {
 				std::unique_lock<std::mutex> lock(this->queue_mutex);
 				while(!this->stop && this->tasks.empty())
 					this->condition.wait(lock);
@@ -61,8 +54,7 @@ inline TaskPool::TaskPool(size_t threads, std::function<void()> init) : stop(fal
 		});
 }
 
-inline TaskPool::~TaskPool()
-{
+inline TaskPool::~TaskPool() {
 	{
 		std::unique_lock<std::mutex> lock(queue_mutex);
 		stop = true;
@@ -75,26 +67,25 @@ inline TaskPool::~TaskPool()
 
 template<class F, class... Args>
 auto TaskPool::enqueue(F&& f, Args&&... args)
--> std::future<typename std::result_of<F(Args...)>::type>
-{
+-> std::future<typename std::result_of<F(Args...)>::type> {
 	typedef typename std::result_of<F(Args...)>::type return_type;
 
 	if(stop) throw std::runtime_error("enqueue on stopped ThreadPool");
 	auto task = std::make_shared< std::packaged_task<return_type()> >(
 					std::bind(std::forward<F>(f), std::forward<Args>(args)...)
 					);
-
 	std::future<return_type> res = task->get_future();
+
 	{
 		std::unique_lock<std::mutex> lock(queue_mutex);
 		tasks.push([task](){ (*task)(); });
 	}
+
 	condition.notify_one();
 	return res;
 }
 
-inline void TaskPool::discard()
-{
+inline void TaskPool::discard() {
 	std::unique_lock<std::mutex> lock(queue_mutex);
 	tasks = std::queue< std::function<void()> >();
 }
