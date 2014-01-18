@@ -54,7 +54,7 @@ void main(void) {
         if(blockLight < 0.01)
             discard;
 
-        //Blinn-Phong shading
+		//Blinn-Phong shading
         vec3 E = normalize(-fragmentPos);
         vec3 H = normalize(lightVector + E);
         float cosAlpha = max(dot(normalVector, H), 0.0f);

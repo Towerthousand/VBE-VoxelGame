@@ -59,7 +59,8 @@ HEADERS += \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \
     SceneMain/Hitbox.hpp \
-    SceneMain/world/DeferredCubeLight.hpp
+    SceneMain/world/DeferredCubeLight.hpp \
+    SceneMain/world/generator/TaskPool.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \

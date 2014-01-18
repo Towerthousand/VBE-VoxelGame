@@ -33,6 +33,7 @@ class Chunk {
 
 		unsigned int getCube(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
 		void pushCubeToArray(short x, short y, short z, std::vector<Vert>& renderData);
+		void initMesh();
 
 		unsigned int cubes[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 		const int XPOS; //in chunks

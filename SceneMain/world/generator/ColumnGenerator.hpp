@@ -1,19 +1,41 @@
 #ifndef WORLDGENERATOR_HPP
 #define WORLDGENERATOR_HPP
 #include "commons.hpp"
+#include "TaskPool.hpp"
 
 class FunctionTerrain;
 class Column;
-class ColumnGenerator {
+class ColumnGenerator : protected TaskPool {
 	public:
-		ColumnGenerator(int seed);
+		 ColumnGenerator(int seed);
 		~ColumnGenerator();
 
-		Column* getColumn(int x, int z);
+		void enqueueTask(vec2i column);
+		void discardTasks();
+		bool currentlyWorking(vec2i column);
+		Column* pullDone();
 
 	private:
-		std::mt19937 generator; //Mersenne twister with nice configuration
-		FunctionTerrain* entry; //root function for the generation tree
+		struct Comp{
+				bool operator()(const vec2i& a, const vec2i& b) {
+					if(a.x != b.x) return a.x < b.x;
+					if(a.y != b.y) return a.y < b.y;
+					return false;
+				}
+				bool operator()(const std::pair<float,vec2i>& a, const std::pair<float,vec2i>& b) {
+					if(a.first != b.first) return a.first < b.first;
+					if(a.second.x != b.second.x) return a.second.x < b.second.x;
+					if(a.second.y != b.second.y) return a.second.y < b.second.y;
+					return false;
+				}
+		};
+
+		std::mutex              currentMutex;
+		std::set<vec2i, Comp>   current;
+		std::mutex          doneMutex;
+		std::queue<Column*> done;
+		std::mt19937 generator;
+		FunctionTerrain* entry;
 };
 
 #endif // WORLDGENERATOR_HPP

@@ -12,7 +12,10 @@
 #include "FunctionTerrainHeightmap.hpp"
 #include "FunctionTerrainJoin.hpp"
 
+#define GENERATIONHEIGHT 16
+
 ColumnGenerator::ColumnGenerator(int seed) :
+	TaskPool(4, [](){VBE_LOG("Generating Worker Thread for chunk Generator");}),
 	entry(NULL) {
 	generator.seed(seed);
 	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
@@ -37,34 +40,65 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	entry = over2;
 }
 
-ColumnGenerator::~ColumnGenerator() {
-	delete entry; //will delete all child node functions recursively into the function tree
+ColumnGenerator::~ColumnGenerator()
+{
+	delete entry;
 }
 
-Column* ColumnGenerator::getColumn(int x, int z) {
-	Column* col = new Column(x,z);
-	col->chunks.resize(16,nullptr);
-	ID3Data data = entry->getID3Data(x*CHUNKSIZE,0,z*CHUNKSIZE,CHUNKSIZE,CHUNKSIZE*16,CHUNKSIZE);
-	for(int i = 0; i < 16; ++i) {
-		col->chunks[i] = new Chunk(x,i,z);
-		bool full = false;
-		for(int x = 0; x < CHUNKSIZE; ++x)
-			for(int y = 0; y < CHUNKSIZE; ++y)
-				for(int z = 0; z < CHUNKSIZE; ++z) {
-					if(data[x][i*CHUNKSIZE+y][z] != 0)
-						full = true;
-					col->chunks[i]->cubes[x][y][z] = data[x][i*CHUNKSIZE+y][z];
-				}
-		if(!full) {
-			delete col->chunks[i];
-			col->chunks[i] = nullptr;
+void ColumnGenerator::enqueueTask(vec2i colPos) {
+	enqueue([this, colPos]() {
+		{
+			std::unique_lock<std::mutex> lock(currentMutex);
+			auto result = current.insert(colPos);
+			VBE_ASSERT(result.second, "you may not enqueue a column that is already being worked on");
 		}
-	}
-	for(int i = 15; i >= 0; --i) {
-		if(col->chunks[i] == nullptr)
-			col->chunks.resize(i);
-		else
-			break;
-	}
-	return col;
+
+		Column* col = new Column(colPos.x,colPos.y);
+		col->chunks.resize(GENERATIONHEIGHT,nullptr);
+		ID3Data data = entry->getID3Data(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE,CHUNKSIZE,CHUNKSIZE*GENERATIONHEIGHT,CHUNKSIZE);
+		for(int i = 0; i < GENERATIONHEIGHT; ++i) {
+			col->chunks[i] = new Chunk(colPos.x,i,colPos.y);
+			bool full = false;
+			for(int x = 0; x < CHUNKSIZE; ++x)
+				for(int y = 0; y < CHUNKSIZE; ++y)
+					for(int z = 0; z < CHUNKSIZE; ++z) {
+						if(data[x][i*CHUNKSIZE+y][z] != 0) full = true;
+						col->chunks[i]->cubes[x][y][z] = data[x][i*CHUNKSIZE+y][z];
+					}
+			if(!full) {
+				delete col->chunks[i];
+				col->chunks[i] = nullptr;
+			}
+		}
+		for(int i = GENERATIONHEIGHT-1; i >= 0; --i) {
+			if(col->chunks[i] == nullptr) col->chunks.resize(i);
+			else break;
+		}
+
+		{
+			std::unique_lock<std::mutex> lock(currentMutex);
+			std::unique_lock<std::mutex> lock2(doneMutex);
+			current.erase(colPos);
+			done.push(col);
+		}
+	});
+}
+
+void ColumnGenerator::discardTasks() {
+	discard();
+}
+
+bool ColumnGenerator::currentlyWorking(vec2i column) {
+	std::unique_lock<std::mutex> lock(currentMutex);
+	return current.find(column) != current.end();
+}
+
+Column* ColumnGenerator::pullDone() {
+	std::unique_lock<std::mutex> lock(doneMutex);
+	if (done.empty()) return nullptr;
+
+	Column* result = done.front();
+	done.pop();
+
+	return result;
 }

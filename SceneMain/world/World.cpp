@@ -9,30 +9,41 @@ World::World() : generator(rand()), renderer(nullptr) {
 	setName("World");
 	for(int x = 0; x < WORLDSIZE; ++x)
 		for(int z = 0; z < WORLDSIZE; ++z)
-			columns[x][z] = generator.getColumn(x,z);
+			columns[x][z] = nullptr;
 }
 
 World::~World() {
 }
 
 void World::update(float deltaTime) {
+	generator.discardTasks();
+	Column* newCol = nullptr;
+	while((newCol = generator.pullDone()) != nullptr) {
+		if(columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] != nullptr) delete newCol;
+		else columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
+	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
+	std::vector<std::pair<float,std::pair<int,int>>> tasks;
 	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
 		for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
 			vec2f colPos = playerChunkPos + vec2f(x,z);
 			Column* actual = getColumn(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE);
-			if(actual == nullptr || actual->getX() != colPos.x || actual->getZ() != colPos.y) {
-				delete actual;
-				actual = generator.getColumn(colPos.x,colPos.y);
-				columns[int(colPos.x)&WORLDSIZE_MASK][int(colPos.y)&WORLDSIZE_MASK] = actual;
+			if((actual == nullptr || actual->getX() != colPos.x || actual->getZ() != colPos.y) && !generator.currentlyWorking(vec2i(colPos))) {
+				if(actual != nullptr) delete actual;
+				tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(playerChunkPos-colPos),std::pair<int,int>(colPos.x,colPos.y)));
+				columns[int(colPos.x)&WORLDSIZE_MASK][int(colPos.y)&WORLDSIZE_MASK] = nullptr;
+				continue;
 			}
+			if(actual == nullptr) continue;
 			for(unsigned int y = 0; y < actual->getChunks().size(); ++y){
 				Chunk* c = actual->getChunks()[y];
 				if(c == nullptr) continue;
 				c->update(deltaTime);
 			}
 		}
+	std::sort(tasks.begin(),tasks.end());
+	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
 }
 
 void World::draw() const{
@@ -42,12 +53,15 @@ void World::draw() const{
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
 
 	for(unsigned int x = 0; x < WORLDSIZE; ++x)
-		for(unsigned int z = 0; z < WORLDSIZE; ++z)
-			for(unsigned int y = 0; y < columns[x][z]->getChunks().size(); ++y) {
-				Chunk* actual = columns[x][z]->getChunks()[y];
+		for(unsigned int z = 0; z < WORLDSIZE; ++z) {
+			Column* col = columns[x][z];
+			if(col == nullptr) continue;
+			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
+				Chunk* actual = col->getChunks()[y];
 				if(actual == nullptr || actual->getVertexCount() == 0 || !cam->getFrustum().insideFrustum(vec3f(actual->getAbsolutePos()+vec3i(CHUNKSIZE/2)),sqrt(3)*CHUNKSIZE)) continue;
 				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
 			}
+		}
 
 	//do occlusion culling here!
 	int layers = 10;
