@@ -8,6 +8,7 @@ Entity::~Entity() {
 }
 
 void Entity::update(float deltaTime) {
+	(void) deltaTime;
 }
 
 void Entity::draw() const {

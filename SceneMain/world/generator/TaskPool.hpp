@@ -1,5 +1,5 @@
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
+#ifndef TASKPOOL_HPP
+#define TASKPOOL_HPP
 
 #include <vector>
 #include <queue>
@@ -90,4 +90,4 @@ inline void TaskPool::discard() {
 	tasks = std::queue< std::function<void()> >();
 }
 
-#endif
+#endif //TASKPOOL_HPP

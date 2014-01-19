@@ -86,8 +86,9 @@ void DeferredCubeLight::calcLight() {
 			for(int z = 0; z < LIGHTSIZE*2; z++)
 				data[z][y][x] = (unsigned char)(light[x][y][z]*255);
 
-	tex.loadFromRaw(data, LIGHTSIZE*2, LIGHTSIZE*2, LIGHTSIZE*2, Texture::RED, Texture::UNSIGNED_BYTE, Texture::R8,false);
+	tex.loadFromRaw(data, LIGHTSIZE*2, LIGHTSIZE*2, LIGHTSIZE*2, Texture::RED, Texture::UNSIGNED_BYTE, Texture::R8, false, 15);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);
+	tex.setWrap(GL_CLAMP_TO_BORDER);
 }
 
 void DeferredCubeLight::update(float deltaTime) {

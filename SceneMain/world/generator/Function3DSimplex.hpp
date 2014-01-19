@@ -8,7 +8,6 @@ class Function3DSimplex : public Function3D {
 		~Function3DSimplex();
 		float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
 	private:
-		//THESE ARE NOT CURRENTLY USED. USING GLM::SIMPLEX INSTEAD
 		float valSimplex3D( const float x, const float y, const float z ); //world coords, return is in [min,max]
 		int fastfloor(const float x);
 		float dot(const int* g, const float x, const float y, const float z);

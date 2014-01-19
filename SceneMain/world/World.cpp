@@ -52,8 +52,8 @@ void World::draw() const{
 
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
 
-	for(unsigned int x = 0; x < WORLDSIZE; ++x)
-		for(unsigned int z = 0; z < WORLDSIZE; ++z) {
+	for(int x = 0; x < WORLDSIZE; ++x)
+		for(int z = 0; z < WORLDSIZE; ++z) {
 			Column* col = columns[x][z];
 			if(col == nullptr) continue;
 			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {

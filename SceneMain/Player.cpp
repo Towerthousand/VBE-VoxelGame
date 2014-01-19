@@ -96,7 +96,7 @@ void Player::processKeys() {
 	{
 		std::vector<DeferredCubeLight*> lights;
 		getGame()->getAllObjectsOfType(lights);
-		for(int i = 0; i < lights.size(); i++)
+		for(unsigned int i = 0; i < lights.size(); i++)
 			lights[i]->calcLight();
 	}
 

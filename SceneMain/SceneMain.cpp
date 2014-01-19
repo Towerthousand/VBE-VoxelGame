@@ -11,6 +11,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
 
 	loadResources();
+	srand(GLOBALCLOCK.getElapsedTime().asMilliseconds());
 
 	//GL stuff..:
 	glClearColor(0, 0, 0, 1);

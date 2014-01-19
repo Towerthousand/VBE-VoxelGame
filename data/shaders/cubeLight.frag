@@ -38,8 +38,8 @@ void main(void) {
         float lightDist = length(lightVector);
         lightVector /= lightDist;
 
-        if(lightDist > lightRadius)
-            discard;
+		if(lightDist > lightRadius)
+			discard;
 
         vec4 valColor0 = texture(color0, vTexCoord);
         vec4 valColor1 = texture(color1, vTexCoord);
@@ -51,8 +51,8 @@ void main(void) {
 
         vec3 posRelativeToLight = (invView * vec4(fragmentPos+normalVector*0.1 - lightPos, 0.0f)).xyz;
         float blockLight = texture(tex, (posRelativeToLight+0.5)/(2*lightRadius) + 0.5f).r;
-        if(blockLight < 0.01)
-            discard;
+		if(blockLight < 0.01)
+		   discard;
 
 		//Blinn-Phong shading
         vec3 E = normalize(-fragmentPos);
@@ -63,5 +63,5 @@ void main(void) {
 
         gl_FragDepth = texture(depth, vTexCoord).x;
 
-        color = vec4(lightColor * cosTheta * attenuationFactor * blockLight * (matDiffuseColor + matSpecularColor * pow(cosAlpha, 1000) * blockLight), 1.0f);
+		color = vec4(lightColor * cosTheta * attenuationFactor * blockLight * (matDiffuseColor + matSpecularColor * pow(cosAlpha, 1000) * blockLight), 1.0f);
 }

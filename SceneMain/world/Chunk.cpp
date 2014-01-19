@@ -14,7 +14,8 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 								   {9, 9, 9, 9, 9, 9}  //8 = sand
 								 };
 
-Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), vertexCount(0), modelMatrix(mat4f(1.0f)), markedForRedraw(true), world((World*)Game::i()->getObjectByName("World")) {
+Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), vertexCount(0), modelMatrix(mat4f(1.0f)), markedForRedraw(true), world(nullptr) {
+	if(Game::i() != nullptr) world = (World*)Game::i()->getObjectByName("World");
 	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
 	memset(cubes,0,sizeof(cubes));
 }

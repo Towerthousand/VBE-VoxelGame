@@ -13,9 +13,10 @@
 #include "FunctionTerrainJoin.hpp"
 
 #define GENERATIONHEIGHT 16
+#define NWORKERS 3
 
 ColumnGenerator::ColumnGenerator(int seed) :
-	TaskPool(4, [](){VBE_LOG("Generating Worker Thread for chunk Generator");}),
+	TaskPool(NWORKERS, [](){std::cout << "Generating Worker Thread for chunk Generator\n";}),
 	entry(NULL) {
 	generator.seed(seed);
 	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
@@ -40,8 +41,7 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	entry = over2;
 }
 
-ColumnGenerator::~ColumnGenerator()
-{
+ColumnGenerator::~ColumnGenerator() {
 	delete entry;
 }
 
