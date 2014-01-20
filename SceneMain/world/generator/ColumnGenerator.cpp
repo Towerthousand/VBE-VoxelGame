@@ -49,8 +49,8 @@ void ColumnGenerator::enqueueTask(vec2i colPos) {
 	enqueue([this, colPos]() {
 		{
 			std::unique_lock<std::mutex> lock(currentMutex);
-			auto result = current.insert(colPos);
-			VBE_ASSERT(result.second, "you may not enqueue a column that is already being worked on");
+			VBE_ASSERT(current.find(colPos) == current.end(), "You may not enqueue a colum that is already being worked on");
+			current.insert(colPos);
 		}
 
 		Column* col = new Column(colPos.x,colPos.y);

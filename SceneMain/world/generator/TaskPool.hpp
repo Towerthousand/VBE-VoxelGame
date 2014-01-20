@@ -14,8 +14,7 @@
 
 class TaskPool {
 	public:
-		TaskPool(size_t threads);
-		TaskPool(size_t threads, std::function<void()>);
+		TaskPool(size_t threads, std::function<void()> = [](){});
 		~TaskPool();
 
 		template<class F, class... Args>
@@ -32,9 +31,6 @@ class TaskPool {
 		std::condition_variable condition;
 		bool stop;
 };
-
-inline TaskPool::TaskPool(size_t threads) : TaskPool(threads, [](){}) {
-}
 
 inline TaskPool::TaskPool(size_t threads, std::function<void()> init) : stop(false) {
 	for(size_t i = 0;i<threads;++i)
