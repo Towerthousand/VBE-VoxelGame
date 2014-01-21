@@ -2,7 +2,7 @@
 #define DEFERREDCUBELIGHT_HPP
 #include "commons.hpp"
 
-#define LIGHTSIZE 16
+#define LIGHTSIZE 64
 
 class World;
 class DeferredContainer;
@@ -14,9 +14,10 @@ class DeferredCubeLight : public GameObject {
 		void update(float deltaTime);
 		void draw() const;
 
-		void calcLight();
+		void calcLight(int cx = 0, int cy = 0, int cz = 0);
 	private:
-		void count(float light[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2], std::pair<float, float>& p, float px, float py, float pz, int x, int y, int z);
+		void count(std::pair<float, float>& pr, vec3i p, vec3i c);
+		void calcQuadrant(int cx, int cy, int cz, int dx, int dy, int dz);
 		float light[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2];
 		unsigned char data[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2];
 		vec3f pos;

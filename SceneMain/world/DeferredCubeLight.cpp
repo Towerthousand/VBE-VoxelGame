@@ -7,7 +7,10 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	world = (World*)getGame()->getObjectByName("World");
 
-	calcLight();
+	int x0 = int(floor(pos.x));
+	int y0 = int(floor(pos.y));
+	int z0 = int(floor(pos.z));
+	calcLight(x0, y0, z0);
 
 	quad.mesh = Meshes.get("quad");
 	quad.program = Programs.get("deferredCubeLight");
@@ -16,75 +19,84 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 DeferredCubeLight::~DeferredCubeLight() {
 }
 
-void DeferredCubeLight::count(float light[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2], std::pair<float, float>& p, float px, float py, float pz, int x, int y, int z) {
-	float c1 = x*px+y*py+z*pz;
-	float c2 = px*px+py*py+pz*pz;
-	float b = c1 / c2;
+void DeferredCubeLight::count(std::pair<float, float>& pr, vec3i p, vec3i c) {
+	float c1 = glm::dot(p, c);
+	float c2 = glm::dot(p, p);
+	vec3f b = vec3f(p) * (c1 / c2);
 
-	float bx = px*b;
-	float by = py*b;
-	float bz = pz*b;
-
-	float d = sqrt((x-bx)*(x-bx)+(y-by)*(y-by)+(z-bz)*(z-bz));
+	float d = glm::distance(b, vec3f(c));
 
 	float w = 1-d;
 	if(w < 0) w = 0;
 
 	if(w == 0) return;
 
-	p.first += light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE]*w;
-	p.second += w;
+	pr.first += light[c.x+LIGHTSIZE][c.y+LIGHTSIZE][c.z+LIGHTSIZE]*w;
+	pr.second += w;
 }
 
 inline int sign(int n) {
 	return n<0?-1:1;
 }
 
-void DeferredCubeLight::calcLight() {
+void DeferredCubeLight::calcQuadrant(int cx, int cy, int cz, int dx, int dy, int dz) {
+	if(cx*dx < 0 || cy*dy < 0 || cz*dz < 0)
+		return;
 
 	int x0 = int(floor(pos.x));
 	int y0 = int(floor(pos.y));
 	int z0 = int(floor(pos.z));
 
-	light[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE] = 1;
-
-	for(int x2 = -LIGHTSIZE; x2 < LIGHTSIZE; x2++) {
-		int x = x2 <= 0 ? -x2 - LIGHTSIZE : x2;
-		int dx = sign(x);
-		for(int y2 = -LIGHTSIZE; y2 < LIGHTSIZE; y2++) {
-			int y = y2 <= 0 ? -y2 - LIGHTSIZE : y2;
-			int dy = sign(y);
-			for(int z2 = -LIGHTSIZE; z2 < LIGHTSIZE; z2++) {
-				int z = z2 <= 0 ? -z2 - LIGHTSIZE : z2;
-				int dz = sign(z);
+	for(int x = cx; x >= -LIGHTSIZE && x < LIGHTSIZE; x+=dx) {
+		for(int y = cy; y >= -LIGHTSIZE && y < LIGHTSIZE; y+=dy) {
+			for(int z = cz; z >= -LIGHTSIZE && z < LIGHTSIZE; z+=dz) {
 
 				if((x == 0 && y == 0 && z == 0) || sqrt(x*x + y*y + z*z) > LIGHTSIZE) continue;
 
-				if(world->getCube(x+x0, y+y0, z+z0) != 0) {
+				if(world->getCube(x+x0, y+y0, z+z0) != 0)
 					light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE] = 0;
-					continue;
+				else
+				{
+					std::pair<float, float> p (0, 0);
+					count(p, vec3i(x, y, z), vec3i(x-dx, y, z));
+					count(p, vec3i(x, y, z), vec3i(x, y-dy, z));
+					count(p, vec3i(x, y, z), vec3i(x, y, z-dz));
+					count(p, vec3i(x, y, z), vec3i(x-dx, y-dy, z));
+					count(p, vec3i(x, y, z), vec3i(x-dx, y, z-dz));
+					count(p, vec3i(x, y, z), vec3i(x, y-dy, z-dz));
+					count(p, vec3i(x, y, z), vec3i(x-dx, y-dy, z-dz));
+
+					p.first /= p.second;
+
+					light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE] = p.first;
 				}
-
-				std::pair<float, float> p (0, 0);
-				count(light, p, x, y, z, x-dx, y, z);
-				count(light, p, x, y, z, x, y-dy, z);
-				count(light, p, x, y, z, x, y, z-dz);
-				count(light, p, x, y, z, x-dx, y-dy, z);
-				count(light, p, x, y, z, x-dx, y, z-dz);
-				count(light, p, x, y, z, x, y-dy, z-dz);
-				count(light, p, x, y, z, x-dx, y-dy, z-dz);
-
-				p.first /= p.second;
-
-				light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE] = p.first;
+				data[z+LIGHTSIZE][y+LIGHTSIZE][x+LIGHTSIZE] = (unsigned char)(light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE]*255);
 			}
 		}
 	}
+}
 
-	for(int x = 0; x < LIGHTSIZE*2; x++)
-		for(int y = 0; y < LIGHTSIZE*2; y++)
-			for(int z = 0; z < LIGHTSIZE*2; z++)
-				data[z][y][x] = (unsigned char)(light[x][y][z]*255);
+void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
+
+	light[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE] = 1;
+	data[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE] = (unsigned char)(light[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE]*255);
+
+	int x0 = int(floor(pos.x));
+	int y0 = int(floor(pos.y));
+	int z0 = int(floor(pos.z));
+
+	cx -= x0;
+	cy -= y0;
+	cz -= z0;
+
+	calcQuadrant(cx, cy, cz, -1, -1, -1);
+	calcQuadrant(cx, cy, cz, -1, -1,  1);
+	calcQuadrant(cx, cy, cz, -1,  1, -1);
+	calcQuadrant(cx, cy, cz, -1,  1,  1);
+	calcQuadrant(cx, cy, cz,  1, -1, -1);
+	calcQuadrant(cx, cy, cz,  1, -1,  1);
+	calcQuadrant(cx, cy, cz,  1,  1, -1);
+	calcQuadrant(cx, cy, cz,  1,  1,  1);
 
 	tex.loadFromRaw(data, LIGHTSIZE*2, LIGHTSIZE*2, LIGHTSIZE*2, Texture::RED, Texture::UNSIGNED_BYTE, Texture::R8, false, 15);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);

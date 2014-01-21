@@ -77,10 +77,15 @@ void Player::processKeys() {
 	Input::setMousePos(SCRWIDTH/2, SCRHEIGHT/2, getGame()->getWindow());
 
 	bool recalc = false;
+	vec3i recalcBlock;
+
+	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
+
 	//take block
 	if(Input::isMousePressed(sf::Mouse::Left))
 		if(targetsBlock) {
 			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
+			recalcBlock = targetedBlock;
 			recalc = true;
 		}
 
@@ -89,6 +94,7 @@ void Player::processKeys() {
 		if(targetsBlock) {
 			VBE_LOG(targetedBlockEnter.x << " " << targetedBlockEnter.y << " " << targetedBlockEnter.z);
 			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
+			recalcBlock = targetedBlockEnter;
 			recalc = true;
 		}
 
@@ -97,7 +103,10 @@ void Player::processKeys() {
 		std::vector<DeferredCubeLight*> lights;
 		getGame()->getAllObjectsOfType(lights);
 		for(unsigned int i = 0; i < lights.size(); i++)
-			lights[i]->calcLight();
+		{
+			DeferredCubeLight* l = lights[i];
+			l->calcLight(recalcBlock.x, recalcBlock.y, recalcBlock.z);
+		}
 	}
 
 	if(Input::isKeyPressed(sf::Keyboard::L)) {
