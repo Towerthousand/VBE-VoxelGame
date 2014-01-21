@@ -11,6 +11,13 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->build();
     gBuffer->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
     gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+
+	sunTarget = new RenderTarget();
+	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
+	sunTarget->build();
+	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setComparison(GL_LESS);
 
     quad.mesh = Meshes.get("quad");
     quad.program = Programs.get("ambientPass");
@@ -36,6 +43,8 @@ void DeferredContainer::draw() const {
 	RenderTarget::bind(gBuffer);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	ContainerObject::draw();
+
+	RenderTarget::bind(sunTarget);
 
 	RenderTarget::bind(screen);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

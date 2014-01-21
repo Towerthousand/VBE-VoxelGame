@@ -38,8 +38,8 @@ void main(void) {
         float lightDist = length(lightVector);
         lightVector /= lightDist;
 
-		if(lightDist > lightRadius)
-			discard;
+                if(lightDist > lightRadius)
+                        discard;
 
         vec4 valColor0 = texture(color0, vTexCoord);
         vec4 valColor1 = texture(color1, vTexCoord);
