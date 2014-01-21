@@ -1,7 +1,6 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
 #include "commons.hpp"
-#include "Cube.hpp"
 #include "generator/ColumnGenerator.hpp"
 
 class Column;

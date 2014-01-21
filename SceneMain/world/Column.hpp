@@ -1,7 +1,6 @@
 #ifndef COLUMN_HPP
 #define COLUMN_HPP
 #include "commons.hpp"
-#include "Cube.hpp"
 
 class Chunk;
 class Column {

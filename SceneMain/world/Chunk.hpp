@@ -1,7 +1,6 @@
 #ifndef CHUNK_HPP
 #define CHUNK_HPP
 #include "commons.hpp"
-#include "Cube.hpp"
 
 class World;
 class Chunk {

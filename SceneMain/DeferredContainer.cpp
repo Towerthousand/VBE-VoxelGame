@@ -34,17 +34,19 @@ void DeferredContainer::update(float deltaTime) {
 void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
 	RenderTarget* screen = RenderTarget::getCurrent();
-    //G BUFFER
+	//G BUFFER
 	glEnable(GL_DEPTH_TEST);
-    glDisable(GL_ALPHA_TEST);
+	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND); //no transparency whatsoever
 
-    drawMode = Deferred;
+	drawMode = Deferred;
 	RenderTarget::bind(gBuffer);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	ContainerObject::draw();
 
 	RenderTarget::bind(sunTarget);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	ContainerObject::draw();
 
 	RenderTarget::bind(screen);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

@@ -7,10 +7,13 @@ Frustum::Plane::Plane(vec3f p0, vec3f p1, vec3f p2) {
 	d = -glm::dot(n,p0);
 }
 
-Frustum::Plane::Plane(vec3f n, vec3f p) : n(n), d(-glm::dot(n,p)) {
+Frustum::Plane::Plane(vec3f n, vec3f p) : n(glm::normalize(n)), d(-glm::dot(n,p)) {
 }
 
-Frustum::Plane::Plane(vec3f n, float d) : n(n), d(d){
+Frustum::Plane::Plane(vec3f n, float d) : n(glm::normalize(n)), d(d){
+}
+
+Frustum::Plane::Plane(vec4f ABCD) : n(glm::normalize(vec3f(ABCD))), d(ABCD.z) {
 }
 
 Frustum::Plane::Plane() : n(0), d(0) {
@@ -42,6 +45,7 @@ bool Frustum::insideFrustum( const vec3f &center, float radius) const {
 }
 
 void Frustum::calculate(mat4f viewMatrix) {
+	// OLD WAY, ONLY WORKS WITH PRESPECTIVE CAMERAS AND IT'S SLOOOOW
 	//calculate frustum with dir, pos , znear, zfar, fov, screen ratio
 	vec3f
 			dir(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]),//same as the player's pov
@@ -82,5 +86,16 @@ void Frustum::calculate(mat4f viewMatrix) {
 	planes[TOP] = Plane(ntl,ftl,ftr);
 	planes[BOTTOM] = Plane(nbl,nbr,fbr);
 	planes[LEFT] = Plane(nbl,fbl,ftl);
-	planes[RIGHT] = Plane(ntr,ftr,fbr);
+	planes[RIGHT] = Plane(ntr,ftr,fbr);	
+	
+	/**
+	NEW WAY
+		You pass into this function a VP matrix (projection*view) of the camera.
+	mat4f VP;
+	
+	planes[LEFT] 	= Plane( VP[0]+VP[3]);
+	planes[RIGHT] 	= Plane(-VP[0]+VP[3]);
+	planes[BOTTOM] 	= Plane( VP[1]+VP[3]);
+	planes[TOP]	= Plane(-VP[1]+VP[3]);
+	**/
 }
