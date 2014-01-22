@@ -34,7 +34,7 @@ class Frustum {
 		Frustum();
 		~Frustum();
 
-		void calculate(mat4f viewMatrix);
+		void calculate(mat4f viewMatrix, mat4f VP);
 		bool insideFrustum(const vec3f& center, float radius) const;
 
 	private:
