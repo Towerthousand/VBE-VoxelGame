@@ -22,7 +22,7 @@ void Camera::update(float deltaTime) {
 	view = glm::rotate(view, rot.y, vec3f(0, 1, 0));
 	view = glm::rotate(view, rot.z, vec3f(0, 0, 1));
 	view = glm::translate(view, -getWorldPos());
-	frustum.calculate(view, projection*view);
+	frustum.calculate(projection*view);
 }
 
 vec3f Camera::getWorldPos() const {

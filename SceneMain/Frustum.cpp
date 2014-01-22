@@ -47,73 +47,31 @@ bool Frustum::insideFrustum( const vec3f &center, float radius) const {
 	return true;
 }
 
-void Frustum::calculate(mat4f viewMatrix, mat4f VP) { //passing viewMatrix just so that way 1 doesn't break yet
-	// FIRST WAY, ONLY WORKS WITH PRESPECTIVE CAMERAS AND IT'S SLOOOOW
-	//calculate frustum with dir, pos , znear, zfar, fov, screen ratio
-	vec3f
-			dir(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]),//same as the player's pov
-			side(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), //x of the camera in world coords
-			up(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]); //up vector of the camera in world coords
-
-	float tfov = (float)tan(DEG_TO_RAD * FOV * 0.5) ; //half FOV in rads
-	float ratio = float(SCRWIDTH)/float(SCRHEIGHT);
-	vec3f camPos = vec3f(glm::inverse(viewMatrix)*vec4f(0,0,0,1));
-
-	float nh,nw,fh,fw;
-	vec3f
-			nc,fc,
-			ntl,ntr,nbl,nbr,
-			ftl,ftr,fbl,fbr;
-	nh = ZNEAR * tfov; //near height
-	nw = nh * ratio;   //near width
-	fh = ZFAR  * tfov; //far height
-	fw = fh * ratio;   //far width
-
-	// compute the centers of the near and far planes
-	nc = camPos - dir * ZNEAR;
-	fc = camPos - dir * ZFAR;
-	
-	// compute the 4 corners of the frustum on the near plane
-	ntl = nc + (up * nh) - (side * nw);
-	ntr = nc + (up * nh) + (side * nw);
-	nbl = nc - (up * nh) - (side * nw);
-	nbr = nc - (up * nh) + (side * nw);
-
-	// compute the 4 corners of the frustum on the far plane
-	ftl = fc + (up * fh) - (side * fw);
-	ftr = fc + (up * fh) + (side * fw);
-	fbl = fc - (up * fh) - (side * fw);
-	fbr = fc - (up * fh) + (side * fw);
-
-	// compute the six planes
-	planes[TOP]	= Plane(ntl,ftl,ftr);
-	planes[BOTTOM] 	= Plane(nbl,nbr,fbr);
-	planes[LEFT]	= Plane(nbl,fbl,ftl);
-	planes[RIGHT]	= Plane(ntr,ftr,fbr);	
-	
-	//SECOND WAY (handles all types of cameras. Not working T.T)
+void Frustum::calculate(mat4f VP) { //passing viewMatrix just so that way 1 doesn't break yet
+	//FIRST WAY (handles all types of cameras. Not working T.T)
 	planes[LEFT] 	= Plane( VP[0]+VP[3]);
 	planes[RIGHT] 	= Plane(-VP[0]+VP[3]);
 	planes[BOTTOM] 	= Plane( VP[1]+VP[3]);
-	planes[TOP]	= Plane(-VP[1]+VP[3]);
+	planes[TOP]		= Plane(-VP[1]+VP[3]);
 	
-	//THIRD WAY (handles all types of cameras. Not tested)
+	//SECOND WAY (handles all types of cameras. Not tested)
 	mat4f invVP = glm::inverse(VP);
+	vec4f ntl,ntr,nbl,nbr,ftl,ftr,fbl,fbr;
 	// compute the 4 corners of the frustum on the near plane
-	ntl = vec3f(invVP * vec4f(-1, 1,-1, 1));
-	ntr = vec3f(invVP * vec4f( 1, 1,-1, 1));
-	nbl = vec3f(invVP * vec4f(-1,-1,-1, 1));
-	nbr = vec3f(invVP * vec4f( 1,-1,-1, 1));
+	ntl = invVP * vec4f(-1, 1,-1, 1);
+	ntr = invVP * vec4f( 1, 1,-1, 1);
+	nbl = invVP * vec4f(-1,-1,-1, 1);
+	nbr = invVP * vec4f( 1,-1,-1, 1);
 
 	// compute the 4 corners of the frustum on the far plane
-	ftl = vec3f(invVP * vec4f(-1, 1, 1, 1));
-	ftr = vec3f(invVP * vec4f( 1, 1, 1, 1));
-	fbl = vec3f(invVP * vec4f(-1,-1, 1, 1));
-	fbr = vec3f(invVP * vec4f( 1,-1, 1, 1));
+	ftl = invVP * vec4f(-1, 1, 1, 1);
+	ftr = invVP * vec4f( 1, 1, 1, 1);
+	fbl = invVP * vec4f(-1,-1, 1, 1);
+	fbr = invVP * vec4f( 1,-1, 1, 1);
 	
 	// compute the six planes
-	planes[TOP]	= Plane(ntl,ftl,ftr);
-	planes[BOTTOM]	= Plane(nbl,nbr,fbr);
-	planes[LEFT]	= Plane(nbl,fbl,ftl);
-	planes[RIGHT]	= Plane(ntr,ftr,fbr);	
+	planes[TOP]	    = Plane(vec3f(ntl/ntl.w),vec3f(ftl/ftl.w),vec3f(ftr/ftr.w));
+	planes[BOTTOM]	= Plane(vec3f(nbl/nbl.w),vec3f(nbr/nbr.w),vec3f(fbr/fbr.w));
+	planes[LEFT]	= Plane(vec3f(nbl/nbl.w),vec3f(fbl/fbl.w),vec3f(ftl/ftl.w));
+	planes[RIGHT]	= Plane(vec3f(ntr/ntr.w),vec3f(ftr/ftr.w),vec3f(fbr/fbr.w));
 }
