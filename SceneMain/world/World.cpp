@@ -47,8 +47,10 @@ void World::update(float deltaTime) {
 }
 
 void World::draw() const{
-	if(renderer->getMode() != DeferredContainer::Deferred) return;
-	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
+	Camera* cam;
+	if(renderer->getMode() == DeferredContainer::Deferred) cam = (Camera*)getGame()->getObjectByName("playerCam");
+	//else if(renderer->getMode() == DeferredContainer::ShadowMap) cam = (Camera*)getGame()->getObjectByName("sunCam");
+	else return;
 
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
 

@@ -44,6 +44,7 @@ void DeferredContainer::draw() const {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	ContainerObject::draw();
 
+	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	ContainerObject::draw();

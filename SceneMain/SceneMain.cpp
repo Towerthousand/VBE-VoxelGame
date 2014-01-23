@@ -24,21 +24,18 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 
 	//getGame()->getWindow().setVerticalSyncEnabled(true);
 
-	//add player cam
-	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
-	player->addTo(this);
-
-	//Add blur
 	BlurContainer* blur = new BlurContainer();
 	blur->addTo(this);
 
-	//add deferred renderer
 	DeferredContainer* renderer = new DeferredContainer();
 	renderer->addTo(blur);
 
 	World* world = new World();
 	world->addTo(renderer);
+
+	Player* player = new Player();
+	player->getCam()->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
+	player->addTo(this);
 }
 
 SceneMain::~SceneMain() {
