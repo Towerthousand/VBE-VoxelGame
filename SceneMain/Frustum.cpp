@@ -47,12 +47,12 @@ bool Frustum::insideFrustum( const vec3f &center, float radius) const {
 	return true;
 }
 
-void Frustum::calculate(mat4f VP) { //passing viewMatrix just so that way 1 doesn't break yet
+void Frustum::calculate(mat4f VP) { //VP == projection*view
 	//FIRST WAY (handles all types of cameras. Not working T.T)
-	planes[LEFT] 	= Plane( VP[0]+VP[3]);
-	planes[RIGHT] 	= Plane(-VP[0]+VP[3]);
-	planes[BOTTOM] 	= Plane( VP[1]+VP[3]);
-	planes[TOP]		= Plane(-VP[1]+VP[3]);
+	planes[LEFT]	= Plane( VP[0]+VP[3]);
+	planes[RIGHT]	= Plane(-VP[0]+VP[3]);
+	planes[BOTTOM]	= Plane( VP[1]+VP[3]);
+	planes[TOP]	= Plane(-VP[1]+VP[3]);
 	
 	//SECOND WAY (handles all types of cameras. Not tested)
 	mat4f invVP = glm::inverse(VP);
@@ -70,7 +70,7 @@ void Frustum::calculate(mat4f VP) { //passing viewMatrix just so that way 1 does
 	fbr = invVP * vec4f( 1,-1, 1, 1);
 	
 	// compute the six planes
-	planes[TOP]	    = Plane(vec3f(ntl/ntl.w),vec3f(ftl/ftl.w),vec3f(ftr/ftr.w));
+	planes[TOP]	= Plane(vec3f(ntl/ntl.w),vec3f(ftl/ftl.w),vec3f(ftr/ftr.w));
 	planes[BOTTOM]	= Plane(vec3f(nbl/nbl.w),vec3f(nbr/nbr.w),vec3f(fbr/fbr.w));
 	planes[LEFT]	= Plane(vec3f(nbl/nbl.w),vec3f(fbl/fbl.w),vec3f(ftl/ftl.w));
 	planes[RIGHT]	= Plane(vec3f(ntr/ntr.w),vec3f(ftr/ftr.w),vec3f(fbr/fbr.w));
