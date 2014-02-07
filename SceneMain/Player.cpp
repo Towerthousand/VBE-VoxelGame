@@ -65,12 +65,6 @@ void Player::processKeys() {
 		if (onFloor && !isJumping)
 			vel.y = 15;
 
-	if(Input::isKeyDown(sf::Keyboard::C)) {
-		cam->pos.y = 0.5;
-	}
-	else {
-		cam->pos.y = 1.5;
-	}
 	//look around
 	if(Input::getMouseDisplacement() != vec2i(0, 0))
 		cam->rot += vec3f(Input::getMouseDisplacement().y*0.1f, Input::getMouseDisplacement().x*0.1f, 0);

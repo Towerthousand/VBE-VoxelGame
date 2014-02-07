@@ -3,7 +3,8 @@
 Frustum::Plane::Plane(vec3f p0, vec3f p1, vec3f p2) {
 	vec3f v = p1-p0;
 	vec3f u = p2-p0;
-	n = glm::normalize(glm::cross(u,v));
+	n = glm::cross(u,v);
+	if(glm::length(n) > 0.001f) n = glm::normalize(n);
 	d = -glm::dot(n,p0);
 }
 
