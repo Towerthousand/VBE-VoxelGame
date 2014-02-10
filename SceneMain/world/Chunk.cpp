@@ -1,6 +1,5 @@
 #include "Chunk.hpp"
 #include "World.hpp"
-#include "../Camera.hpp"
 
 const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
 								   {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)

@@ -1,5 +1,4 @@
 #include "DeferredContainer.hpp"
-#include "Camera.hpp"
 #include "BlurContainer.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {

@@ -2,7 +2,6 @@
 #include "Column.hpp"
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
-#include "../Camera.hpp"
 
 World::World() : generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");

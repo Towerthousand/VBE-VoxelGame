@@ -1,6 +1,5 @@
 #include "DeferredLight.hpp"
 #include "DeferredContainer.hpp"
-#include "Camera.hpp"
 
 DeferredLight::DeferredLight() : pos(0.0f), color(1.0f), radius(30.0f), renderer((DeferredContainer*)getGame()->getObjectByName("deferred")) {
 	quad.mesh = Meshes.get("quad");

@@ -1,6 +1,5 @@
 #include "SceneMain.hpp"
 #include "Player.hpp"
-#include "Camera.hpp"
 #include "DeferredContainer.hpp"
 #include "DeferredLight.hpp"
 #include "BlurContainer.hpp"

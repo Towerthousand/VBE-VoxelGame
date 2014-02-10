@@ -1,6 +1,5 @@
 #include "DeferredCubeLight.hpp"
 #include "World.hpp"
-#include "../Camera.hpp"
 #include "../DeferredContainer.hpp"
 
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {

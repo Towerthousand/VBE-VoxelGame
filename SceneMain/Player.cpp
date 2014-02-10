@@ -1,5 +1,4 @@
 #include "Player.hpp"
-#include "Camera.hpp"
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
