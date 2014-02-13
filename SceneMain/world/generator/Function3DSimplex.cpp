@@ -1,37 +1,37 @@
 #include "Function3DSimplex.hpp"
 
 Function3DSimplex::Function3DSimplex(std::mt19937* generator, float scale, float min, float max) :
-    Function3D(), generator(generator), scale(scale), min(min), max(max){
-    //generate permutation
-    std::uniform_int_distribution<int> distribution(0,255);
-    perm.resize(256);
-    for (int i = 0; i < 256; i++)
-        perm[i] = i;
-    for (int i = 0; i < 256; i++) {
-        int j = distribution(*generator);
-        //Swap perm[i] and perm[j]
-        int aux = perm[i];
-        perm[i] = perm[j];
-        perm[j] = aux;
-    }
-    perm.resize(512);
-    for (int i = 0; i < 256; i++)
-        perm[i+256] = perm[i];
+	Function3D(), generator(generator), scale(scale), min(min), max(max){
+	//generate permutation
+	std::uniform_int_distribution<int> distribution(0,255);
+	perm.resize(256);
+	for (int i = 0; i < 256; i++)
+		perm[i] = i;
+	for (int i = 0; i < 256; i++) {
+		int j = distribution(*generator);
+		//Swap perm[i] and perm[j]
+		int aux = perm[i];
+		perm[i] = perm[j];
+		perm[j] = aux;
+	}
+	perm.resize(512);
+	for (int i = 0; i < 256; i++)
+		perm[i+256] = perm[i];
 }
 
 Function3DSimplex::~Function3DSimplex() {
 }
 
 float3Data Function3DSimplex::getFloat3Data(int x, int y, int z, int sx, int sy, int sz) { //world coords
-    float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
-    for(int localX = 0; localX < sx; ++localX)
-        for(int localY = 0; localY < sy; ++localY)
-            for(int localZ = 0; localZ < sz; ++localZ) {
+	float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
+	for(int localX = 0; localX < sx; ++localX)
+		for(int localY = 0; localY < sy; ++localY)
+			for(int localZ = 0; localZ < sz; ++localZ) {
 				vec3d pos((x+localX)/scale,(y+localY)/scale,(z+localZ)/scale);
 				result[localX][localY][localZ] =
 						valSimplex3D(pos.x,pos.y,pos.z); //more precision, slower
-            }
-    return result;
+			}
+	return result;
 }
 
 float Function3DSimplex::valSimplex3D( const float x, const float y, const float z ) {
@@ -135,7 +135,7 @@ int Function3DSimplex::fastfloor( const float x ) { return x > 0 ? (int) x : (in
 float Function3DSimplex::dot( const int* g, const float x, const float y, const float z ) { return g[0]*x + g[1]*y + g[2]*z; }
 
 const int Function3DSimplex::grad3[12][3] = {
-    {1,1,0}, {-1,1,0}, {1,-1,0}, {-1,-1,0},
-    {1,0,1}, {-1,0,1}, {1,0,-1}, {-1,0,-1},
-    {0,1,1}, {0,-1,1}, {0,1,-1}, {0,-1,-1}
+	{1,1,0}, {-1,1,0}, {1,-1,0}, {-1,-1,0},
+	{1,0,1}, {-1,0,1}, {1,0,-1}, {-1,0,-1},
+	{0,1,1}, {0,-1,1}, {0,1,-1}, {0,-1,-1}
 };

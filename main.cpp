@@ -1,13 +1,11 @@
 #include "SceneMain/SceneMain.hpp"
 
 int main() {
-	WINDOW_TITLE = "Deferred Test";
-	ZNEAR = 0.01f;
-	ZFAR = 1000.0f;
+	Log::setFlags(Log::fTimestamp|Log::fAlwaysSave|Log::fStandardOut);
 	Game* game = new Game();
-    SceneMain* sc = new SceneMain();
+	SceneMain* sc = new SceneMain();
 	sc->addTo(game);
 	game->run();
 	delete game;
-    return 42;
+	return 42;
 }

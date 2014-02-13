@@ -16,7 +16,7 @@
 #define NWORKERS 3
 
 ColumnGenerator::ColumnGenerator(int seed) :
-	TaskPool(NWORKERS, [](){std::cout << "Generating Worker Thread for chunk Generator\n";}),
+	TaskPool(NWORKERS),
 	entry(NULL) {
 	generator.seed(seed);
 	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);

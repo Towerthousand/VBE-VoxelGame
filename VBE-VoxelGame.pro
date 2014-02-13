@@ -3,13 +3,13 @@ INCLUDEPATH += .
 #DEFINES += __DLOG
 SOURCES += main.cpp \
     commons.cpp \
-	SceneMain/SceneMain.cpp \
+    SceneMain/SceneMain.cpp \
     SceneMain/DeferredContainer.cpp \
-	SceneMain/DeferredLight.cpp \
-	SceneMain/world/World.cpp \
+    SceneMain/DeferredLight.cpp \
+    SceneMain/world/World.cpp \
     SceneMain/BlurContainer.cpp \
-	SceneMain/world/Column.cpp \
-	SceneMain/world/Chunk.cpp \
+    SceneMain/world/Column.cpp \
+    SceneMain/world/Chunk.cpp \
     SceneMain/world/generator/Function2DConst.cpp \
     SceneMain/world/generator/Function2DSimplex.cpp \
     SceneMain/world/generator/Function3DAdd.cpp \
@@ -29,14 +29,14 @@ SOURCES += main.cpp \
 
 HEADERS += \
     commons.hpp \
-	SceneMain/SceneMain.hpp \
+    SceneMain/SceneMain.hpp \
     SceneMain/DeferredContainer.hpp \
-	SceneMain/DeferredLight.hpp \
-	SceneMain/world/World.hpp \
+    SceneMain/DeferredLight.hpp \
+    SceneMain/world/World.hpp \
     SceneMain/BlurContainer.hpp \
-	SceneMain/world/Column.hpp \
-	SceneMain/world/Chunk.hpp \
-	SceneMain/world/Cube.hpp \
+    SceneMain/world/Column.hpp \
+    SceneMain/world/Chunk.hpp \
+    SceneMain/world/Cube.hpp \
     SceneMain/world/generator/Function2D.hpp \
     SceneMain/world/generator/Function2DConst.hpp \
     SceneMain/world/generator/Function2DSimplex.hpp \

@@ -33,7 +33,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	world->addTo(renderer);
 
 	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(FOV, float(SCRWIDTH)/float(SCRHEIGHT), ZNEAR, ZFAR);
+	player->getCam()->projection = glm::perspective(60.0f, float(SCRWIDTH)/float(SCRHEIGHT), 0.01f, 100.0f);
 	player->addTo(this);
 }
 
