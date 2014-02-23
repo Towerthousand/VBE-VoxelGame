@@ -44,30 +44,30 @@ void Player::processKeys() {
 	//Move player
 	const float speed = 10.0f;
 	vec2f dir(sin(cam->rot.y*DEG_TO_RAD), -cos(cam->rot.y*DEG_TO_RAD));
-	if(Input::isKeyDown(sf::Keyboard::W)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::W)) {
 		vel.x += dir.x*speed;
 		vel.z += dir.y*speed;
 	}
-	if(Input::isKeyDown(sf::Keyboard::S)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::S)) {
 		vel.x += -dir.x*speed;
 		vel.z += -dir.y*speed;
 	}
-	if(Input::isKeyDown(sf::Keyboard::A)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::A)) {
 		vel.x += dir.y*speed;
 		vel.z += -dir.x*speed;
 	}
-	if(Input::isKeyDown(sf::Keyboard::D)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::D)) {
 		vel.x += -dir.y*speed;
 		vel.z += dir.x*speed;
 	}
-	if(Input::isKeyDown(sf::Keyboard::Space))
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Space))
 		if (onFloor && !isJumping)
 			vel.y = 15;
 
 	//look around
-	if(Input::getMouseDisplacement() != vec2i(0, 0))
-		cam->rot += vec3f(Input::getMouseDisplacement().y*0.1f, Input::getMouseDisplacement().x*0.1f, 0);
-	Input::setMousePos(SCRWIDTH/2, SCRHEIGHT/2, getGame()->getWindow());
+	vec2f displacement = vec2f(Environment::getMouse()->getMouseDisplacement())*0.1f;
+	cam->rot += vec3f(displacement, 0.0f);
+	Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
 
 	bool recalc = false;
 	vec3i recalcBlock;
@@ -75,7 +75,7 @@ void Player::processKeys() {
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
 
 	//take block
-	if(Input::isMousePressed(sf::Mouse::Left))
+	if(Environment::getMouse()->isButtonHeld(Mouse::Left))
 		if(targetsBlock) {
 			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			recalcBlock = targetedBlock;
@@ -83,7 +83,7 @@ void Player::processKeys() {
 		}
 
 	//put block
-	if(Input::isMousePressed(sf::Mouse::Right))
+	if(Environment::getMouse()->isButtonHeld(Mouse::Right))
 		if(targetsBlock) {
 			VBE_LOG(targetedBlockEnter.x << " " << targetedBlockEnter.y << " " << targetedBlockEnter.z);
 			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
@@ -102,7 +102,7 @@ void Player::processKeys() {
 		}
 	}
 
-	if(Input::isKeyPressed(sf::Keyboard::L)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::L)) {
 		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);

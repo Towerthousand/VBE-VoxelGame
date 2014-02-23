@@ -65,7 +65,7 @@ void DeferredContainer::draw() const {
 	quad.program->uniform("color0")->set(getColor0());
 	quad.program->uniform("color1")->set(getColor1());
 	quad.program->uniform("depth")->set(getDepth());
-	quad.program->uniform("invResolution")->set(vec2f(1.0f/SCRWIDTH, 1.0f/SCRHEIGHT));
+	quad.program->uniform("invResolution")->set(vec2f(1.0f/Environment::getScreen()->getWidth(), 1.0f/Environment::getScreen()->getHeight()));
 	quad.draw();
 
 	glDepthFunc(GL_LEQUAL);

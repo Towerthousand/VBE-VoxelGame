@@ -10,7 +10,6 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
 
 	loadResources();
-	srand(GLOBALCLOCK.getElapsedTime().asMilliseconds());
 
 	//GL stuff..:
 	glClearColor(0, 0, 0, 1);
@@ -33,7 +32,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	world->addTo(renderer);
 
 	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(60.0f, float(SCRWIDTH)/float(SCRHEIGHT), 0.01f, 100.0f);
+	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 100.0f);
 	player->addTo(this);
 }
 
@@ -41,7 +40,6 @@ SceneMain::~SceneMain() {
 	Textures2D.clear();
 	Meshes.clear();
 	Programs.clear();
-	AudioManager::clear();
 }
 
 void SceneMain::loadResources() {

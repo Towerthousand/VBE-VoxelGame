@@ -59,7 +59,7 @@ void BlurContainer::draw() const {
 	//BLUR
 	RenderTarget::bind(horitzontalBlurred);
 	glClear(GL_COLOR_BUFFER_BIT);
-	if(!Input::isKeyDown(sf::Keyboard::B)) {
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
 		quad.program = Programs.get("blurPassHoritzontal");
 		quad.program->uniform("MVP")->set(mat4f(1.0f));
 		quad.program->uniform("RTScene")->set(blurMask->getTextureForAttachment(RenderTarget::COLOR0));
@@ -69,7 +69,7 @@ void BlurContainer::draw() const {
 
 	RenderTarget::bind(blurred);
 	glClear(GL_COLOR_BUFFER_BIT);
-	if(!Input::isKeyDown(sf::Keyboard::B)) {
+	if(!Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
 		quad.program = Programs.get("blurPassVertical");
 		quad.program->uniform("MVP")->set(mat4f(1.0f));
 		quad.program->uniform("RTBlurH")->set(horitzontalBlurred->getTextureForAttachment(RenderTarget::COLOR0));
@@ -84,6 +84,6 @@ void BlurContainer::draw() const {
 	quad.program->uniform("MVP")->set(mat4f(1.0f));
     quad.program->uniform("tex1")->set(noBlur->getTextureForAttachment(RenderTarget::COLOR0));
 	quad.program->uniform("tex2")->set(blurred->getTextureForAttachment(RenderTarget::COLOR0));
-	quad.program->uniform("invResolution")->set(vec2f(1.0f/(SCRWIDTH), 1.0f/(SCRHEIGHT)));
+	quad.program->uniform("invResolution")->set(vec2f(1.0f/(Environment::getScreen()->getWidth()), 1.0f/(Environment::getScreen()->getHeight())));
 	quad.draw();
 }
