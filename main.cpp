@@ -6,7 +6,7 @@ int main() {
 	Environment::startUp();
 	Environment::getScreen()->initWindow(":3", 500, 500, Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL | Screen::WINDOW_BORDERLESS);
 	Environment::getMouse()->hideCursor();
-
+	Environment::getMouse()->setGrab(true);
 	Game* game = new Game();
 	SceneMain* sc = new SceneMain();
 	sc->addTo(game);

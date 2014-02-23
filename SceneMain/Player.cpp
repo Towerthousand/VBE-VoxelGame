@@ -65,11 +65,10 @@ void Player::processKeys() {
 			vel.y = 15;
 
 	//look around
-	vec2f displacement = vec2f(Environment::getMouse()->getMouseDisplacement())*0.1f;
-	if(displacement != vec2f(0,0))  {
-		Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
-		cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
-	}
+	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
+	//Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
+	cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
+
 	bool recalc = false;
 	vec3i recalcBlock;
 
