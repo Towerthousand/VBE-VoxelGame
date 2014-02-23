@@ -66,7 +66,8 @@ void Player::processKeys() {
 
 	//look around
 	vec2f displacement = vec2f(Environment::getMouse()->getMouseDisplacement())*0.1f;
-	cam->rot += vec3f(displacement, 0.0f);
+	Log::message() << displacement << Log::Flush;
+	//cam->rot += vec3f(displacement, 0.0f);
 	Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
 
 	bool recalc = false;
