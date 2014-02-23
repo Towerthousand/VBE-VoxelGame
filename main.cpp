@@ -4,7 +4,7 @@ int main() {
 	Log::setFlags(Log::Timestamp|Log::AlwaysSave|Log::StandardOut);
 
 	Environment::startUp();
-	Environment::getScreen()->initWindow(":3", 1024, 768, Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL);
+	Environment::getScreen()->initWindow(":3", 500, 500, Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL | Screen::WINDOW_BORDERLESS);
 
 	Game* game = new Game();
 	SceneMain* sc = new SceneMain();

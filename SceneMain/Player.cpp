@@ -66,17 +66,17 @@ void Player::processKeys() {
 
 	//look around
 	vec2f displacement = vec2f(Environment::getMouse()->getMouseDisplacement())*0.1f;
-	Log::message() << displacement << Log::Flush;
-	//cam->rot += vec3f(displacement, 0.0f);
-	Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
-
+	if(displacement != vec2f(0,0))  {
+		Environment::getMouse()->setMousePos(vec2i(Environment::getScreen()->getSize())/2);
+		cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
+	}
 	bool recalc = false;
 	vec3i recalcBlock;
 
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
 
 	//take block
-	if(Environment::getMouse()->isButtonHeld(Mouse::Left))
+	if(Environment::getMouse()->isButtonPressed(Mouse::Left))
 		if(targetsBlock) {
 			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			recalcBlock = targetedBlock;
@@ -84,7 +84,7 @@ void Player::processKeys() {
 		}
 
 	//put block
-	if(Environment::getMouse()->isButtonHeld(Mouse::Right))
+	if(Environment::getMouse()->isButtonPressed(Mouse::Right))
 		if(targetsBlock) {
 			VBE_LOG(targetedBlockEnter.x << " " << targetedBlockEnter.y << " " << targetedBlockEnter.z);
 			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
@@ -92,12 +92,10 @@ void Player::processKeys() {
 			recalc = true;
 		}
 
-	if(recalc)
-	{
+	if(recalc) {
 		std::vector<DeferredCubeLight*> lights;
 		getGame()->getAllObjectsOfType(lights);
-		for(unsigned int i = 0; i < lights.size(); i++)
-		{
+		for(unsigned int i = 0; i < lights.size(); i++) {
 			DeferredCubeLight* l = lights[i];
 			l->calcLight(recalcBlock.x, recalcBlock.y, recalcBlock.z);
 		}
