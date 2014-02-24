@@ -6,6 +6,7 @@ int main() {
 	Environment::setup().windowHeight = 300;
 	Environment::setup().windowWidth = 300;
 	Environment::setup().windowFlags = Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL | Screen::WINDOW_FULLSCREEN;
+	Environment::setup().mouseGrab = true;
 	Game* game = new Game();
 	SceneMain* sc = new SceneMain();
 	sc->addTo(game);

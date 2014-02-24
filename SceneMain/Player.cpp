@@ -67,6 +67,7 @@ void Player::processKeys() {
 	//look around
 	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
 	cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
+	cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
 	bool recalc = false;
 	vec3i recalcBlock;
 
