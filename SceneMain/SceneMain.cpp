@@ -112,4 +112,15 @@ void SceneMain::update(float deltaTime) {
 		debugCounter--;
 		fpsCount = 0;
 	}
+//	VBE_LOG("MODES");
+//	std::vector<Screen::DisplayMode> modes = Screen::getDisplayModes(0);
+//	for(int i = 0; i < modes.size(); ++i) {
+//		VBE_LOG("Mode " << modes[i].height << " " << modes[i].width << " " << modes[i].refreshRate);
+//	}
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::A))
+		Environment::getScreen()->setDisplayMode(0,0);
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::S))
+		Environment::getScreen()->setDisplayMode(2,0);
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::D))
+		Environment::getScreen()->setDisplayMode(12,0);
 }

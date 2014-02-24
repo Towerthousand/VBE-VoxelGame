@@ -59,7 +59,7 @@ void BlurContainer::draw() const {
 	//BLUR
 	RenderTarget::bind(horitzontalBlurred);
 	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
+	if(!Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
 		quad.program = Programs.get("blurPassHoritzontal");
 		quad.program->uniform("MVP")->set(mat4f(1.0f));
 		quad.program->uniform("RTScene")->set(blurMask->getTextureForAttachment(RenderTarget::COLOR0));
