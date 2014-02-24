@@ -34,28 +34,27 @@ void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
 	RenderTarget* screen = RenderTarget::getCurrent();
 	//G BUFFER
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND); //no transparency whatsoever
+	GL_ASSERT(glEnable(GL_DEPTH_TEST));
+	GL_ASSERT(glDisable(GL_BLEND)); //no transparency whatsoever
 
 	drawMode = Deferred;
 	RenderTarget::bind(gBuffer);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 	ContainerObject::draw();
 
 	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
-	glClear(GL_DEPTH_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
 
 	RenderTarget::bind(screen);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
 	//DEFERRED LIGHTS
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE); //additive
-	glDepthMask(GL_TRUE);
-	glDepthFunc(GL_ALWAYS);
+	GL_ASSERT(glEnable(GL_BLEND));
+	GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
+	GL_ASSERT(glDepthMask(GL_TRUE));
+	GL_ASSERT(glDepthFunc(GL_ALWAYS));
 	drawMode = Light;
 	ContainerObject::draw();
 
@@ -68,8 +67,8 @@ void DeferredContainer::draw() const {
 	quad.program->uniform("invResolution")->set(vec2f(1.0f/Environment::getScreen()->getWidth(), 1.0f/Environment::getScreen()->getHeight()));
 	quad.draw();
 
-	glDepthFunc(GL_LEQUAL);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //forward rendering blending
+	GL_ASSERT(glDepthFunc(GL_LEQUAL));
+	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

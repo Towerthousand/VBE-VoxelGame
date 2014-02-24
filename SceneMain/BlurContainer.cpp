@@ -45,11 +45,11 @@ void BlurContainer::draw() const {
 
 	ContainerObject::draw();
 
-	glBlendFunc(GL_ONE,GL_ONE);
+	GL_ASSERT(glBlendFunc(GL_ONE,GL_ONE));
 
 	//BLUR MASK BUILDING
 	RenderTarget::bind(blurMask);
-	glClear(GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 	quad.program = Programs.get("blurMaskPass");
 	quad.program->uniform("MVP")->set(mat4f(1.0f));
 	quad.program->uniform("color0")->set(noBlur->getTextureForAttachment(RenderTarget::COLOR0));
@@ -58,7 +58,7 @@ void BlurContainer::draw() const {
 
 	//BLUR
 	RenderTarget::bind(horitzontalBlurred);
-	glClear(GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 	if(Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
 		quad.program = Programs.get("blurPassHoritzontal");
 		quad.program->uniform("MVP")->set(mat4f(1.0f));
@@ -68,7 +68,7 @@ void BlurContainer::draw() const {
 	}
 
 	RenderTarget::bind(blurred);
-	glClear(GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 	if(!Environment::getKeyboard()->isKeyHeld(Keyboard::B)) {
 		quad.program = Programs.get("blurPassVertical");
 		quad.program->uniform("MVP")->set(mat4f(1.0f));
@@ -79,7 +79,7 @@ void BlurContainer::draw() const {
 
 	//BLUR + SCENE
 	RenderTarget::bind(nullptr);
-	glClear(GL_COLOR_BUFFER_BIT);
+	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
 	quad.program = Programs.get("textureToScreen");
 	quad.program->uniform("MVP")->set(mat4f(1.0f));
     quad.program->uniform("tex1")->set(noBlur->getTextureForAttachment(RenderTarget::COLOR0));

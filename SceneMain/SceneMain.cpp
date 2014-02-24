@@ -12,13 +12,13 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	loadResources();
 
 	//GL stuff..:
-	glClearColor(0, 0, 0, 1);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_CULL_FACE); //enable backface culling
-	glCullFace(GL_BACK);
+	GL_ASSERT(glClearColor(0, 0, 0, 1));
+	GL_ASSERT(glEnable(GL_DEPTH_TEST));
+	GL_ASSERT(glEnable(GL_BLEND));
+	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+	GL_ASSERT(glDepthFunc(GL_LEQUAL));
+	GL_ASSERT(glEnable(GL_CULL_FACE)); //enable backface culling
+	GL_ASSERT(glCullFace(GL_BACK));
 
 	//getGame()->getWindow().setVerticalSyncEnabled(true);
 

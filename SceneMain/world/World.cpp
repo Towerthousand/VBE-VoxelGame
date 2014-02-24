@@ -24,7 +24,7 @@ void World::update(float deltaTime) {
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
-	std::vector<std::pair<float,std::pair<int,int>>> tasks;
+	std::vector<std::pair<float,std::pair<int,int> > > tasks;
 	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
 		for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
 			vec2f colPos = playerChunkPos + vec2f(x,z);
@@ -80,38 +80,38 @@ void World::draw() const{
 		std::vector<Chunk*> chunkPointers(chunksPerLayer,nullptr);
 
 		//disable rendering state
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glDepthMask(GL_FALSE);
+		GL_ASSERT(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
+		GL_ASSERT(glDepthMask(GL_FALSE));
 
 		//generate and send the queries
 		int queriesSent = 0;
-		glGenQueries(chunksPerLayer, &queries[0]);
+		GL_ASSERT(glGenQueries(chunksPerLayer, &queries[0]));
 		for (int i = 0; i < chunksPerLayer && queryList.size() > 0; ++i) {
 			Chunk* currChunk = queryList.top().second;
 			chunkPointers[i] = currChunk;
 			queryList.pop();
 
-			glBeginQuery(GL_ANY_SAMPLES_PASSED,queries[i]);
+			GL_ASSERT(glBeginQuery(GL_ANY_SAMPLES_PASSED,queries[i]));
 			currChunk->drawBoundingBox();
-			glEndQuery(GL_ANY_SAMPLES_PASSED);
+			GL_ASSERT(glEndQuery(GL_ANY_SAMPLES_PASSED));
 			++queriesSent;
 		}
 
 		//enable rendering state
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glDepthMask(GL_TRUE);
+		GL_ASSERT(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+		GL_ASSERT(glDepthMask(GL_TRUE));
 
 		//collect query results
 		for (int i = 0; i < queriesSent; ++i) {
 			//if we have pending query, get result
 			GLint seen;
-			glGetQueryObjectiv(queries[i],GL_QUERY_RESULT, &seen);
+			GL_ASSERT(glGetQueryObjectiv(queries[i],GL_QUERY_RESULT, &seen));
 			//if seen, draw it
 			if (seen > 0)
 				chunkPointers[i]->draw();
 		}
 		//delete the queries
-		glDeleteQueries(queries.size(),&queries[0]);
+		GL_ASSERT(glDeleteQueries(queries.size(),&queries[0]));
 	}
 }
 
