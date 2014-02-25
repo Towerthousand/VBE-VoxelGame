@@ -16,7 +16,8 @@ class Chunk {
 		unsigned int getY() const { return YPOS; }
 		int getZ() const { return ZPOS; }
 		vec3i getAbsolutePos() const; //in cubes
-		unsigned int getVertexCount() const { return vertexCount; }
+		AABB getWorldSpaceBoundingBox();
+		unsigned int isHidden() const { return (boundingBox.getDimensions() == vec3f(0)); }
 
 	private:
 		struct Vert {
@@ -38,11 +39,13 @@ class Chunk {
 		const int XPOS; //in chunks
 		const unsigned int YPOS; //in chunks
 		const int ZPOS; //in chunks
-		unsigned int vertexCount;
-		mat4f modelMatrix;
-		Model model;
-		Model boundingBox;
 		bool markedForRedraw;
+
+		mat4f modelMatrix;
+		AABB boundingBox;
+		Model terrainModel;
+		Model boundingBoxModel;
+
 		World* world;
 
 		friend class ColumnGenerator;

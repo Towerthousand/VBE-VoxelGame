@@ -24,6 +24,7 @@ class World : public GameObject {
 		Column* columns[WORLDSIZE][WORLDSIZE];
 		ColumnGenerator generator;
 		DeferredContainer* renderer;
+		friend class DeferredContainer;
 };
 
 #endif // WORLD_HPP

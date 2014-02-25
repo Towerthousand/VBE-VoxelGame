@@ -1,5 +1,8 @@
 #include "DeferredContainer.hpp"
 #include "BlurContainer.hpp"
+#include "world/World.hpp"
+#include "world/Chunk.hpp"
+#include "world/Column.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
     setName("deferred");
