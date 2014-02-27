@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \
     SceneMain/Hitbox.cpp \
-    SceneMain/world/DeferredCubeLight.cpp
+    SceneMain/world/DeferredCubeLight.cpp \
+    SceneMain/world/Sun.cpp
 
 HEADERS += \
     commons.hpp \
@@ -56,7 +57,8 @@ HEADERS += \
     SceneMain/Player.hpp \
     SceneMain/Hitbox.hpp \
     SceneMain/world/DeferredCubeLight.hpp \
-    SceneMain/world/generator/TaskPool.hpp
+    SceneMain/world/generator/TaskPool.hpp \
+    SceneMain/world/Sun.hpp
 
 OTHER_FILES += \
     data/shaders/quad.vert \

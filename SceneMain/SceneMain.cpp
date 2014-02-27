@@ -33,6 +33,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 
 	Player* player = new Player();
 	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 100.0f);
+	//player->getCam()->projection = glm::ortho(-5.0f,5.0f,-5.0f,5.0f,-100.0f, 100.0f);
 	player->addTo(this);
 }
 
@@ -112,4 +113,5 @@ void SceneMain::update(float deltaTime) {
 		debugCounter--;
 		fpsCount = 0;
 	}
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::Escape)) getGame()->isRunning = false;
 }
