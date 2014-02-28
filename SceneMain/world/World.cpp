@@ -60,7 +60,7 @@ void World::draw() const{
 			if(col == nullptr) continue;
 			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
 				Chunk* actual = col->getChunks()[y];
-				if(actual == nullptr || actual->isHidden() || !Collision::Frustum_AABB(cam->getFrustum(),actual->getWorldSpaceBoundingBox())) continue;
+				if(actual == nullptr || actual->isHidden() || !Collision::intersects(cam->getFrustum(),actual->getWorldSpaceBoundingBox())) continue;
 				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
 			}
 		}
