@@ -14,7 +14,7 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 								 };
 
 Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr) {
-	if(Game::i() != nullptr) world = (World*)Game::i()->getObjectByName("World");
+	if(Game::i() != nullptr) world = (World*)Game::i()->getObjectByName("world");
 	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
 	memset(cubes,0,sizeof(cubes));
 }
@@ -55,8 +55,7 @@ void Chunk::update(float deltaTime) {
 	if(!markedForRedraw) return;
 	markedForRedraw = false;
 	std::vector<Chunk::Vert> renderData;
-	bool first = true;
-	boundingBox = AABB(vec3f(0), vec3f(0));
+	boundingBox = AABB();
 	for(int z = 0; z < CHUNKSIZE; ++z)
 		for(int y = 0; y < CHUNKSIZE; ++y)
 			for(int x = 0; x < CHUNKSIZE; ++x)
@@ -64,14 +63,8 @@ void Chunk::update(float deltaTime) {
 					unsigned int oldSize = renderData.size();
 					pushCubeToArray(x, y, z, renderData);
 					if(renderData.size() > oldSize){
-						if(first) {
-							boundingBox = AABB(vec3f(x, y, z), vec3f(x+1, y+1, z+1));
-							first = false;
-						}
-						else {
 							boundingBox.extend(vec3f(x, y, z));
 							boundingBox.extend(vec3f(x+1, y+1, z+1));
-						}
 					}
 				}
 	terrainModel.mesh->setVertexData(&renderData[0], renderData.size());
@@ -79,9 +72,9 @@ void Chunk::update(float deltaTime) {
 
 void Chunk::draw() const {
 	Camera* cam = world->getCamera();
-	terrainModel.program->uniform("MVP")->set(cam->projection*cam->view*modelMatrix);
+	terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 	terrainModel.program->uniform("M")->set(modelMatrix);
-	terrainModel.program->uniform("V")->set(cam->view);
+	terrainModel.program->uniform("V")->set(cam->getView());
 	terrainModel.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
 	terrainModel.draw();
 }
@@ -89,7 +82,7 @@ void Chunk::draw() const {
 void Chunk::drawBoundingBox() const {
 	if(boundingBox.getDimensions() == vec3f(0.0f)) return;
 	Camera* cam = world->getCamera();
-	boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->view*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+	boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
 	boundingBoxModel.draw();
 }
 

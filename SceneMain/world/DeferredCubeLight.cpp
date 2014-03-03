@@ -4,7 +4,7 @@
 
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
-	world = (World*)getGame()->getObjectByName("World");
+	world = (World*)getGame()->getObjectByName("world");
 
 	int x0 = int(floor(pos.x));
 	int y0 = int(floor(pos.y));
@@ -111,7 +111,7 @@ void DeferredCubeLight::draw() const {
 	if(renderer->getMode() != DeferredContainer::Light) return;
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec3f posWorldSpace = vec3f(fullTransform*vec4f(0,0,0,1));
-	vec3f posViewSpace = vec3f(cam->view*vec4f(posWorldSpace,1.0));
+	vec3f posViewSpace = vec3f(cam->getView()*vec4f(posWorldSpace,1.0));
 
 	mat4f t(1.0);
 	if(glm::length(posViewSpace) > LIGHTSIZE) {
@@ -128,7 +128,7 @@ void DeferredCubeLight::draw() const {
 				  0      , 0      , 0      , 1);
 		t = glm::scale(rot, vec3f(LIGHTSIZE));
 		t = glm::translate(t, vec3f(0, 0, 1));
-		quad.program->uniform("MVP")->set(cam->projection*cam->view*fullTransform*t);
+		quad.program->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
 	}
 	else
 		quad.program->uniform("MVP")->set(t);
@@ -139,7 +139,7 @@ void DeferredCubeLight::draw() const {
 	quad.program->uniform("depth")->set(renderer->getDepth());
 	quad.program->uniform("lightPos")->set(posViewSpace);
 	quad.program->uniform("invProj")->set(glm::inverse(cam->projection));
-	quad.program->uniform("invView")->set(glm::inverse(cam->view));
+	quad.program->uniform("invView")->set(glm::inverse(cam->getView()));
 	quad.program->uniform("lightColor")->set(color);
 	quad.program->uniform("lightRadius")->set(float(LIGHTSIZE));
 	quad.program->uniform("tex")->set(&tex);

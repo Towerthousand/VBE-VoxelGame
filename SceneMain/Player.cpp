@@ -4,7 +4,7 @@
 #include "DeferredContainer.hpp"
 
 Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
-	setName("Player");
+	setName("player");
 	cam = new Camera("playerCam", vec3f(0,1.5,0));
 	cam->addTo(this);
 	acc = vec3f(0,-10,0);
@@ -40,7 +40,7 @@ void Player::update(float deltaTime) {
 }
 
 void Player::processKeys() {
-	World* w = (World*)getGame()->getObjectByName("World");
+	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
 	const float speed = 10.0f;
 	vec2f dir(sin(cam->rot.y*DEG_TO_RAD), -cos(cam->rot.y*DEG_TO_RAD));
@@ -66,8 +66,8 @@ void Player::processKeys() {
 
 	//look around
 	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
-	cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
-	cam->rot += vec3f(displacement.y, displacement.x, 0.0f);
+	cam->rotateLocal(displacement.y, vec3f(1,0,0));
+	cam->rotateGlobal(displacement.x, vec3f(0,0,1));
 	bool recalc = false;
 	vec3i recalcBlock;
 
@@ -108,7 +108,7 @@ void Player::processKeys() {
 }
 
 void Player::traceView() {
-	World* w = (World*)getGame()->getObjectByName("World");
+	World* w = (World*)getGame()->getObjectByName("world");
     float tMax = 10; //View radius
 	vec3f   cpos(cam->getWorldPos()),
 			dir(cos(-cam->rot.x*DEG_TO_RAD)*(-sin(-cam->rot.y*DEG_TO_RAD)),

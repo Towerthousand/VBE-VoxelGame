@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <random>
+#include <algorithm>
 
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels

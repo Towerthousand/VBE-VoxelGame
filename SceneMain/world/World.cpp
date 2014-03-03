@@ -2,14 +2,16 @@
 #include "Column.hpp"
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
-#include <algorithm>
+#include "Sun.hpp"
 
 World::World() : generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
-	setName("World");
+	setName("world");
 	for(int x = 0; x < WORLDSIZE; ++x)
 		for(int z = 0; z < WORLDSIZE; ++z)
 			columns[x][z] = nullptr;
+	Sun* sun = new Sun();
+	sun->addTo(this);
 }
 
 World::~World() {
@@ -48,8 +50,12 @@ void World::update(float deltaTime) {
 
 void World::draw() const{
 	Camera* cam;
-	if(renderer->getMode() == DeferredContainer::Deferred) cam = (Camera*)getGame()->getObjectByName("playerCam");
-	//else if(renderer->getMode() == DeferredContainer::ShadowMap) cam = (Camera*)getGame()->getObjectByName("sunCam");
+	if(renderer->getMode() == DeferredContainer::Deferred)
+		cam = (Camera*)getGame()->getObjectByName("playerCam");
+	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
+		drawShadowMaps();
+		return;
+	}
 	else return;
 
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
@@ -113,6 +119,25 @@ void World::draw() const{
 		//delete the queries
 		GL_ASSERT(glDeleteQueries(queries.size(),&queries[0]));
 	}
+}
+
+void World::drawShadowMaps() const {
+	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+	AABB occludersBox;
+	AABB occludedBox;
+	Camera* playerCam = (Camera*)getGame()->getObjectByName("playerCam");
+	for(int x = 0; x < WORLDSIZE; ++x)
+		for(int z = 0; z < WORLDSIZE; ++z) {
+			Column* col = columns[x][z];
+			if(col == nullptr) continue;
+			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
+				Chunk* actual = col->getChunks()[y];
+				if(actual == nullptr) continue;
+				occludersBox.extend(actual->getWorldSpaceBoundingBox());
+				if(actual->isHidden() || !Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox())) continue;
+				occludedBox.extend(actual->getWorldSpaceBoundingBox());
+			}
+		}
 }
 
 bool World::outOfBounds(int x, int y, int z) const {

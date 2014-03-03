@@ -13,6 +13,7 @@ class World : public GameObject {
 
 		void update(float deltaTime);
 		void draw() const;
+		void drawShadowMaps() const;
 
 		bool outOfBounds(int x, int y, int z) const;
 		unsigned int getCube(int x, int y, int z) const;

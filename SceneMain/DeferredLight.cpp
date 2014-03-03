@@ -17,7 +17,7 @@ void DeferredLight::draw() const{
 	if(renderer->getMode() != DeferredContainer::Light) return;
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec3f posWorldSpace = vec3f(fullTransform*vec4f(0,0,0,1));
-	vec3f posViewSpace = vec3f(cam->view*vec4f(posWorldSpace,1.0));
+	vec3f posViewSpace = vec3f(cam->getView()*vec4f(posWorldSpace,1.0));
 
 	mat4f t(1.0);
 	if(glm::length(posViewSpace) > radius) {
@@ -34,7 +34,7 @@ void DeferredLight::draw() const{
 				  0      , 0      , 0      , 1);
 		t = glm::scale(rot, vec3f(radius));
 		t = glm::translate(t, vec3f(0, 0, 1));
-		quad.program->uniform("MVP")->set(cam->projection*cam->view*fullTransform*t);
+		quad.program->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
 	}
 	else
 		quad.program->uniform("MVP")->set(t);

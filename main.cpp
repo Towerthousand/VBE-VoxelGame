@@ -1,7 +1,6 @@
 #include "SceneMain/SceneMain.hpp"
 
 int main() {
-	Log::setFlags(Log::Timestamp|Log::AlwaysSave|Log::StandardOut);
 	Environment::setup().windowTitle = ":3";
 	Environment::setup().windowHeight = 1000;
 	Environment::setup().windowWidth = 1000;
