@@ -43,7 +43,8 @@ void Player::processKeys() {
 	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
 	const float speed = 10.0f;
-	vec2f dir(glm::normalize(vec2f(cam->getForward().x,cam->getForward().z)));
+	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
+	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
 	if(Environment::getKeyboard()->isKeyHeld(Keyboard::W)) {
 		vel.x += dir.x*speed;
 		vel.z += dir.y*speed;
@@ -68,10 +69,10 @@ void Player::processKeys() {
 	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
 	cam->rotateLocal(displacement.y, vec3f(1,0,0));
 	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
-	bool recalc = false;
-	vec3i recalcBlock;
 
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
+	bool recalc = false;
+	vec3i recalcBlock;
 
 	//take block
 	if(Environment::getMouse()->isButtonPressed(Mouse::Left))
@@ -109,7 +110,7 @@ void Player::processKeys() {
 
 void Player::traceView() {
 	World* w = (World*)getGame()->getObjectByName("world");
-    float tMax = 10; //View radius
+	float tMax = 10; //View radius
 	vec3f   cpos(cam->getWorldPos()),
 			dir(cam->getForward()),
 			vox(floor(cpos.x), floor(cpos.y), floor(cpos.z)),
@@ -119,7 +120,7 @@ void Player::traceView() {
 			tDelta(tMax,tMax,tMax);
 
 	if (!w->outOfBounds(cpos.x,cpos.y,cpos.z) &&
-		w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
+			w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
 		targetsBlock = true;
 		targetedBlock = vec3f(floor(cpos.x),floor(cpos.y),floor(cpos.z));
 		return;
