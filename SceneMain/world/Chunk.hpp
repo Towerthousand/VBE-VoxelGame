@@ -3,6 +3,7 @@
 #include "commons.hpp"
 
 class World;
+class DeferredContainer;
 class Chunk {
 	public:
 		Chunk(int x, unsigned int y, int z);
@@ -47,6 +48,7 @@ class Chunk {
 		Model boundingBoxModel;
 
 		World* world;
+		DeferredContainer* renderer;
 
 		friend class ColumnGenerator;
 		friend class Column;

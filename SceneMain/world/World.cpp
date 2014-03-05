@@ -22,7 +22,13 @@ void World::update(float deltaTime) {
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
 		if(columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] != nullptr) delete newCol;
-		else columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
+		else {
+			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
+			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
+			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
+			if(getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
+			if(getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
+		}
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
@@ -48,18 +54,20 @@ void World::update(float deltaTime) {
 	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
 }
 
-void World::draw() const{
-	Camera* cam;
-	if(renderer->getMode() == DeferredContainer::Deferred)
-		cam = (Camera*)getGame()->getObjectByName("playerCam");
-	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		drawShadowMaps();
-		return;
+void World::draw() const {
+	switch(renderer->getMode()) {
+		case DeferredContainer::Deferred:
+			draw((Camera*)getGame()->getObjectByName("playerCam"));
+			break;
+		case DeferredContainer::ShadowMap:
+			draw((Camera*)getGame()->getObjectByName("sunCamera"));
+			break;
+		default: break;
 	}
-	else return;
+}
 
+void World::draw(Camera* cam) const{
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
-
 	for(int x = 0; x < WORLDSIZE; ++x)
 		for(int z = 0; z < WORLDSIZE; ++z) {
 			Column* col = columns[x][z];
@@ -119,50 +127,6 @@ void World::draw() const{
 		//delete the queries
 		GL_ASSERT(glDeleteQueries(queries.size(),&queries[0]));
 	}
-}
-
-void World::drawShadowMaps() const {
-	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
-	AABB occludersBox;
-	AABB occludedBox;
-	Camera* playerCam = (Camera*)getGame()->getObjectByName("playerCam");
-	for(int x = 0; x < WORLDSIZE; ++x)
-		for(int z = 0; z < WORLDSIZE; ++z) {
-			Column* col = columns[x][z];
-			if(col == nullptr) continue;
-			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
-				Chunk* actual = col->getChunks()[y];
-				if(actual == nullptr) continue;
-				occludersBox.extend(actual->getWorldSpaceBoundingBox());
-				if(actual->isHidden() || !Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox())) continue;
-				occludedBox.extend(actual->getWorldSpaceBoundingBox());
-			}
-		}
-	Camera* sunCam = new Camera("", occludedBox.getCenter());
-	sunCam->lookInDir(sun->getDirection());
-
-	vec3f min(0.0f), max(0.0f);
-	std::vector<vec3f> projections(8);
-	projections[0] = occludedBox.getMin();
-	projections[1] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,0,1);
-	projections[2] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,0);
-	projections[3] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,1);
-	projections[4] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,0);
-	projections[5] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,1);
-	projections[6] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,1,0);
-	projections[7] = occludedBox.getMin() + occludedBox.getDimensions();
-	for(int i = 0; i < 8; ++i) {
-		vec3f& p = projections[i];
-		p = vec3f(sunCam->getView()*vec4f(p, 1.0f));
-		max.x = (max.x < p.x)? p.x : max.x;
-		max.y = (max.y < p.y)? p.y : max.y;
-		max.z = (max.z < p.z)? p.z : max.z;
-		min.x = (min.x > p.x)? p.x : min.x;
-		min.y = (min.y > p.y)? p.y : min.y;
-		min.z = (min.z > p.z)? p.z : min.z;
-	}
-	sunCam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
-	delete sunCam;
 }
 
 bool World::outOfBounds(int x, int y, int z) const {

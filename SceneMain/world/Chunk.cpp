@@ -1,5 +1,6 @@
 #include "Chunk.hpp"
 #include "World.hpp"
+#include "../DeferredContainer.hpp"
 
 const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
 								   {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)
@@ -13,8 +14,11 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 								   {9, 9, 9, 9, 9, 9}  //8 = sand
 								 };
 
-Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr) {
-	if(Game::i() != nullptr) world = (World*)Game::i()->getObjectByName("world");
+Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr), renderer(nullptr) {
+	if(Game::i() != nullptr) {
+		world = (World*)Game::i()->getObjectByName("world");
+		renderer = (DeferredContainer*)Game::i()->getObjectByName("deferred");
+	}
 	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
 	memset(cubes,0,sizeof(cubes));
 }
@@ -63,27 +67,43 @@ void Chunk::update(float deltaTime) {
 					unsigned int oldSize = renderData.size();
 					pushCubeToArray(x, y, z, renderData);
 					if(renderData.size() > oldSize){
-							boundingBox.extend(vec3f(x, y, z));
-							boundingBox.extend(vec3f(x+1, y+1, z+1));
+						boundingBox.extend(vec3f(x, y, z));
+						boundingBox.extend(vec3f(x+1, y+1, z+1));
 					}
 				}
 	terrainModel.mesh->setVertexData(&renderData[0], renderData.size());
 }
 
 void Chunk::draw() const {
-	Camera* cam = world->getCamera();
-	terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
-	terrainModel.program->uniform("M")->set(modelMatrix);
-	terrainModel.program->uniform("V")->set(cam->getView());
-	terrainModel.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
-	terrainModel.draw();
+	if(renderer->getMode() == DeferredContainer::Deferred) {
+		terrainModel.program = Programs.get("deferredChunk");
+		Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
+		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
+		terrainModel.program->uniform("M")->set(modelMatrix);
+		terrainModel.program->uniform("V")->set(cam->getView());
+		terrainModel.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
+		terrainModel.draw();
+	}
+	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
+		terrainModel.program = Programs.get("occlusionQuery");
+		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
+		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
+		terrainModel.draw();
+	}
 }
 
 void Chunk::drawBoundingBox() const {
 	if(boundingBox.getDimensions() == vec3f(0.0f)) return;
-	Camera* cam = world->getCamera();
-	boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-	boundingBoxModel.draw();
+	if(renderer->getMode() == DeferredContainer::Deferred) {
+		Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
+		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+		boundingBoxModel.draw();
+	}
+	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
+		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
+		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+		boundingBoxModel.draw();
+	}
 }
 
 void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> &renderData) { //I DON'T KNOW HOW TO MAKE THIS COMPACT
