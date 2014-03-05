@@ -141,27 +141,28 @@ void World::drawShadowMaps() const {
 	Camera* sunCam = new Camera("", occludedBox.getCenter());
 	sunCam->lookInDir(sun->getDirection());
 
-	float minX = 0.0f, minY = 0.0f, maxX = 0.0f, maxY = 0.0f, minZ = 0.0f, maxZ = 0.0f;
-	vec3f projections[8];
+	vec3f min(0.0f), max(0.0f);
+	std::vector<vec3f> projections(8);
 	projections[0] = occludedBox.getMin();
 	projections[1] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,0,1);
-	projections[3] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,0);
-	projections[4] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,1);
-	projections[5] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,0);
-	projections[6] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,1);
-	projections[7] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,1,0);
-	projections[8] = occludedBox.getMin() + occludedBox.getDimensions();
+	projections[2] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,0);
+	projections[3] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0,1,1);
+	projections[4] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,0);
+	projections[5] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,0,1);
+	projections[6] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(1,1,0);
+	projections[7] = occludedBox.getMin() + occludedBox.getDimensions();
 	for(int i = 0; i < 8; ++i) {
 		vec3f& p = projections[i];
 		p = vec3f(sunCam->getView()*vec4f(p, 1.0f));
-		maxX = (maxX < p.x)? p.x : maxX;
-		maxY = (maxY < p.y)? p.y : maxY;
-		minX = (minX > p.x)? p.x : minX;
-		minY = (minY > p.y)? p.y : minY;
+		max.x = (max.x < p.x)? p.x : max.x;
+		max.y = (max.y < p.y)? p.y : max.y;
+		max.z = (max.z < p.z)? p.z : max.z;
+		min.x = (min.x > p.x)? p.x : min.x;
+		min.y = (min.y > p.y)? p.y : min.y;
+		min.z = (min.z > p.z)? p.z : min.z;
 	}
-	minZ = Collision::intersectionPoint(Ray(sunCam.getWorldPos(), -sunCam->getForward()), occludersBox);
-	maxZ = Collision::intersectionPoint(Ray(sunCam.getWorldPos(), sunCam->getForward()), occludersBox);
-	sunCam->projection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+	sunCam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+	delete sunCam;
 }
 
 bool World::outOfBounds(int x, int y, int z) const {
