@@ -3,15 +3,15 @@
 #include "../DeferredContainer.hpp"
 
 const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
-								   {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)
-								   {2, 2, 2, 2, 2, 2}, //1 = dirt
-								   {3, 3, 3, 3, 3, 3}, //2 = stone
-								   {0, 0, 0, 0, 2, 1}, //3 = grass
-								   {4, 4, 4, 4, 4, 4}, //4 = LIGHT
-								   {5, 5, 5, 5, 5, 5}, //5 = cobble
-								   {6, 6, 6, 6, 7, 7}, //6 = log
-								   {8, 8, 8, 8, 8, 8}, //7 = planks
-								   {9, 9, 9, 9, 9, 9}  //8 = sand
+								   { 0,  0,  0,  0,  0,  0}, //0 = air (empty, will never be used)
+								   { 1,  1,  1,  1,  1,  1}, //1 = stone
+								   { 3,  3,  3,  3,  2,  0}, //2 = grass
+								   { 2,  2,  2,  2,  2,  2}, //3 = dirt
+								   {16, 16, 16, 16, 16, 16}, //4 = cobble
+								   { 4,  4,  4,  4,  4,  4}, //5 = planks
+								   { 0,  0,  0,  0,  0,  0}, //6 = sapling
+								   {17, 17, 17, 17, 17, 17}, //7 = bedrock
+								   {14, 14, 14, 14, 14, 14}  //8 = flowing water
 								 };
 
 Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr), renderer(nullptr) {
@@ -20,7 +20,7 @@ Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedFo
 		renderer = (DeferredContainer*)Game::i()->getObjectByName("deferred");
 	}
 	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
-	memset(cubes,0,sizeof(cubes));
+	initMesh();
 }
 
 Chunk::~Chunk() {
@@ -39,10 +39,8 @@ void Chunk::initMesh() {
 	boundingBoxModel.program = Programs.get("occlusionQuery");
 }
 
-unsigned int Chunk::getCube(int x, int y, int z) const { //in local space
-	if(x >= 0 && x < CHUNKSIZE && y >= 0 && y < CHUNKSIZE && z >= 0 && z < CHUNKSIZE)
-		return cubes[x][y][z];
-	return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
+unsigned int Chunk::getBlock(int x, int y, int z) const {
+	return world->getBlock(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE));
 }
 
 vec3i Chunk::getAbsolutePos() const {
@@ -55,7 +53,6 @@ AABB Chunk::getWorldSpaceBoundingBox() {
 
 void Chunk::update(float deltaTime) {
 	(void) deltaTime;
-	if(terrainModel.mesh == nullptr) initMesh();
 	if(!markedForRedraw) return;
 	markedForRedraw = false;
 	std::vector<Chunk::Vert> renderData;
@@ -63,7 +60,7 @@ void Chunk::update(float deltaTime) {
 	for(int z = 0; z < CHUNKSIZE; ++z)
 		for(int y = 0; y < CHUNKSIZE; ++y)
 			for(int x = 0; x < CHUNKSIZE; ++x)
-				if (cubes[x][y][z] != 0) { // only draw if it's not air
+				if (getBlock(x, y, z) != 0) { // only draw if it's not air
 					unsigned int oldSize = renderData.size();
 					pushCubeToArray(x, y, z, renderData);
 					if(renderData.size() > oldSize){
@@ -108,78 +105,81 @@ void Chunk::drawBoundingBox() const {
 
 void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> &renderData) { //I DON'T KNOW HOW TO MAKE THIS COMPACT
 	short texY, texX;
-	unsigned int cubeID = cubes[x][y][z];
+	unsigned int cubeID = getBlock(x, y, z);
+	const int textureTiles = 16; //Texture is textureTiles*textureTiles, we don't care about the pixel size.
+	const int tileSize = (1<<9)/textureTiles;
 
-	if(getCube(x, y, z+1) == 0) { // front face
-		texX = (textureIndexes[cubeID][0] % (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
-		texY = (textureIndexes[cubeID][0] / (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
+	if(getBlock(x, y, z+1) == 0) { // front face
+		texX = (textureIndexes[cubeID][0] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][0] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 0, texX          , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE  , texY          ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX          , texY+TEXSIZE  ));
+		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 0, texX+tileSize          , texY          ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX , texY          ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX+tileSize          , texY+tileSize ));
 
-		renderData.push_back(Chunk::Vert(x  , y  , z+1, 0, texX+TEXSIZE  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX          , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE  , texY          ));
+		renderData.push_back(Chunk::Vert(x  , y  , z+1, 0, texX , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX+tileSize          , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX , texY          ));
 	}
-	if(getCube(x, y, z-1) == 0) { // back face
-		texX = (textureIndexes[cubeID][1] % (512/TEXSIZE))*TEXSIZE;
-		texY = (textureIndexes[cubeID][1] / (512/TEXSIZE))*TEXSIZE;
+	if(getBlock(x, y, z-1) == 0) { // back face
+		texX = (textureIndexes[cubeID][1] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][1] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+tileSize , texY          ));
 		renderData.push_back(Chunk::Vert(x+1, y+1, z, 1, texX          , texY          ));
 
-		renderData.push_back(Chunk::Vert(x  , y  , z, 1, texX+TEXSIZE  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  ));
+		renderData.push_back(Chunk::Vert(x  , y  , z, 1, texX+tileSize , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+tileSize , texY          ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+tileSize ));
 	}
-	if(getCube(x+1, y, z) == 0) { // left face
-		texX = (textureIndexes[cubeID][2] % (512/TEXSIZE))*TEXSIZE;
-		texY = (textureIndexes[cubeID][2] / (512/TEXSIZE))*TEXSIZE;
+	if(getBlock(x+1, y, z) == 0) { // left face
+		texX = (textureIndexes[cubeID][2] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][2] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 2, texX        , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 2, texX        , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+tileSize, texY+tileSize ));
 		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          ));
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 2, texX+TEXSIZE, texY));
+		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+tileSize, texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 2, texX+tileSize, texY));
 		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          ));
 	}
-	if(getCube(x-1, y, z) == 0) { // right face
-		texX = (textureIndexes[cubeID][3] % (512/TEXSIZE))*TEXSIZE;
-		texY = (textureIndexes[cubeID][3] / (512/TEXSIZE))*TEXSIZE;
+	if(getBlock(x-1, y, z) == 0) { // right face
+		texX = (textureIndexes[cubeID][3] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][3] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x  , y  , z+1, 3, texX, texY+TEXSIZE          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE));
+		renderData.push_back(Chunk::Vert(x  , y  , z+1, 3, texX+tileSize, texY+tileSize         ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX+tileSize        , texY          ));
+		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX, texY+tileSize));
 
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z  , 3, texX+TEXSIZE, texY          ));
-		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE			));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX+tileSize        , texY          ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z  , 3, texX , texY          ));
+		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX , texY+tileSize			));
 	}
-	if(getCube(x, y-1, z) == 0) { // bottom face
-		texX = (textureIndexes[cubeID][4] % (512/TEXSIZE))*TEXSIZE;
-		texY = (textureIndexes[cubeID][4] / (512/TEXSIZE))*TEXSIZE;
+	if(getBlock(x, y-1, z) == 0) { // bottom face
+		texX = (textureIndexes[cubeID][4] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][4] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y, z  , 4, texX  , texY  ));
+		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX , texY  ));
+		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX+tileSize  , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x  , y, z  , 4, texX+tileSize  , texY  ));
 
-		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x+1, y, z+1, 4, texX+TEXSIZE    , texY+TEXSIZE    ));
-		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX  , texY+TEXSIZE  ));
+		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX , texY  ));
+		renderData.push_back(Chunk::Vert(x+1, y, z+1, 4, texX   , texY+tileSize   ));
+		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX+tileSize  , texY+tileSize ));
 	}
-	if(getCube(x, y+1, z) == 0) { // top face
-		texX = (textureIndexes[cubeID][5] % (512/TEXSIZE))*TEXSIZE;
-		texY = (textureIndexes[cubeID][5] / (512/TEXSIZE))*TEXSIZE;
+	if(getBlock(x, y+1, z) == 0) { // top face
+		texX = (textureIndexes[cubeID][5] % (textureTiles))*tileSize;
+		texY = (textureIndexes[cubeID][5] / (textureTiles))*tileSize;
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE  , texY  ));
+		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+tileSize , texY  ));
 		renderData.push_back(Chunk::Vert(x  , y+1, z  , 5, texX  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+TEXSIZE  ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+tileSize ));
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 5, texX+TEXSIZE    , texY+TEXSIZE    ));
+		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+tileSize , texY  ));
+		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+tileSize ));
+		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 5, texX+tileSize   , texY+tileSize   ));
 	}
+	return;
 }

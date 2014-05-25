@@ -52,7 +52,7 @@ void DeferredCubeLight::calcQuadrant(int cx, int cy, int cz, int dx, int dy, int
 
 				if((x == 0 && y == 0 && z == 0) || sqrt(x*x + y*y + z*z) > LIGHTSIZE) continue;
 
-				if(world->getCube(x+x0, y+y0, z+z0) != 0)
+				if(world->getBlock(x+x0, y+y0, z+z0) != 0)
 					light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE] = 0;
 				else
 				{

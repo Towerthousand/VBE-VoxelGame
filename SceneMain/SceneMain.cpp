@@ -1,5 +1,7 @@
 #include "SceneMain.hpp"
 #include "Player.hpp"
+#include "PlayerBase.hpp"
+#include "PlayerNetwork.hpp"
 #include "DeferredContainer.hpp"
 #include "DeferredLight.hpp"
 #include "BlurContainer.hpp"
@@ -28,13 +30,43 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	DeferredContainer* renderer = new DeferredContainer();
 	renderer->addTo(blur);
 
-	World* world = new World();
+	world = new World();
 	world->addTo(renderer);
 
-	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 10000.0f);
-	player->addTo(this);
+	//spawnPlayer(id);
 }
+
+void SceneMain::spawnPlayer(int id)
+{
+	PlayerBase* player;
+	if(id == -1)
+		player = new Player();
+	else
+		player = new PlayerNetwork(id);
+
+	player->addTo(this);
+	players[id] = player;
+}
+
+void SceneMain::despawnPlayer(int id)
+{
+	VBE_ASSERT(id != -1, "Can't despawn me!");
+
+	PlayerBase* player = players[id];
+	VBE_ASSERT(player != nullptr, "Despawning player that doesn't exist");
+	player->removeAndDelete();
+	players.erase(id);
+}
+
+PlayerBase* SceneMain::getPlayer(int id)
+{
+	std::map<int, PlayerBase*>::iterator it = players.find(id);
+	if(it == players.end())
+		return nullptr;
+	else
+		return it->second;
+}
+
 
 SceneMain::~SceneMain() {
 	Textures2D.clear();
@@ -88,7 +120,7 @@ void SceneMain::loadResources() {
 	Textures2D.add("nullBlack", Texture2D::createFromRaw(pixels4, 1, 1));
 	char pixels5[4] = {char(255), char(255), char(255), char(255)};
 	Textures2D.add("nullWhite", Texture2D::createFromRaw(pixels5, 1, 1));
-	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/blocks8.png"));
+	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/terrain.png"));
 	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program

@@ -19,6 +19,7 @@ class Chunk {
 		vec3i getAbsolutePos() const; //in cubes
 		AABB getWorldSpaceBoundingBox();
 		unsigned int isHidden() const { return (boundingBox.getDimensions() == vec3f(0)); }
+		inline void markForRedraw() { markedForRedraw = true; }
 
 	private:
 		struct Vert {
@@ -32,11 +33,10 @@ class Chunk {
 				unsigned short tx,ty;
 		};
 
-		unsigned int getCube(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
+		unsigned int getBlock(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
 		void pushCubeToArray(short x, short y, short z, std::vector<Vert>& renderData);
 		void initMesh();
 
-		unsigned int cubes[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 		const int XPOS; //in chunks
 		const unsigned int YPOS; //in chunks
 		const int ZPOS; //in chunks
@@ -49,9 +49,6 @@ class Chunk {
 
 		World* world;
 		DeferredContainer* renderer;
-
-		friend class ColumnGenerator;
-		friend class Column;
 };
 
 #endif // CHUNK_HPP

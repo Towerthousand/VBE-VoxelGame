@@ -2,7 +2,6 @@
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
 #include "world/Chunk.hpp"
-#include "world/Column.hpp"
 #include "world/Sun.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
@@ -49,7 +48,7 @@ void DeferredContainer::draw() const {
 	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
-	ContainerObject::draw();
+	//ContainerObject::draw();
 
 	RenderTarget::bind(screen);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));

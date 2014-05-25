@@ -10,7 +10,7 @@
 #include <algorithm>
 
 constexpr int CHUNKSIZE_POW2 = 4;
-constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels
+constexpr int CHUNKSIZE = 1<<CHUNKSIZE_POW2; //in voxels
 constexpr int CHUNKSIZE_MASK = CHUNKSIZE-1;
 constexpr int WORLDSIZE = 32; //in chunks
 constexpr int WORLDSIZE_MASK = WORLDSIZE-1;

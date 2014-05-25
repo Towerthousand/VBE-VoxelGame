@@ -1,7 +1,7 @@
 #include "Sun.hpp"
 #include "World.hpp"
-#include "Column.hpp"
 #include "Chunk.hpp"
+#include "Level.hpp"
 
 Sun::Sun() : angle(45.0f) {
 	setName("sun");
@@ -18,19 +18,18 @@ void Sun::update(float deltaTime) {
 	AABB occludedBox;
 	Camera* playerCam = (Camera*)getGame()->getObjectByName("playerCam");
 	World* w = (World*)getGame()->getObjectByName("world");
-	for(int x = 0; x < WORLDSIZE; ++x)
-		for(int z = 0; z < WORLDSIZE; ++z) {
-			Column* col = w->columns[x][z];
-			if(col == nullptr) continue;
-			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
-				Chunk* actual = col->getChunks()[y];
+	for(int y = 0; y < w->level->ty/CHUNKSIZE; ++y)
+		for(int z = 0; z < w->level->tz/CHUNKSIZE; ++z)
+			for(int x = 0; x < w->level->tx/CHUNKSIZE; ++x)
+			{
+				Chunk* actual = w->getChunk(x, y, z);
 				if(actual != nullptr) {
 					occludersBox.extend(actual->getWorldSpaceBoundingBox());
 					if(!actual->isHidden() && Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox()))
 						occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}
-		}
+
 	cam->pos = occludedBox.getCenter();
 	cam->lookInDir(getDirection());
 

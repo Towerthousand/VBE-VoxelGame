@@ -1,14 +1,15 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 #include "Entity.hpp"
+#include "PlayerBase.hpp"
 
 class Camera;
-class Player : public Entity {
+class Player : public PlayerBase {
 	public:
 		Player();
 		~Player();
 
-		void update(float deltaTime);
+		virtual void update(float deltaTime);
 		Camera* getCam() const { return cam; }
 
 	private:
@@ -16,7 +17,7 @@ class Player : public Entity {
 		void traceView();
 
 		Camera* cam;
-		unsigned int selectedID; //current blockID, used to place blocks
+		unsigned char selectedID; //current blockID, used to place blocks
 		vec3i targetedBlock;
 		vec3i targetedBlockEnter;
 		bool onFloor;

@@ -13,12 +13,12 @@ class Entity : public GameObject {
 
 		vec3f vel;
 		vec3f acc;
+		vec3f pos;
 	protected:
 		virtual void movePos(float deltaTime);
 
 		Hitbox hitbox;
 		vec3f scale;
-		vec3f pos;
 };
 
 #endif // ENTITY_HPP

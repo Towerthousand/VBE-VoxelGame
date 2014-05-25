@@ -1,57 +1,34 @@
 #include "World.hpp"
-#include "Column.hpp"
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
 #include "Sun.hpp"
+#include "Level.hpp"
+#include "../NetworkManager.hpp"
 
-World::World() : generator(rand()), renderer(nullptr) {
+World::World() : renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
+	level = &((NetworkManager*)getGame()->getObjectByName("NetworkManager"))->level;
 	setName("world");
-	for(int x = 0; x < WORLDSIZE; ++x)
-		for(int z = 0; z < WORLDSIZE; ++z)
-			columns[x][z] = nullptr;
+
 	Sun* sun = new Sun();
 	sun->addTo(this);
+
+	chunks.resize(level->tx*level->ty*level->tz/CHUNKSIZE/CHUNKSIZE/CHUNKSIZE);
+	for(int y = 0; y < level->ty/CHUNKSIZE; ++y)
+		for(int z = 0; z < level->tz/CHUNKSIZE; ++z)
+			for(int x = 0; x < level->tx/CHUNKSIZE; ++x)
+				setChunk(x, y, z, new Chunk(x, y, z));
 }
 
 World::~World() {
 }
 
 void World::update(float deltaTime) {
-	generator.discardTasks();
-	Column* newCol = nullptr;
-	while((newCol = generator.pullDone()) != nullptr) {
-		if(columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] != nullptr) delete newCol;
-		else {
-			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
-			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
-		}
-	}
-	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
-	std::vector<std::pair<float,std::pair<int,int> > > tasks;
-	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
-		for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
-			vec2f colPos = playerChunkPos + vec2f(x,z);
-			Column* actual = getColumn(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE);
-			if((actual == nullptr || actual->getX() != colPos.x || actual->getZ() != colPos.y) && !generator.currentlyWorking(vec2i(colPos))) {
-				if(actual != nullptr) delete actual;
-				tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(playerChunkPos-colPos),std::pair<int,int>(colPos.x,colPos.y)));
-				columns[int(colPos.x)&WORLDSIZE_MASK][int(colPos.y)&WORLDSIZE_MASK] = nullptr;
-				continue;
-			}
-			if(actual == nullptr) continue;
-			for(unsigned int y = 0; y < actual->getChunks().size(); ++y){
-				Chunk* c = actual->getChunks()[y];
-				if(c == nullptr) continue;
-				c->update(deltaTime);
-			}
-		}
-	std::sort(tasks.begin(),tasks.end());
-	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
+	for(int y = 0; y < level->ty/CHUNKSIZE; ++y)
+		for(int z = 0; z < level->tz/CHUNKSIZE; ++z)
+			for(int x = 0; x < level->tx/CHUNKSIZE; ++x)
+				getChunk(x, y, z)->update(deltaTime);
+
 }
 
 void World::draw() const {
@@ -68,16 +45,14 @@ void World::draw() const {
 
 void World::draw(Camera* cam) const{
 	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
-	for(int x = 0; x < WORLDSIZE; ++x)
-		for(int z = 0; z < WORLDSIZE; ++z) {
-			Column* col = columns[x][z];
-			if(col == nullptr) continue;
-			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
-				Chunk* actual = col->getChunks()[y];
+	for(int y = 0; y < level->ty/CHUNKSIZE; ++y)
+		for(int z = 0; z < level->tz/CHUNKSIZE; ++z)
+			for(int x = 0; x < level->tx/CHUNKSIZE; ++x)
+			{
+				Chunk* actual = getChunk(x, y, z);
 				if(actual == nullptr || actual->isHidden() || !Collision::intersects(cam->getFrustum(),actual->getWorldSpaceBoundingBox())) continue;
 				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
 			}
-		}
 
 	//do occlusion culling here!
 	int layers = 10;
@@ -130,26 +105,50 @@ void World::draw(Camera* cam) const{
 }
 
 bool World::outOfBounds(int x, int y, int z) const {
-	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
-	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0);
+	if(x < 0 || x >= level->tx) return true;
+	if(y < 0 || y >= level->ty) return true;
+	if(z < 0 || z >= level->tz) return true;
+	return false;
 }
 
-Column* World::getColumn(int x, int y, int z) const {
-	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
-	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0)? nullptr:c;
+Chunk* World::getChunk(int x, int y, int z) const
+{
+	int tx = level->tx/CHUNKSIZE;
+	int ty = level->ty/CHUNKSIZE;
+	int tz = level->tz/CHUNKSIZE;
+
+	return x >= 0 && y >= 0 && z >= 0 && x < tx && y < ty && z < tz
+			? chunks[(y * tz + z) * tx + x] : nullptr;
+}
+
+void World::setChunk(int x, int y, int z, Chunk* c)
+{
+	int tx = level->tx/CHUNKSIZE;
+	int ty = level->ty/CHUNKSIZE;
+	int tz = level->tz/CHUNKSIZE;
+
+	if(x >= 0 && y >= 0 && z >= 0 && x < tx && y < ty && z < tz)
+		chunks[(y * tz + z) * tx + x] = c;
 }
 
 Camera* World::getCamera() const {
 	return (Camera*)getGame()->getObjectByName("playerCam");
 }
 
-unsigned int World::getCube(int x, int y, int z) const {
-	Column* c = getColumn(x,y,z);
-	return (c == nullptr)? 0 : c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
+unsigned char World::getBlock(int x, int y, int z) const {
+	return level->getBlock(x, y, z);
 }
 
-void World::setCube(int x, int y, int z, unsigned int cube) {
-	Column* c = getColumn(x,y,z);
-	if(c == nullptr) return;
-	c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
+const int dx[] = {1, -1, 0, 0, 0, 0};
+const int dy[] = {0, 0, 1, -1, 0, 0};
+const int dz[] = {0, 0, 0, 0, 1, -1};
+
+void World::setBlock(int x, int y, int z, unsigned char block) {
+	level->setBlock(x, y, z, block);
+	for(int i = 0; i < 6; i++)
+	{
+		Chunk* c = getChunk((x+dx[i])/CHUNKSIZE, (y+dy[i])/CHUNKSIZE, (z+dz[i])/CHUNKSIZE);
+		if(c != nullptr)
+			c->markForRedraw();
+	}
 }

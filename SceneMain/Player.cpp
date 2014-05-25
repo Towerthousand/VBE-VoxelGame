@@ -2,15 +2,17 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
+#include "NetworkManager.hpp"
 
-Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
+Player::Player() : PlayerBase(-1), cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
 	setName("player");
-	cam = new Camera("playerCam", vec3f(0,1.5,0));
+	cam = new Camera("playerCam", vec3f(0,1.0,0));
 	cam->addTo(this);
-	acc = vec3f(0,-10,0);
+	cam->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 10000.0f);
+	acc = vec3f(0,-27,0);
 	pos = vec3f(8,110,8);
 	hitbox.type = Hitbox::BOX;
-	hitbox.radius = vec3f(0.6*scale.x,1.6*scale.y,0.6*scale.z);
+	hitbox.radius = vec3f(0.3*scale.x,0.8*scale.y,0.3*scale.z);
 }
 
 Player::~Player() {
@@ -29,7 +31,7 @@ void Player::update(float deltaTime) {
 
 	//Limit movement
 	vel.x = 0; // Player only accelerates vertically, so speed.x doesn't carry
-	vel.y = std::fmax(-70,vel.y);
+	//vel.y = std::fmax(-70,vel.y);
 	vel.z = 0; // Player only accelerates vertically, so speed.z doesn't carry
 
 	//transform coordinates for camera and other children
@@ -41,8 +43,9 @@ void Player::update(float deltaTime) {
 
 void Player::processKeys() {
 	World* w = (World*)getGame()->getObjectByName("world");
+	NetworkManager* net = (NetworkManager*)getGame()->getObjectByName("NetworkManager");
 	//Move player
-	const float speed = 10.0f;
+	const float speed = 7.0f;
 	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
 	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
 	if(Environment::getKeyboard()->isKeyHeld(Keyboard::W)) {
@@ -63,21 +66,34 @@ void Player::processKeys() {
 	}
 	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Space))
 		if (onFloor && !isJumping)
-			vel.y = 15;
+			vel.y = 8.4;
 
 	//look around
-	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
-	cam->rotateLocal(displacement.y, vec3f(1,0,0));
-	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
+	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.2f;
+	pitch += displacement.y;
+	yaw += displacement.x;
+	if(pitch < -90) pitch = -90;
+	if(pitch > 90) pitch = 90;
+	if(yaw < 0) yaw += 360;
+	if(yaw >= 360) yaw -= 360;
 
-	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
+	mat4f rot (1.0f);
+	rot = glm::rotate(rot, pitch, vec3f(1, 0, 0));
+	rot = glm::rotate(rot, yaw, vec3f(0, 1, 0));
+	cam->rotation = rot;
+
+	net->sendPosition(pos.x, pos.y, pos.z, yaw, pitch);
+	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setBlock
 	bool recalc = false;
 	vec3i recalcBlock;
 
+	heldBlock = 1; //TODO
 	//take block
 	if(Environment::getMouse()->isButtonPressed(Mouse::Left))
 		if(targetsBlock) {
-			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
+			w->setBlock(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
+			net->sendSetBlock(targetedBlock.x,targetedBlock.y,targetedBlock.z,false, heldBlock);
+
 			recalcBlock = targetedBlock;
 			recalc = true;
 		}
@@ -85,7 +101,8 @@ void Player::processKeys() {
 	//put block
 	if(Environment::getMouse()->isButtonPressed(Mouse::Right))
 		if(targetsBlock) {
-			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
+			w->setBlock(targetedBlockEnter.x, targetedBlockEnter.y, targetedBlockEnter.z, heldBlock);
+			net->sendSetBlock(targetedBlockEnter.x, targetedBlockEnter.y, targetedBlockEnter.z, true, heldBlock);
 			recalcBlock = targetedBlockEnter;
 			recalc = true;
 		}
@@ -120,7 +137,7 @@ void Player::traceView() {
 			tDelta(tMax,tMax,tMax);
 
 	if (!w->outOfBounds(cpos.x,cpos.y,cpos.z) &&
-			w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
+			w->getBlock(cpos.x,cpos.y,cpos.z) != 0) {
 		targetsBlock = true;
 		targetedBlock = vec3f(floor(cpos.x),floor(cpos.y),floor(cpos.z));
 		return;
@@ -177,7 +194,7 @@ void Player::traceView() {
 				tMaxc.z= tMaxc.z + tDelta.z;
 			}
 		}
-		if(!w->outOfBounds(vox.x,vox.y,vox.z) && w->getCube(vox.x,vox.y,vox.z) != 0) {
+		if(!w->outOfBounds(vox.x,vox.y,vox.z) && w->getBlock(vox.x,vox.y,vox.z) != 0) {
 			targetsBlock = true;
 			targetedBlock = vox;
 			return;

@@ -1,5 +1,7 @@
 include(VBE/VBE.pro)
 INCLUDEPATH += .
+LIBS += -lz
+
 #DEFINES += __DLOG
 SOURCES += main.cpp \
 	commons.cpp \
@@ -8,25 +10,17 @@ SOURCES += main.cpp \
 	SceneMain/DeferredLight.cpp \
 	SceneMain/world/World.cpp \
 	SceneMain/BlurContainer.cpp \
-	SceneMain/world/Column.cpp \
-	SceneMain/world/Chunk.cpp \
-	SceneMain/world/generator/Function2DConst.cpp \
-	SceneMain/world/generator/Function2DSimplex.cpp \
-	SceneMain/world/generator/Function3DAdd.cpp \
-	SceneMain/world/generator/Function3DDiv.cpp \
-	SceneMain/world/generator/Function3DSimplex.cpp \
-	SceneMain/world/generator/Function3DSub.cpp \
-	SceneMain/world/generator/Function3DYcoord.cpp \
-	SceneMain/world/generator/FunctionTerrainHeightmap.cpp \
-	SceneMain/world/generator/FunctionTerrainJoin.cpp \
-	SceneMain/world/generator/FunctionTerrainOverlay.cpp \
-	SceneMain/world/generator/FunctionTerrrainVolume.cpp \
-	SceneMain/world/generator/ColumnGenerator.cpp \
+        SceneMain/world/Chunk.cpp \
 	SceneMain/Entity.cpp \
 	SceneMain/Player.cpp \
 	SceneMain/Hitbox.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
-	SceneMain/world/Sun.cpp
+	SceneMain/world/Sun.cpp \
+    SceneMain/Socket.cpp \
+    SceneMain/NetworkManager.cpp \
+    SceneMain/world/Level.cpp \
+    SceneMain/PlayerBase.cpp \
+    SceneMain/PlayerNetwork.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -35,30 +29,19 @@ HEADERS += \
 	SceneMain/DeferredLight.hpp \
 	SceneMain/world/World.hpp \
 	SceneMain/BlurContainer.hpp \
-	SceneMain/world/Column.hpp \
 	SceneMain/world/Chunk.hpp \
-	SceneMain/world/Cube.hpp \
-	SceneMain/world/generator/Function2D.hpp \
-	SceneMain/world/generator/Function2DConst.hpp \
-	SceneMain/world/generator/Function2DSimplex.hpp \
-	SceneMain/world/generator/Function3D.hpp \
-	SceneMain/world/generator/Function3DAdd.hpp \
-	SceneMain/world/generator/Function3DDiv.hpp \
-	SceneMain/world/generator/Function3DSimplex.hpp \
-	SceneMain/world/generator/Function3DSub.hpp \
-	SceneMain/world/generator/Function3DYcoord.hpp \
-	SceneMain/world/generator/FunctionTerrain.hpp \
-	SceneMain/world/generator/FunctionTerrainHeightmap.hpp \
-	SceneMain/world/generator/FunctionTerrainJoin.hpp \
-	SceneMain/world/generator/FunctionTerrainOverlay.hpp \
-	SceneMain/world/generator/FunctionTerrrainVolume.hpp \
-	SceneMain/world/generator/ColumnGenerator.hpp \
+        SceneMain/world/Cube.hpp \
 	SceneMain/Entity.hpp \
 	SceneMain/Player.hpp \
 	SceneMain/Hitbox.hpp \
 	SceneMain/world/DeferredCubeLight.hpp \
 	SceneMain/world/generator/TaskPool.hpp \
-	SceneMain/world/Sun.hpp
+	SceneMain/world/Sun.hpp \
+    SceneMain/Socket.hpp \
+    SceneMain/NetworkManager.hpp \
+    SceneMain/world/Level.hpp \
+    SceneMain/PlayerBase.hpp \
+    SceneMain/PlayerNetwork.hpp
 
 OTHER_FILES += \
 	data/shaders/quad.vert \
