@@ -279,6 +279,23 @@ void NetworkManager::update(float deltaTime)
 				char userType = s.readByte();
 				break;
 			}
+			case 0x10: //ExtInfo
+			{
+				string name = s.readString();
+				short count = s.readShort();
+				break;
+			}
+			case 0x11: //ExtName
+			{
+				string name = s.readString();
+				int version = s.readInt();
+				break;
+			}
+			case 0x13: //CustomBlocks
+			{
+				char level = s.readByte();
+				break;
+			}
 			default:
 			{
 				cout<<"Unknown packet: "<<int(packetId)<<endl;

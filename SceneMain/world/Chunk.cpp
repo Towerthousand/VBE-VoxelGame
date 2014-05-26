@@ -2,16 +2,48 @@
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
 
-const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
-								   { 0,  0,  0,  0,  0,  0}, //0 = air (empty, will never be used)
-								   { 1,  1,  1,  1,  1,  1}, //1 = stone
-								   { 3,  3,  3,  3,  2,  0}, //2 = grass
-								   { 2,  2,  2,  2,  2,  2}, //3 = dirt
-								   {16, 16, 16, 16, 16, 16}, //4 = cobble
-								   { 4,  4,  4,  4,  4,  4}, //5 = planks
-								   { 0,  0,  0,  0,  0,  0}, //6 = sapling
-								   {17, 17, 17, 17, 17, 17}, //7 = bedrock
-								   {14, 14, 14, 14, 14, 14}  //8 = flowing water
+const int textureIndexes[][6] = { //order is front, back, left, right, bottom, top
+								   { 0,  0,  0,  0,  0,  0}, //0 air (empty, will never be used)
+								   { 1,  1,  1,  1,  1,  1}, //1 stone
+								   { 3,  3,  3,  3,  2,  0}, //2 grass
+								   { 2,  2,  2,  2,  2,  2}, //3 dirt
+								   {16, 16, 16, 16, 16, 16}, //4 cobble
+								   { 4,  4,  4,  4,  4,  4}, //5 planks
+								   { 0,  0,  0,  0,  0,  0}, //6 sapling
+								   {17, 17, 17, 17, 17, 17}, //7 bedrock
+								   {14, 14, 14, 14, 14, 14}, //8 flowing water
+								   {14, 14, 14, 14, 14, 14}, //9 stat water
+								   {30, 30, 30, 30, 30 ,30}, //10 flow lava
+								   {30, 30, 30, 30, 30 ,30}, //11 flow lava
+								   {18, 18, 18, 18, 18, 18}, //12 sand
+								   {19, 19, 19, 19, 19, 19}, //13 gravel
+								   {32, 32, 32, 32, 32, 32}, //14 gold
+								   {33, 33, 33, 33, 33, 33}, //15 iron
+								   {34, 34, 34, 34, 34, 34}, //16 coal ore
+								   {20, 20, 20, 20, 21, 21}, //17 log
+								   {22, 22, 22, 22, 22, 22}, //18 leaves
+								   {48, 48, 48, 48, 48, 48}, //19 sponge
+								   {49, 49, 49, 49, 49, 49}, //20 glass
+								   {64, 64, 64, 64, 64, 64}, //21 wool
+								   {65, 65, 65, 65, 65, 65}, //22 wool
+								   {66, 66, 66, 66, 66, 66}, //23 wool
+								   {67, 67, 67, 67, 67, 67}, //24 wool
+								   {68, 68, 68, 68, 68, 68}, //25 wool
+								   {69, 69, 69, 69, 69, 69}, //26 wool
+								   {70, 70, 70, 70, 70, 70}, //27 wool
+								   {71, 71, 71, 71, 71, 71}, //28 wool
+								   {72, 72, 72, 72, 72, 72}, //29 wool
+								   {73, 73, 73, 73, 73, 73}, //30 wool
+								   {74, 74, 74, 74, 74, 74}, //31 wool
+								   {75, 75, 75, 75, 75, 75}, //32 wool
+								   {76, 76, 76, 76, 76, 76}, //33 wool
+								   {77, 77, 77, 77, 77, 77}, //34 wool
+								   {78, 78, 78, 78, 78, 78}, //35 wool
+								   {79, 79, 79, 79, 79, 79}, //36 wool
+								   {13, 13, 13, 13, 13, 13}, //37 dandelion
+								   {12, 12, 12, 12, 12, 12}, //38 rose
+								   {29, 29, 29, 29, 29, 29}, //39 brown mush
+								   {28, 28, 28, 28, 28, 28}, //40 red mush
 								 };
 
 Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr), renderer(nullptr) {

@@ -13,7 +13,7 @@ int main() {
 
 	Game* game = new Game();
 
-	NetworkManager* n = new NetworkManager("dirbaio.net", 25565, "blarg");
+	NetworkManager* n = new NetworkManager("localhost", 25565, "blarg");
 	n->addTo(game);
 
 	game->run();

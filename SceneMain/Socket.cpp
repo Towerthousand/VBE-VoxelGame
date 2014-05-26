@@ -134,6 +134,14 @@ short Socket::readShort()
 	return r;
 }
 
+int Socket::readInt()
+{
+	int r;
+	read(&r, sizeof(r));
+	r = ntohl(r);
+	return r;
+}
+
 std::string Socket::readString()
 {
 	char str[64];
@@ -167,6 +175,13 @@ void Socket::writeByte(char c)
 void Socket::writeShort(short c)
 {
 	c = htons(c);
+	write(&c, sizeof(c));
+}
+
+
+void Socket::writeInt(int c)
+{
+	c = htonl(c);
 	write(&c, sizeof(c));
 }
 

@@ -14,6 +14,7 @@ class Socket
 		void read(void* dest, int len);
 		char readByte();
 		short readShort();
+		int readInt();
 		std::string readString();
 		void readBytes(char* bytes);
 
@@ -22,6 +23,7 @@ class Socket
 		void write(const void* src, int len);
 		void writeByte(char c);
 		void writeShort(short c);
+		void writeInt(int c);
 		void writeString(const std::string& s);
 		void writeBytes(char* bytes);
 
