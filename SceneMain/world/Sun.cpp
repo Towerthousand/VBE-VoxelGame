@@ -65,7 +65,6 @@ void Sun::update(float deltaTime) {
 	for(int i = 0; i < 8; ++i) {
 		vec3f& p = projections2[i];
 		p = vec3f(cam->getView()*vec4f(p, 1.0f));
-		max.x = std::max(max.x, p.x);
 		min.z = (min.z > p.z)? p.z : min.z;
 	}
 	cam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);

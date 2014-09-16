@@ -11,14 +11,12 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
 	gBuffer->addTexture(RenderTarget::COLOR0, Texture::RGB8); //COLOR
 	gBuffer->addTexture(RenderTarget::COLOR1, Texture::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
-	gBuffer->build();
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
 	sunTarget = new RenderTarget(1.0f);
 	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
-	sunTarget->build();
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setComparison(GL_LESS);
 
@@ -36,7 +34,7 @@ void DeferredContainer::update(float deltaTime) {
 
 void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
-	RenderTarget* screen = RenderTarget::getCurrent();
+	const RenderTarget* screen = RenderTarget::getCurrent();
 	//G BUFFER
 	GL_ASSERT(glEnable(GL_DEPTH_TEST));
 	GL_ASSERT(glDisable(GL_BLEND)); //no transparency whatsoever
