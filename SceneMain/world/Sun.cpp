@@ -26,7 +26,7 @@ void Sun::update(float deltaTime) {
 				Chunk* actual = col->getChunks()[y];
 				if(actual != nullptr) {
 					occludersBox.extend(actual->getWorldSpaceBoundingBox());
-					if(!actual->isHidden() && Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox()))
+					if(!actual->isEmpty() && Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox()))
 						occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}

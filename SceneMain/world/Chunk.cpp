@@ -2,7 +2,7 @@
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
 
-const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
+const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
 								   {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)
 								   {2, 2, 2, 2, 2, 2}, //1 = dirt
 								   {3, 3, 3, 3, 3, 3}, //2 = stone
@@ -14,7 +14,24 @@ const int textureIndexes[9][6] = { //order is front, back, left, right, bottom, 
 								   {9, 9, 9, 9, 9, 9}  //8 = sand
 								 };
 
-Chunk::Chunk(int x, unsigned int y, int z) : XPOS(x), YPOS(y), ZPOS(z), markedForRedraw(true), modelMatrix(mat4f(1.0f)), boundingBox(vec3f(0),vec3f(0)), world(nullptr), renderer(nullptr) {
+std::vector<vec3c> Chunk::visibilityNodes;
+bool Chunk::visited[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
+vec3c Chunk::d[6] = {
+	vec3c(-1,0,0),
+	vec3c(1,0,0),
+	vec3c(0,-1,0),
+	vec3c(0,1,0),
+	vec3c(0,0,-1),
+	vec3c(0,0,1)
+};
+
+
+Chunk::Chunk(int x, unsigned int y, int z) :
+	XPOS(x), YPOS(y), ZPOS(z),
+	needsMeshRebuild(true), hasVertices(false),
+	visibilityFlags(0x0000), modelMatrix(mat4f(1.0f)),
+	boundingBox(vec3f(0),vec3f(0)),
+	world(nullptr), renderer(nullptr) {
 	if(Game::i() != nullptr) {
 		world = (World*)Game::i()->getObjectByName("world");
 		renderer = (DeferredContainer*)Game::i()->getObjectByName("deferred");
@@ -27,51 +44,50 @@ Chunk::~Chunk() {
 	delete terrainModel.mesh;
 }
 
-void Chunk::initMesh() {
-	std::vector<Vertex::Element> elements = {
-		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
-		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
-		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat)
-	};
-	terrainModel.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
-	terrainModel.program = Programs.get("deferredChunk");
-	boundingBoxModel.mesh = Meshes.get("1x1Cube");
-	boundingBoxModel.program = Programs.get("occlusionQuery");
+void Chunk::initStructures() {
+	visibilityNodes.empty();
+	for(unsigned int x = 0; x < CHUNKSIZE; x++)
+		for(unsigned int y = 0; y < CHUNKSIZE; y++)
+			for(unsigned int z = 0; z < CHUNKSIZE; z++)
+				if(x == 0 || y == 0 || z == 0 || x == CHUNKSIZE-1 || y == CHUNKSIZE-1 || z == CHUNKSIZE-1)
+					visibilityNodes.push_back(vec3c(x,y,z));
 }
 
-unsigned int Chunk::getCube(int x, int y, int z) const { //in local space
-	if(x >= 0 && x < CHUNKSIZE && y >= 0 && y < CHUNKSIZE && z >= 0 && z < CHUNKSIZE)
-		return cubes[x][y][z];
-	return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
+unsigned short Chunk::getVisibilityFlagsForFaces(unsigned char faces) {
+	unsigned short ret = 0x0000;
+	if((faces & MINX) && (faces & MAXX)) ret |= MINX_MAXX;
+	if((faces & MINX) && (faces & MINY)) ret |= MINX_MINY;
+	if((faces & MINX) && (faces & MAXY)) ret |= MINX_MAXY;
+	if((faces & MINX) && (faces & MINZ)) ret |= MINX_MINZ;
+	if((faces & MINX) && (faces & MAXZ)) ret |= MINX_MAXX;
+	if((faces & MINY) && (faces & MAXX)) ret |= MINY_MAXX;
+	if((faces & MINY) && (faces & MAXY)) ret |= MINY_MAXY;
+	if((faces & MINY) && (faces & MINZ)) ret |= MINY_MINZ;
+	if((faces & MINY) && (faces & MAXZ)) ret |= MINY_MAXZ;
+	if((faces & MINZ) && (faces & MAXX)) ret |= MINZ_MAXX;
+	if((faces & MINZ) && (faces & MAXY)) ret |= MINZ_MAXY;
+	if((faces & MINZ) && (faces & MAXZ)) ret |= MINZ_MAXZ;
+	if((faces & MAXX) && (faces & MAXY)) ret |= MAXX_MAXY;
+	if((faces & MAXX) && (faces & MAXZ)) ret |= MAXX_MAXZ;
+	if((faces & MAXY) && (faces & MAXZ)) ret |= MAXY_MAXZ;
+	return ret;
 }
 
-vec3i Chunk::getAbsolutePos() const {
-	return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
-}
-
-AABB Chunk::getWorldSpaceBoundingBox() {
-	return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
+Chunk::Face Chunk::getOppositeFace(Chunk::Face f) {
+	switch(f) {
+		case MINX: return MAXX;
+		case MINY: return MAXY;
+		case MINZ: return MAXZ;
+		case MAXX: return MINX;
+		case MAXY: return MINY;
+		case MAXZ: return MINZ;
+		case ALL_FACES: return ALL_FACES;
+	}
+	return ALL_FACES;
 }
 
 void Chunk::update(float deltaTime) {
 	(void) deltaTime;
-	if(terrainModel.mesh == nullptr) initMesh();
-	if(!markedForRedraw) return;
-	markedForRedraw = false;
-	std::vector<Chunk::Vert> renderData;
-	boundingBox = AABB();
-	for(int z = 0; z < CHUNKSIZE; ++z)
-		for(int y = 0; y < CHUNKSIZE; ++y)
-			for(int x = 0; x < CHUNKSIZE; ++x)
-				if (cubes[x][y][z] != 0) { // only draw if it's not air
-					unsigned int oldSize = renderData.size();
-					pushCubeToArray(x, y, z, renderData);
-					if(renderData.size() > oldSize){
-						boundingBox.extend(vec3f(x, y, z));
-						boundingBox.extend(vec3f(x+1, y+1, z+1));
-					}
-				}
-	terrainModel.mesh->setVertexData(&renderData[0], renderData.size());
 }
 
 void Chunk::draw() const {
@@ -104,6 +120,99 @@ void Chunk::drawBoundingBox() const {
 		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
 		boundingBoxModel.draw();
 	}
+}
+
+void Chunk::rebuildMesh() {
+	if(!needsMeshRebuild) return;
+	needsMeshRebuild = false;
+	if(terrainModel.mesh == nullptr) initMesh();
+	std::vector<Chunk::Vert> renderData;
+	boundingBox = AABB();
+	for(int z = 0; z < CHUNKSIZE; ++z)
+		for(int y = 0; y < CHUNKSIZE; ++y)
+			for(int x = 0; x < CHUNKSIZE; ++x)
+				if (cubes[x][y][z] != 0) { // only draw if it's not air
+					unsigned int oldSize = renderData.size();
+					pushCubeToArray(x, y, z, renderData);
+					if(renderData.size() > oldSize){
+						boundingBox.extend(vec3f(x, y, z));
+						boundingBox.extend(vec3f(x+1, y+1, z+1));
+					}
+				}
+	terrainModel.mesh->setVertexData(&renderData[0], renderData.size());
+	hasVertices = (renderData.size() != 0);
+	rebuildVisibilityGraph();
+}
+
+vec3i Chunk::getAbsolutePos() const {
+	return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
+}
+
+AABB Chunk::getWorldSpaceBoundingBox() const {
+	return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
+}
+
+bool Chunk::visibilityTest(Chunk::Face enter, Chunk::Face exit) const {
+	return !((getVisibilityFlagsForFaces(enter|exit) & visibilityFlags) == 0x0000);
+}
+
+void Chunk::initMesh() {
+	std::vector<Vertex::Element> elements = {
+		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
+		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
+		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat)
+	};
+	terrainModel.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
+	terrainModel.program = Programs.get("deferredChunk");
+	boundingBoxModel.mesh = Meshes.get("1x1Cube");
+	boundingBoxModel.program = Programs.get("occlusionQuery");
+}
+
+void Chunk::rebuildVisibilityGraph() {
+	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
+	visibilityFlags = 0; //the flags
+	std::queue<vec3c> q;
+	unsigned char faces;
+	for(unsigned int i = 0; i < visibilityNodes.size(); ++i) {
+		vec3c& src = visibilityNodes[i];
+		if(visited[src.x][src.y][src.z] || cubes[src.x][src.y][src.z] != 0) continue;
+		faces = 0x00; //faces the current bfs has touched
+		q.empty();
+		q.push(src);
+		visited[src.x][src.y][src.z] = true; //visited by any bfs?
+		if(src.x == 0) faces |= MINX;
+		else if(src.x == CHUNKSIZE-1) faces |= MAXX;
+		if(src.y == 0) faces |= MINY;
+		else if(src.y == CHUNKSIZE-1) faces |= MAXY;
+		if(src.z == 0) faces |= MINZ;
+		else if(src.z == CHUNKSIZE-1) faces |= MAXZ;
+		while(!q.empty()) {
+			vec3c c = q.front();
+			q.pop();
+			for(int i = 0; i < 6; ++i) {
+				vec3c curr2 = c + d[i];
+				if(visited[curr2.x][curr2.y][curr2.z] || cubes[curr2.x][curr2.y][curr2.z] != 0) continue;
+				visited[curr2.x][curr2.y][curr2.z] = true;
+				if(curr2.x == 0) faces |= MINX;
+				else if(curr2.x == CHUNKSIZE-1) faces |= MAXX;
+				if(curr2.y == 0) faces |= MINY;
+				else if(curr2.y == CHUNKSIZE-1) faces |= MAXY;
+				if(curr2.z == 0) faces |= MINZ;
+				else if(curr2.z == CHUNKSIZE-1) faces |= MAXZ;
+			}
+			if(faces == ALL_FACES) { visibilityFlags = ALL_FLAGS; return; }
+		}
+
+		visibilityFlags |= getVisibilityFlagsForFaces(faces);
+
+		if(visibilityFlags == ALL_FLAGS) return;
+	}
+}
+
+unsigned int Chunk::getCube(int x, int y, int z) const { //in local space
+	if(x >= 0 && x < CHUNKSIZE && y >= 0 && y < CHUNKSIZE && z >= 0 && z < CHUNKSIZE)
+		return cubes[x][y][z];
+	return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
 }
 
 void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> &renderData) { //I DON'T KNOW HOW TO MAKE THIS COMPACT

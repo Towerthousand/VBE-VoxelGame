@@ -4,6 +4,15 @@
 #include "../DeferredContainer.hpp"
 #include "Sun.hpp"
 
+struct FunctorComparevec3i{
+		bool operator()(const vec3i& a, const vec3i& b) {
+			if(a.x != b.x) return a.x < b.x;
+			if(a.y != b.y) return a.y < b.y;
+			if(a.z != b.z) return a.z < b.z;
+			return false;
+		}
+};
+
 World::World() : generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	setName("world");
@@ -67,66 +76,58 @@ void World::draw() const {
 }
 
 void World::draw(Camera* cam) const{
-	std::priority_queue<std::pair<float,Chunk*> > queryList; //chunks to be queried, ordered by distance
-	for(int x = 0; x < WORLDSIZE; ++x)
-		for(int z = 0; z < WORLDSIZE; ++z) {
-			Column* col = columns[x][z];
-			if(col == nullptr) continue;
-			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
-				Chunk* actual = col->getChunks()[y];
-				if(actual == nullptr || actual->isHidden() || !Collision::intersects(cam->getFrustum(),actual->getWorldSpaceBoundingBox())) continue;
-				queryList.push(std::pair<float,Chunk*>(-glm::length(vec3f(actual->getAbsolutePos()) + vec3f(CHUNKSIZE/2)-cam->getWorldPos()),actual));
-			}
+	std::vector<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
+	vec3i initialChunk(glm::floor(cam->getForward()));
+	std::queue<std::pair<Chunk::Face, vec3i>>q; //bfs queue, each node is (entry face, chunkPos), in chunk coords
+	std::map<vec3i,int, FunctorComparevec3i> visited; //visited nodes.
+	Chunk::Face faces[6] = {
+		Chunk::MINX, Chunk::MAXX,
+		Chunk::MINY, Chunk::MAXY,
+		Chunk::MINZ, Chunk::MAXZ
+	};
+	vec3i offsets[6] = {
+		vec3i(-1,0,0), vec3i(1,0,0),
+		vec3i(0,-1,0), vec3i(0,1,0),
+		vec3i(0,0,-1), vec3i(0,0,1)
+	};
+	//push initial
+	q.push(std::pair<Chunk::Face, vec3i>(Chunk::ALL_FACES, initialChunk));
+	visited.insert(std::pair<vec3i, int>(initialChunk, 0));
+	//bfs
+	while(!q.empty()) {
+		std::pair<Chunk::Face, vec3i> currentChunkPos = q.front();
+		q.pop();
+
+		//Process current chunk: if it exists, rebuild mesh+visibility graph and queue for drawing
+		Column* currentColumn = getColumn(currentChunkPos.second*CHUNKSIZE);
+		Chunk* currentChunk = nullptr; //used later inside neighbor loop
+		if(currentColumn != nullptr && (currentChunk = currentColumn->getChunk(currentChunkPos.second.y*CHUNKSIZE)) != nullptr) {
+			currentChunk->rebuildMesh();
+			chunksToDraw.push_back(currentChunk);
 		}
 
-	//do occlusion culling here!
-	int layers = 10;
-	int chunksPerLayer = queryList.size()/layers + int(queryList.size()%layers > 0); //chunks per pass
-	//first layer is always drawn
-	for(int i = 0; i < chunksPerLayer && queryList.size() > 0; i++) {
-		std::pair<float,Chunk*> c = queryList.top();
-		queryList.pop();
-		c.second->draw();
+		int distance = visited.at(currentChunkPos.second)+1; //neighbor chunks's bfs distance
+		//foreach face
+		for(int i = 0; i < 6; ++i) {
+			std::pair<Chunk::Face,vec3i> neighborChunkPos(Chunk::getOppositeFace(faces[i]), currentChunkPos.second + offsets[i]);
+
+			//visited culling
+			if(visited.find(neighborChunkPos.second) != visited.end()) continue;
+			visited.insert(std::pair<vec3i, int>(neighborChunkPos.second, distance));
+			//manhattan culling
+			if(distance > Utils::manhattanDistance(initialChunk, neighborChunkPos.second)) continue;
+			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
+			if(getColumn(neighborChunkPos.second*CHUNKSIZE) == nullptr) continue;
+			//visibility culling
+			if(currentChunk != nullptr && !currentChunk->visibilityTest(currentChunkPos.first , faces[i])) continue;
+			//fustrum culling
+			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborChunkPos.second*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), CHUNKSIZE>>1))) continue;
+
+			q.push(neighborChunkPos);
+		}
 	}
-	//Query other layers
-	for(int currLayer = 1; currLayer < layers && queryList.size() > 0; ++currLayer) {
-		std::vector<GLuint> queries(chunksPerLayer,0);
-		std::vector<Chunk*> chunkPointers(chunksPerLayer,nullptr);
-
-		//disable rendering state
-		GL_ASSERT(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
-		GL_ASSERT(glDepthMask(GL_FALSE));
-
-		//generate and send the queries
-		int queriesSent = 0;
-		GL_ASSERT(glGenQueries(chunksPerLayer, &queries[0]));
-		for (int i = 0; i < chunksPerLayer && queryList.size() > 0; ++i) {
-			Chunk* currChunk = queryList.top().second;
-			chunkPointers[i] = currChunk;
-			queryList.pop();
-
-			GL_ASSERT(glBeginQuery(GL_ANY_SAMPLES_PASSED,queries[i]));
-			currChunk->drawBoundingBox();
-			GL_ASSERT(glEndQuery(GL_ANY_SAMPLES_PASSED));
-			++queriesSent;
-		}
-
-		//enable rendering state
-		GL_ASSERT(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-		GL_ASSERT(glDepthMask(GL_TRUE));
-
-		//collect query results
-		for (int i = 0; i < queriesSent; ++i) {
-			//if we have pending query, get result
-			GLint seen;
-			GL_ASSERT(glGetQueryObjectiv(queries[i],GL_QUERY_RESULT, &seen));
-			//if seen, draw it
-			if (seen > 0)
-				chunkPointers[i]->draw();
-		}
-		//delete the queries
-		GL_ASSERT(glDeleteQueries(queries.size(),&queries[0]));
-	}
+	for(unsigned int i = 0; i < chunksToDraw.size(); ++i)
+		chunksToDraw[i]->draw();
 }
 
 bool World::outOfBounds(int x, int y, int z) const {
@@ -137,10 +138,6 @@ bool World::outOfBounds(int x, int y, int z) const {
 Column* World::getColumn(int x, int y, int z) const {
 	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
 	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0)? nullptr:c;
-}
-
-Camera* World::getCamera() const {
-	return (Camera*)getGame()->getObjectByName("playerCam");
 }
 
 unsigned int World::getCube(int x, int y, int z) const {

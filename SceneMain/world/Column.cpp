@@ -27,16 +27,20 @@ void Column::setCube(unsigned int x, unsigned int y, unsigned int z, unsigned in
 	if(chunks[chunk] == nullptr)
 		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
 	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z] = cube;
-	chunks[chunk]->markedForRedraw = true;
+	chunks[chunk]->needsMeshRebuild = true;
 }
 
 void Column::rebuildMeshes() {
-	return;
 	for(unsigned int i = 0; i < chunks.size(); ++i)
 		if(chunks[i] != nullptr)
-			chunks[i]->markedForRedraw = true;
+			chunks[i]->needsMeshRebuild = true;
 }
 
 vec3i Column::getAbolutePos() const {
 	return vec3i(XPOS*CHUNKSIZE,0,ZPOS*CHUNKSIZE);
+}
+
+Chunk*Column::getChunk(int y) {
+	int realY = y >> CHUNKSIZE_POW2;
+	return (realY < 0 || realY >= (int)chunks.size()) ? nullptr : chunks[realY];
 }

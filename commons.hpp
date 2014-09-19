@@ -18,4 +18,11 @@ constexpr int MINLIGHT = 3;
 constexpr int MAXLIGHT = 16;
 constexpr int TEXSIZE = 8;
 
+namespace Utils {
+	template<typename T>
+	inline int manhattanDistance(const glm::detail::tvec3<T>& a, const glm::detail::tvec3<T>& b) {
+		return std::abs(a[0]-b[0])+std::abs(a[1]-b[1])+std::abs(a[2]-b[2]);
+	}
+}
+
 #endif // COMMONS_HPP

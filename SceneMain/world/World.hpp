@@ -19,7 +19,6 @@ class World : public GameObject {
 		unsigned int getCube(int x, int y, int z) const;
 		Column* getColumn(int x, int y, int z) const;
 		Column* getColumn(vec3i pos) const {return getColumn(pos.x,pos.y,pos.z);}
-		Camera* getCamera() const;
 
 		void setCube(int x, int y, int z, unsigned int cube);
 	private:
