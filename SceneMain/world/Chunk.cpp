@@ -29,7 +29,7 @@ vec3c Chunk::d[6] = {
 Chunk::Chunk(int x, unsigned int y, int z) :
 	XPOS(x), YPOS(y), ZPOS(z),
 	needsMeshRebuild(true), hasVertices(false),
-	visibilityFlags(0x0000), modelMatrix(mat4f(1.0f)),
+	visibilityGraph(0), modelMatrix(mat4f(1.0f)),
 	boundingBox(vec3f(0),vec3f(0)),
 	world(nullptr), renderer(nullptr) {
 	if(Game::i() != nullptr) {
@@ -51,26 +51,6 @@ void Chunk::initStructures() {
 			for(unsigned int z = 0; z < CHUNKSIZE; z++)
 				if(x == 0 || y == 0 || z == 0 || x == CHUNKSIZE-1 || y == CHUNKSIZE-1 || z == CHUNKSIZE-1)
 					visibilityNodes.push_back(vec3c(x,y,z));
-}
-
-unsigned short Chunk::getVisibilityFlagsForFaces(unsigned char faces) {
-	unsigned short ret = 0x0000;
-	if((faces & MINX) != 0x00 && (faces & MAXX) != 0x00) ret |= MINX_MAXX;
-	if((faces & MINX) != 0x00 && (faces & MINY) != 0x00) ret |= MINX_MINY;
-	if((faces & MINX) != 0x00 && (faces & MAXY) != 0x00) ret |= MINX_MAXY;
-	if((faces & MINX) != 0x00 && (faces & MINZ) != 0x00) ret |= MINX_MINZ;
-	if((faces & MINX) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINX_MAXX;
-	if((faces & MINY) != 0x00 && (faces & MAXX) != 0x00) ret |= MINY_MAXX;
-	if((faces & MINY) != 0x00 && (faces & MAXY) != 0x00) ret |= MINY_MAXY;
-	if((faces & MINY) != 0x00 && (faces & MINZ) != 0x00) ret |= MINY_MINZ;
-	if((faces & MINY) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINY_MAXZ;
-	if((faces & MINZ) != 0x00 && (faces & MAXX) != 0x00) ret |= MINZ_MAXX;
-	if((faces & MINZ) != 0x00 && (faces & MAXY) != 0x00) ret |= MINZ_MAXY;
-	if((faces & MINZ) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINZ_MAXZ;
-	if((faces & MAXX) != 0x00 && (faces & MAXY) != 0x00) ret |= MAXX_MAXY;
-	if((faces & MAXX) != 0x00 && (faces & MAXZ) != 0x00) ret |= MAXX_MAXZ;
-	if((faces & MAXY) != 0x00 && (faces & MAXZ) != 0x00) ret |= MAXY_MAXZ;
-	return ret;
 }
 
 Chunk::Face Chunk::getOppositeFace(Chunk::Face f) {
@@ -153,7 +133,13 @@ AABB Chunk::getWorldSpaceBoundingBox() const {
 }
 
 bool Chunk::visibilityTest(Chunk::Face enter, Chunk::Face exit) const {
-	return ((getVisibilityFlagsForFaces(enter|exit) & visibilityFlags) != 0x0000);
+	if(enter == ALL_FACES || exit == ALL_FACES) return true; //for starting node on chunk BFS
+	return visibilityGraph.test(getVisibilityIndex(enter, exit));
+}
+
+int Chunk::getVisibilityIndex(int a, int b) {
+	if(a >= b) a--;
+	return a+b*5;
 }
 
 void Chunk::initMesh() {
@@ -170,24 +156,24 @@ void Chunk::initMesh() {
 
 void Chunk::rebuildVisibilityGraph() {
 	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
-	visibilityFlags = 0x0000; //the flags
+	visibilityGraph.reset();
 	std::queue<vec3c> q;
-	unsigned char faces;
+	std::bitset<6> faces;
 	for(unsigned int i = 0; i < visibilityNodes.size(); ++i) {
 		vec3c& src = visibilityNodes[i];
 		if(visited[src.x][src.y][src.z] || cubes[src.x][src.y][src.z] != 0) continue;
-		faces = 0x00; //faces the current bfs has touched
+		faces.reset(); //faces the current bfs has touched
 		q.empty();
 		q.push(src);
 		visited[src.x][src.y][src.z] = true; //visited by any bfs?
 		while(!q.empty()) {
 			vec3c c = q.front(); q.pop();
-			if(c.x == 0) faces |= MINX;
-			else if(c.x == CHUNKSIZE-1) faces |= MAXX;
-			if(c.y == 0) faces |= MINY;
-			else if(c.y == CHUNKSIZE-1) faces |= MAXY;
-			if(c.z == 0) faces |= MINZ;
-			else if(c.z == CHUNKSIZE-1) faces |= MAXZ;
+			if(c.x == 0) faces.set(MINX);
+			else if(c.x == CHUNKSIZE-1) faces.set(MAXX);
+			if(c.y == 0) faces.set(MINY);
+			else if(c.y == CHUNKSIZE-1) faces.set(MAXY);
+			if(c.z == 0) faces.set(MINZ);
+			else if(c.z == CHUNKSIZE-1) faces.set(MAXZ);
 			for(int j = 0; j < 6; ++j) {
 				vec3c neighbor = c + d[j];
 				//cull out-of-chunk nodes
@@ -200,12 +186,16 @@ void Chunk::rebuildVisibilityGraph() {
 				visited[neighbor.x][neighbor.y][neighbor.z] = true;
 				q.push(neighbor);
 			}
-			if(faces == ALL_FACES) { visibilityFlags = ALL_FLAGS; return; }
+			if(faces.all()) { visibilityGraph.set(); return; }
 		}
 
-		visibilityFlags |= getVisibilityFlagsForFaces(faces);
+		for(int i = 0; i < 6; ++ i)
+			for(int j = i+1; j < 6; ++j) {
+				visibilityGraph.set(getVisibilityIndex(i,j));
+				visibilityGraph.set(getVisibilityIndex(j,i));
+			}
 
-		if(visibilityFlags == ALL_FLAGS) return;
+		if(visibilityGraph.all()) return;
 	}
 }
 

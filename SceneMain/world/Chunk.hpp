@@ -6,40 +6,20 @@ class World;
 class DeferredContainer;
 class Chunk {
 	public:
-		enum VisibilityFlag {
-			MINX_MAXX = 0x0001,
-			MINX_MINY = 0x0002,
-			MINX_MAXY = 0x0004,
-			MINX_MINZ = 0x0008,
-			MINX_MAXZ = 0x0010,
-			MINY_MAXX = 0x0020,
-			MINY_MAXY = 0x0040,
-			MINY_MINZ = 0x0080,
-			MINY_MAXZ = 0x0100,
-			MINZ_MAXX = 0x0200,
-			MINZ_MAXY = 0x0400,
-			MINZ_MAXZ = 0x0800,
-			MAXX_MAXY = 0x1000,
-			MAXX_MAXZ = 0x2000,
-			MAXY_MAXZ = 0x4000,
-			ALL_FLAGS = 0x7FFF
-		};
-
 		enum Face {
-			MINX = 0x01,
-			MINY = 0x02,
-			MINZ = 0x04,
-			MAXX = 0x08,
-			MAXY = 0x10,
-			MAXZ = 0x20,
-			ALL_FACES = 0x3F
+			MINX = 0,
+			MINY = 1,
+			MINZ = 2,
+			MAXX = 3,
+			MAXY = 4,
+			MAXZ = 5,
+			ALL_FACES = 6
 		};
 
 		Chunk(int x, unsigned int y, int z);
 		~Chunk();
 
 		static void initStructures();
-		static unsigned short getVisibilityFlagsForFaces(unsigned char faces);
 		static Face getOppositeFace(Face f);
 
 		void update(float deltaTime);
@@ -68,6 +48,8 @@ class Chunk {
 				unsigned short tx,ty;
 		};
 
+		static int getVisibilityIndex(int a, int b);
+
 		void initMesh();
 		void rebuildVisibilityGraph();
 		unsigned int getCube(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
@@ -77,10 +59,9 @@ class Chunk {
 		const int XPOS; //in chunks
 		const unsigned int YPOS; //in chunks
 		const int ZPOS; //in chunks
-
 		bool needsMeshRebuild; //does it need rebuilding?
 		bool hasVertices; //is there any face touching air?
-		unsigned short visibilityFlags;
+		std::bitset<30> visibilityGraph;
 		mat4f modelMatrix;
 		AABB boundingBox;
 		Model terrainModel;
