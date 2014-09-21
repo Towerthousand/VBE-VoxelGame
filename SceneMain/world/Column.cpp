@@ -13,10 +13,8 @@ Column::~Column() {
 
 unsigned int Column::getCube(unsigned int x, unsigned int y, unsigned int z) const {
 	VBE_ASSERT(int(x) < CHUNKSIZE && int(z) < CHUNKSIZE, "Invalid Column::getCube() parameters");
-	int chunk = y >> CHUNKSIZE_POW2;
-	if((int)chunks.size() <= chunk || chunks[chunk] == nullptr)
-		return 0;
-	return chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z];
+	Chunk* c = getChunk(y);
+	return (c != nullptr? c->cubes[x][y&CHUNKSIZE_MASK][z] : 0);
 }
 
 void Column::setCube(unsigned int x, unsigned int y, unsigned int z, unsigned int cube) {
@@ -40,7 +38,7 @@ vec3i Column::getAbolutePos() const {
 	return vec3i(XPOS*CHUNKSIZE,0,ZPOS*CHUNKSIZE);
 }
 
-Chunk*Column::getChunk(int y) {
+Chunk* Column::getChunk(int y) const {
 	int realY = y >> CHUNKSIZE_POW2;
 	return (realY < 0 || realY >= (int)chunks.size()) ? nullptr : chunks[realY];
 }

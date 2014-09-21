@@ -55,21 +55,21 @@ void Chunk::initStructures() {
 
 unsigned short Chunk::getVisibilityFlagsForFaces(unsigned char faces) {
 	unsigned short ret = 0x0000;
-	if((faces & MINX) && (faces & MAXX)) ret |= MINX_MAXX;
-	if((faces & MINX) && (faces & MINY)) ret |= MINX_MINY;
-	if((faces & MINX) && (faces & MAXY)) ret |= MINX_MAXY;
-	if((faces & MINX) && (faces & MINZ)) ret |= MINX_MINZ;
-	if((faces & MINX) && (faces & MAXZ)) ret |= MINX_MAXX;
-	if((faces & MINY) && (faces & MAXX)) ret |= MINY_MAXX;
-	if((faces & MINY) && (faces & MAXY)) ret |= MINY_MAXY;
-	if((faces & MINY) && (faces & MINZ)) ret |= MINY_MINZ;
-	if((faces & MINY) && (faces & MAXZ)) ret |= MINY_MAXZ;
-	if((faces & MINZ) && (faces & MAXX)) ret |= MINZ_MAXX;
-	if((faces & MINZ) && (faces & MAXY)) ret |= MINZ_MAXY;
-	if((faces & MINZ) && (faces & MAXZ)) ret |= MINZ_MAXZ;
-	if((faces & MAXX) && (faces & MAXY)) ret |= MAXX_MAXY;
-	if((faces & MAXX) && (faces & MAXZ)) ret |= MAXX_MAXZ;
-	if((faces & MAXY) && (faces & MAXZ)) ret |= MAXY_MAXZ;
+	if((faces & MINX) != 0x00 && (faces & MAXX) != 0x00) ret |= MINX_MAXX;
+	if((faces & MINX) != 0x00 && (faces & MINY) != 0x00) ret |= MINX_MINY;
+	if((faces & MINX) != 0x00 && (faces & MAXY) != 0x00) ret |= MINX_MAXY;
+	if((faces & MINX) != 0x00 && (faces & MINZ) != 0x00) ret |= MINX_MINZ;
+	if((faces & MINX) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINX_MAXX;
+	if((faces & MINY) != 0x00 && (faces & MAXX) != 0x00) ret |= MINY_MAXX;
+	if((faces & MINY) != 0x00 && (faces & MAXY) != 0x00) ret |= MINY_MAXY;
+	if((faces & MINY) != 0x00 && (faces & MINZ) != 0x00) ret |= MINY_MINZ;
+	if((faces & MINY) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINY_MAXZ;
+	if((faces & MINZ) != 0x00 && (faces & MAXX) != 0x00) ret |= MINZ_MAXX;
+	if((faces & MINZ) != 0x00 && (faces & MAXY) != 0x00) ret |= MINZ_MAXY;
+	if((faces & MINZ) != 0x00 && (faces & MAXZ) != 0x00) ret |= MINZ_MAXZ;
+	if((faces & MAXX) != 0x00 && (faces & MAXY) != 0x00) ret |= MAXX_MAXY;
+	if((faces & MAXX) != 0x00 && (faces & MAXZ) != 0x00) ret |= MAXX_MAXZ;
+	if((faces & MAXY) != 0x00 && (faces & MAXZ) != 0x00) ret |= MAXY_MAXZ;
 	return ret;
 }
 
@@ -153,7 +153,7 @@ AABB Chunk::getWorldSpaceBoundingBox() const {
 }
 
 bool Chunk::visibilityTest(Chunk::Face enter, Chunk::Face exit) const {
-	return !((getVisibilityFlagsForFaces(enter|exit) & visibilityFlags) == 0x0000);
+	return ((getVisibilityFlagsForFaces(enter|exit) & visibilityFlags) != 0x0000);
 }
 
 void Chunk::initMesh() {
@@ -170,7 +170,7 @@ void Chunk::initMesh() {
 
 void Chunk::rebuildVisibilityGraph() {
 	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
-	visibilityFlags = 0; //the flags
+	visibilityFlags = 0x0000; //the flags
 	std::queue<vec3c> q;
 	unsigned char faces;
 	for(unsigned int i = 0; i < visibilityNodes.size(); ++i) {
@@ -180,25 +180,25 @@ void Chunk::rebuildVisibilityGraph() {
 		q.empty();
 		q.push(src);
 		visited[src.x][src.y][src.z] = true; //visited by any bfs?
-		if(src.x == 0) faces |= MINX;
-		else if(src.x == CHUNKSIZE-1) faces |= MAXX;
-		if(src.y == 0) faces |= MINY;
-		else if(src.y == CHUNKSIZE-1) faces |= MAXY;
-		if(src.z == 0) faces |= MINZ;
-		else if(src.z == CHUNKSIZE-1) faces |= MAXZ;
 		while(!q.empty()) {
-			vec3c c = q.front();
-			q.pop();
-			for(int i = 0; i < 6; ++i) {
-				vec3c curr2 = c + d[i];
-				if(visited[curr2.x][curr2.y][curr2.z] || cubes[curr2.x][curr2.y][curr2.z] != 0) continue;
-				visited[curr2.x][curr2.y][curr2.z] = true;
-				if(curr2.x == 0) faces |= MINX;
-				else if(curr2.x == CHUNKSIZE-1) faces |= MAXX;
-				if(curr2.y == 0) faces |= MINY;
-				else if(curr2.y == CHUNKSIZE-1) faces |= MAXY;
-				if(curr2.z == 0) faces |= MINZ;
-				else if(curr2.z == CHUNKSIZE-1) faces |= MAXZ;
+			vec3c c = q.front(); q.pop();
+			if(c.x == 0) faces |= MINX;
+			else if(c.x == CHUNKSIZE-1) faces |= MAXX;
+			if(c.y == 0) faces |= MINY;
+			else if(c.y == CHUNKSIZE-1) faces |= MAXY;
+			if(c.z == 0) faces |= MINZ;
+			else if(c.z == CHUNKSIZE-1) faces |= MAXZ;
+			for(int j = 0; j < 6; ++j) {
+				vec3c neighbor = c + d[j];
+				//cull out-of-chunk nodes
+				if(neighbor.x < 0 || neighbor.y < 0 || neighbor.z < 0 ||
+				   neighbor.x == CHUNKSIZE || neighbor.y == CHUNKSIZE || neighbor.z == CHUNKSIZE) continue;
+
+				//don't visit non-air nodes and omit already visited nodes
+				if(visited[neighbor.x][neighbor.y][neighbor.z] || cubes[neighbor.x][neighbor.y][neighbor.z] != 0) continue;
+
+				visited[neighbor.x][neighbor.y][neighbor.z] = true;
+				q.push(neighbor);
 			}
 			if(faces == ALL_FACES) { visibilityFlags = ALL_FLAGS; return; }
 		}

@@ -13,7 +13,7 @@ class Column {
 		int getX() const { return XPOS; }
 		int getZ() const { return ZPOS; }
 		const std::vector<Chunk*>& getChunks() const { return chunks; }
-		Chunk* getChunk(int y);
+		Chunk* getChunk(int y) const;
 
 		void rebuildMeshes();
 		void setCube(unsigned int x, unsigned int y, unsigned int z, unsigned int cube);

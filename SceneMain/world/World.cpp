@@ -77,7 +77,7 @@ void World::draw() const {
 
 void World::draw(Camera* cam) const{
 	std::vector<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
-	vec3i initialChunk(glm::floor(cam->getForward()));
+	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<std::pair<Chunk::Face, vec3i>>q; //bfs queue, each node is (entry face, chunkPos), in chunk coords
 	std::map<vec3i,int, FunctorComparevec3i> visited; //visited nodes.
 	Chunk::Face faces[6] = {
