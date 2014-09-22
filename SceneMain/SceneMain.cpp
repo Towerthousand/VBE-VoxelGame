@@ -5,6 +5,7 @@
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
+#include "debug/DebugDrawer.hpp"
 
 SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
@@ -30,8 +31,11 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	world->addTo(renderer);
 
 	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 10000.0f);
+	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 1000.0f);
 	player->addTo(this);
+
+	DebugDrawer* debug = new DebugDrawer();
+	debug->addTo(this);
 }
 
 SceneMain::~SceneMain() {
@@ -99,7 +103,7 @@ void SceneMain::loadResources() {
 	Programs.add("blurMaskPass", ShaderProgram::loadFromFile("data/shaders/quad.vert", "data/shaders/blurMaskPass.frag"));
 	Programs.add("depthShader", ShaderProgram::loadFromFile("data/shaders/depth.vert","data/shaders/depth.frag"));
 	Programs.add("deferredChunk", ShaderProgram::loadFromFile("data/shaders/chunkDeferred.vert", "data/shaders/chunkDeferred.frag"));
-	Programs.add("occlusionQuery", ShaderProgram::loadFromFile("data/shaders/occlusionQuery.vert", "data/shaders/occlusionQuery.frag"));
+	Programs.add("debugDraw", ShaderProgram::loadFromFile("data/shaders/debugDraw.vert", "data/shaders/debugDraw.frag"));
 }
 
 void SceneMain::update(float deltaTime) {

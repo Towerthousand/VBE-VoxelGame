@@ -5,6 +5,7 @@ BlurContainer::BlurContainer() {
 	noBlur->addRenderBuffer(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32);
 	noBlur->addTexture(RenderTarget::COLOR0, Texture::RGBA8);
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
+	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setWrap(GL_CLAMP_TO_EDGE);
 
 	float blurSize = 3;
 	float blurSizeDivisor = std::pow(2,blurSize);
@@ -82,4 +83,6 @@ void BlurContainer::draw() const {
 	quad.program->uniform("tex2")->set(blurred->getTextureForAttachment(RenderTarget::COLOR0));
 	quad.program->uniform("invResolution")->set(vec2f(1.0f/(Environment::getScreen()->getWidth()), 1.0f/(Environment::getScreen()->getHeight())));
 	quad.draw();
+
+	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 }

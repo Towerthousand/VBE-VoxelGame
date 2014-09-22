@@ -82,7 +82,7 @@ void Chunk::draw() const {
 		terrainModel.draw();
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		terrainModel.program = Programs.get("occlusionQuery");
+		terrainModel.program = Programs.get("depthShader");
 		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
 		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		terrainModel.draw();
@@ -152,7 +152,7 @@ void Chunk::initMesh() {
 	terrainModel.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
 	terrainModel.program = Programs.get("deferredChunk");
 	boundingBoxModel.mesh = Meshes.get("1x1Cube");
-	boundingBoxModel.program = Programs.get("occlusionQuery");
+	boundingBoxModel.program = Programs.get("depthShader");
 }
 
 void Chunk::rebuildVisibilityGraph() {

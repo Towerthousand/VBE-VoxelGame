@@ -85,6 +85,8 @@ void DeferredContainer::draw() const {
 
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
+	drawMode = Forward;
+	ContainerObject::draw();
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

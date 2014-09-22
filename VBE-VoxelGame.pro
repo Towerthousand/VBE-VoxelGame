@@ -26,7 +26,9 @@ SOURCES += main.cpp \
 	SceneMain/Player.cpp \
 	SceneMain/Hitbox.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
-	SceneMain/world/Sun.cpp
+	SceneMain/world/Sun.cpp \
+    SceneMain/debug/imgui.cpp \
+    SceneMain/debug/DebugDrawer.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -58,14 +60,15 @@ HEADERS += \
 	SceneMain/Hitbox.hpp \
 	SceneMain/world/DeferredCubeLight.hpp \
 	SceneMain/world/generator/TaskPool.hpp \
-	SceneMain/world/Sun.hpp
+	SceneMain/world/Sun.hpp \
+    SceneMain/debug/imconfig.hpp \
+    SceneMain/debug/imgui.hpp \
+    SceneMain/debug/stb_textedit.hpp \
+    SceneMain/debug/DebugDrawer.hpp
 
 OTHER_FILES += \
 	data/shaders/quad.vert \
 	data/shaders/light.frag \
-	data/shaders/particles.frag \
-	data/shaders/particles.vert \
-	data/shaders/particles.geom \
 	data/shaders/ambientPass.frag \
 	data/shaders/blurPassVertical.frag \
 	data/shaders/blurPassHoritzontal.frag \
@@ -75,7 +78,7 @@ OTHER_FILES += \
 	data/shaders/depth.vert \
 	data/shaders/chunkDeferred.vert \
 	data/shaders/chunkDeferred.frag \
-	data/shaders/occlusionQuery.vert \
-	data/shaders/occlusionQuery.frag \
-	data/shaders/cubeLight.frag
+	data/shaders/cubeLight.frag \
+    data/shaders/debugDraw.frag \
+    data/shaders/debugDraw.vert
 

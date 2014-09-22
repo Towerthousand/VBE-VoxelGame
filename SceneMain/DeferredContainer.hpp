@@ -8,7 +8,8 @@ class DeferredContainer : public ContainerObject {
         enum DrawMode {
 			Deferred = 0,
 			Light,
-			ShadowMap
+			ShadowMap,
+			Forward
 		};
 
 		DeferredContainer();
