@@ -20,8 +20,6 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	GL_ASSERT(glEnable(GL_CULL_FACE)); //enable backface culling
 	GL_ASSERT(glCullFace(GL_BACK));
 
-	//getGame()->getWindow().setVerticalSyncEnabled(true);
-
 	BlurContainer* blur = new BlurContainer();
 	blur->addTo(this);
 

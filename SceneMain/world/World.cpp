@@ -21,6 +21,7 @@ World::World() : generator(rand()), renderer(nullptr) {
 			columns[x][z] = nullptr;
 	Sun* sun = new Sun();
 	sun->addTo(this);
+	Chunk::initStructures();
 }
 
 World::~World() {
@@ -31,7 +32,7 @@ void World::update(float deltaTime) {
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
 		if(columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] != nullptr) delete newCol;
-		else {
+		else  {
 			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
 			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
 			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
@@ -93,6 +94,11 @@ void World::draw(Camera* cam) const{
 	//push initial
 	q.push(std::pair<Chunk::Face, vec3i>(Chunk::ALL_FACES, initialChunk));
 	visited.insert(std::pair<vec3i, int>(initialChunk, 0));
+	//push initial neighbors
+	for(int i = 0; i < 6; ++i) {
+		q.push(std::pair<Chunk::Face, vec3i>(Chunk::getOppositeFace(faces[i]), initialChunk+offsets[i]));
+		visited.insert(std::pair<vec3i, int>(initialChunk+offsets[i], 1));
+	}
 	//bfs
 	while(!q.empty()) {
 		std::pair<Chunk::Face, vec3i> currentChunkPos = q.front();
@@ -105,7 +111,6 @@ void World::draw(Camera* cam) const{
 			currentChunk->rebuildMesh();
 			chunksToDraw.push_back(currentChunk);
 		}
-
 		int distance = visited.at(currentChunkPos.second)+1; //neighbor chunks's bfs distance
 		//foreach face
 		for(int i = 0; i < 6; ++i) {
@@ -121,7 +126,7 @@ void World::draw(Camera* cam) const{
 			//visibility culling
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(currentChunkPos.first , faces[i])) continue;
 			//fustrum culling
-			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborChunkPos.second*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), CHUNKSIZE>>1))) continue;
+			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborChunkPos.second*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), (CHUNKSIZE>>1)*1.74f))) continue;
 
 			q.push(neighborChunkPos);
 		}

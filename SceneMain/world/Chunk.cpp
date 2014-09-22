@@ -71,6 +71,7 @@ void Chunk::update(float deltaTime) {
 }
 
 void Chunk::draw() const {
+	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
 		terrainModel.program = Programs.get("deferredChunk");
 		Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
@@ -167,7 +168,7 @@ void Chunk::rebuildVisibilityGraph() {
 		q.push(src);
 		visited[src.x][src.y][src.z] = true; //visited by any bfs?
 		while(!q.empty()) {
-			vec3c c = q.front(); q.pop();
+			vec3c c = q.front(); q.pop(); //current
 			if(c.x == 0) faces.set(MINX);
 			else if(c.x == CHUNKSIZE-1) faces.set(MAXX);
 			if(c.y == 0) faces.set(MINY);
@@ -175,20 +176,19 @@ void Chunk::rebuildVisibilityGraph() {
 			if(c.z == 0) faces.set(MINZ);
 			else if(c.z == CHUNKSIZE-1) faces.set(MAXZ);
 			for(int j = 0; j < 6; ++j) {
-				vec3c neighbor = c + d[j];
+				vec3c n = c + d[j]; //neighbor
 				//cull out-of-chunk nodes
-				if(neighbor.x < 0 || neighbor.y < 0 || neighbor.z < 0 ||
-				   neighbor.x == CHUNKSIZE || neighbor.y == CHUNKSIZE || neighbor.z == CHUNKSIZE) continue;
+				if(n.x < 0 || n.y < 0 || n.z < 0 ||
+				   n.x == CHUNKSIZE || n.y == CHUNKSIZE || n.z == CHUNKSIZE) continue;
 
 				//don't visit non-air nodes and omit already visited nodes
-				if(visited[neighbor.x][neighbor.y][neighbor.z] || cubes[neighbor.x][neighbor.y][neighbor.z] != 0) continue;
+				if(visited[n.x][n.y][n.z] || cubes[n.x][n.y][n.z] != 0) continue;
 
-				visited[neighbor.x][neighbor.y][neighbor.z] = true;
-				q.push(neighbor);
+				visited[n.x][n.y][n.z] = true;
+				q.push(n);
 			}
 			if(faces.all()) { visibilityGraph.set(); return; }
 		}
-
 		for(int i = 0; i < 6; ++ i)
 			for(int j = i+1; j < 6; ++j) {
 				visibilityGraph.set(getVisibilityIndex(i,j));
