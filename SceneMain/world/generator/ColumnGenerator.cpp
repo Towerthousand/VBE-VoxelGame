@@ -13,7 +13,7 @@
 #include "FunctionTerrainJoin.hpp"
 
 #define GENERATIONHEIGHT 16
-#define NWORKERS 1
+#define NWORKERS 3
 
 ColumnGenerator::ColumnGenerator(int seed) :
 	TaskPool(NWORKERS),
@@ -34,9 +34,12 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	Function3DSub* sub2 = new Function3DSub(add4,sub1);
 	FunctionTerrrainVolume* vol1 = new FunctionTerrrainVolume(sub2,2);
 	Function2DSimplex* simplex21 = new Function2DSimplex(&generator,50,90,95);
+	Function2DSimplex* simplex22 = new Function2DSimplex(&generator,100,0,130);
 	FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
-	FunctionTerrainJoin* join1 = new FunctionTerrainJoin(vol1,terrain1);
-	FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(join1,1,2,4);
+	FunctionTerrainHeightmap* terrain2 = new FunctionTerrainHeightmap(simplex22,2);
+	FunctionTerrainJoin* join1 = new FunctionTerrainJoin(terrain2,terrain1);
+	FunctionTerrainJoin* join2 = new FunctionTerrainJoin(vol1,join1);
+	FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(join2,1,2,4);
 	FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
 	entry = over2;
 }

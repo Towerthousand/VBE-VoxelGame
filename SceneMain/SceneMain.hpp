@@ -10,9 +10,7 @@ class SceneMain : public GameObject {
 		void update(float deltaTime);
 
 	private:
-        void loadResources();
-		float debugCounter;
-		int fpsCount;
+		void loadResources();
 };
 
 #endif // SCENEMAIN_HPP

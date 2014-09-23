@@ -7,10 +7,12 @@
 #include "world/DeferredCubeLight.hpp"
 #include "debug/Profiler.hpp"
 
-SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
+SceneMain::SceneMain() {
 	this->setName("SCENE");
 
 	loadResources();
+
+	srand(Environment::getClock()*1000);
 
 	//GL stuff..:
 	GL_ASSERT(glClearColor(0, 0, 0, 1));
@@ -107,12 +109,5 @@ void SceneMain::loadResources() {
 }
 
 void SceneMain::update(float deltaTime) {
-	++fpsCount;
-	debugCounter += deltaTime;
-	if (debugCounter > 1) {
-		VBE_LOG("FPS: " << fpsCount);
-		debugCounter--;
-		fpsCount = 0;
-	}
 	if(Environment::getKeyboard()->isKeyPressed(Keyboard::Escape)) getGame()->isRunning = false;
 }

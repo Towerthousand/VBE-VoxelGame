@@ -1,9 +1,18 @@
 #include "Profiler.hpp"
 #include "SceneMain/DeferredContainer.hpp"
 
+float Profiler::frameTimeStart = 0.0f;
+float Profiler::frameTimeEnd = 0.0f;
+float Profiler::updateTimeStart = 0.0f;
+float Profiler::updateTimeEnd = 0.0f;
+float Profiler::drawTimeStart = 0.0f;
+float Profiler::drawTimeEnd = 0.0f;
+int Profiler::cameraChunksDrawn = 0;
+int Profiler::sunChunksDrawn = 0;
+int Profiler::columnsGenerated = 0;
 Profiler* Profiler::instance = nullptr;
 
-Profiler::Profiler() : tex(nullptr), show_test(false), show_other(false), floatSlider(0.0f) {
+Profiler::Profiler() : frameCount(0), timePassed(0.0f), FPS(0), colsPerSecond(0), tex(nullptr) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
@@ -87,7 +96,10 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 }
 
 const char* Profiler::getClip() const {
-	return SDL_GetClipboardText();
+	char* c = SDL_GetClipboardText();
+	clip = std::string(c);
+	SDL_free(c);
+	return clip.c_str();
 }
 
 void Profiler::setClip(const char* text, const char* text_end) const {
@@ -118,21 +130,29 @@ void Profiler::update(float deltaTime) {
 	io.MouseDown[0] = Environment::getMouse()->isButtonHeld(Mouse::Left);
 	io.MousePos = vec2f(Environment::getMouse()->getMousePos());
 	ImGui::NewFrame();
+	//UPDATE INTERNAL DEBUG VARS AND RESET EXTERNAL
+	timePassed += deltaTime;
+	if(timePassed >= 1.0f) {
+		timePassed -= 1.0f;
+		FPS = frameCount;
+		frameCount = 0;
+	}
+	frameCount += 1;
+	frameTimeStart = 0.0f;
+	frameTimeEnd = 0.0f;
+	updateTimeStart = 0.0f;
+	updateTimeEnd = 0.0f;
+	drawTimeStart = 0;
+	drawTimeEnd = 0;
+	cameraChunksDrawn = 0;
+	sunChunksDrawn = 0;
+	columnsGenerated = 0;
 	//UI
-	ImGui::Text("Hello, world!");
-	ImGui::SliderFloat("float", &floatSlider, 0.0f, 1.0f);
-	show_test ^= ImGui::Button("Test Window");
-	show_other ^= ImGui::Button("Another Window");
-	ImGui::Text("60.0f FPS");
-	if (show_test) {
-		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));        // Normally user code doesn't need/want to call it because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-		ImGui::ShowTestWindow(&show_test);
-	}
-	if (show_other) {
-		ImGui::Begin("Another Window", &show_other, ImVec2(200,100));
-		ImGui::Text("Hello");
-		ImGui::End();
-	}
+	ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
+	ImGui::Begin("Profiler", nullptr, ImVec2(550,680));
+	ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
+	ImGui::Text("%i", FPS);
+	ImGui::End();
 }
 
 void Profiler::draw() const {
