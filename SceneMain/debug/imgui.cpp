@@ -5813,7 +5813,8 @@ void ShowTestWindow(bool* open)
         ImGui::PlotLines("Frame Times", &values.front(), (int)values.size(), (int)values_offset, "avg 0.0", -1.0f, 1.0f, ImVec2(0,70));
 
         ImGui::SameLine(); ImGui::Checkbox("pause", &pause);
-        ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0,70));
+		std::string str("LOLOL");
+		ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, str.c_str(), 0.0f, 1.0f, ImVec2(0,70));
     }
 
     if (ImGui::CollapsingHeader("Widgets on same line"))

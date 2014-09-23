@@ -5,7 +5,7 @@
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
-#include "debug/DebugDrawer.hpp"
+#include "debug/Profiler.hpp"
 
 SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	this->setName("SCENE");
@@ -34,7 +34,7 @@ SceneMain::SceneMain() : debugCounter(0.0), fpsCount(0) {
 	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 1000.0f);
 	player->addTo(this);
 
-	DebugDrawer* debug = new DebugDrawer();
+	Profiler* debug = new Profiler();
 	debug->addTo(this);
 }
 

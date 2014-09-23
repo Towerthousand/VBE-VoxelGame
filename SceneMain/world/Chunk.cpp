@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
+#pragma GCC diagnostic ignored "-Wchar-subscripts"
 
 const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
 								   {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)

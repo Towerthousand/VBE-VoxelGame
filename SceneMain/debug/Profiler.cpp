@@ -1,9 +1,9 @@
-#include "DebugDrawer.hpp"
+#include "Profiler.hpp"
 #include "SceneMain/DeferredContainer.hpp"
 
-DebugDrawer* DebugDrawer::instance = nullptr;
+Profiler* Profiler::instance = nullptr;
 
-DebugDrawer::DebugDrawer() : renderer(nullptr), tex(nullptr) {
+Profiler::Profiler() : tex(nullptr), show_test(false), show_other(false), floatSlider(0.0f) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
@@ -13,7 +13,6 @@ DebugDrawer::DebugDrawer() : renderer(nullptr), tex(nullptr) {
 	setUpdatePriority(100);
 	setDrawPriority(100);
 
-	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	model.program = Programs.get("debugDraw");
 	std::vector<Vertex::Element> elems = {
 		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 2),
@@ -27,30 +26,31 @@ DebugDrawer::DebugDrawer() : renderer(nullptr), tex(nullptr) {
 	io.DisplaySize.x = Environment::getScreen()->getWidth();
 	io.DisplaySize.y = Environment::getScreen()->getHeight();
 	io.IniFilename = "imgui.ini";
-	io.RenderDrawListsFn = &DebugDrawer::renderHandle;
-	io.SetClipboardTextFn = &DebugDrawer::setClipHandle;
-	io.GetClipboardTextFn = &DebugDrawer::getClipHandle;
+	io.RenderDrawListsFn = &Profiler::renderHandle;
+	io.SetClipboardTextFn = &Profiler::setClipHandle;
+	io.GetClipboardTextFn = &Profiler::getClipHandle;
 }
 
-DebugDrawer::~DebugDrawer() {
+Profiler::~Profiler() {
 	delete model.mesh;
+	delete tex;
 	ImGui::Shutdown();
 	instance = nullptr;
 }
 
-void DebugDrawer::renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count) {
+void Profiler::renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count) {
 	instance->render(cmd_lists, cmd_lists_count);
 }
 
-const char* DebugDrawer::getClipHandle() {
+const char* Profiler::getClipHandle() {
 	return instance->getClip();
 }
 
-void DebugDrawer::setClipHandle(const char* text, const char* text_end) {
+void Profiler::setClipHandle(const char* text, const char* text_end) {
 	instance->setClipHandle(text, text_end);
 }
 
-void DebugDrawer::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
+void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 	//if(renderer->getMode() != DeferredContainer::Forward) return;
 	if (cmd_lists_count == 0)
 		return;
@@ -86,11 +86,11 @@ void DebugDrawer::render(ImDrawList** const cmd_lists, int cmd_lists_count) cons
 	GL_ASSERT(glEnable(GL_CULL_FACE));
 }
 
-const char* DebugDrawer::getClip() const {
+const char* Profiler::getClip() const {
 	return SDL_GetClipboardText();
 }
 
-void DebugDrawer::setClip(const char* text, const char* text_end) const {
+void Profiler::setClip(const char* text, const char* text_end) const {
 	if (!text_end)
 		text_end = text + strlen(text);
 
@@ -108,18 +108,33 @@ void DebugDrawer::setClip(const char* text, const char* text_end) const {
 	}
 }
 
-void DebugDrawer::update(float deltaTime) {
+void Profiler::update(float deltaTime) {
+	//INPUT
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = deltaTime == 0.0f ? 0.00001f : deltaTime;
 	io.MouseWheel = Environment::getMouse()->getMouseWheelMovement().y != 0 ? (Environment::getMouse()->getMouseWheelMovement().y > 0 ? 1 : -1) : 0;
 	io.KeyCtrl = Environment::getKeyboard()->isKeyHeld(Keyboard::LControl);
 	io.KeyShift = Environment::getKeyboard()->isKeyHeld(Keyboard::LShift);
-	io.MouseDown[0] = Environment::getMouse()->isButtonPressed(Mouse::Left);
+	io.MouseDown[0] = Environment::getMouse()->isButtonHeld(Mouse::Left);
+	io.MousePos = vec2f(Environment::getMouse()->getMousePos());
 	ImGui::NewFrame();
+	//UI
+	ImGui::Text("Hello, world!");
+	ImGui::SliderFloat("float", &floatSlider, 0.0f, 1.0f);
+	show_test ^= ImGui::Button("Test Window");
+	show_other ^= ImGui::Button("Another Window");
+	ImGui::Text("60.0f FPS");
+	if (show_test) {
+		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));        // Normally user code doesn't need/want to call it because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+		ImGui::ShowTestWindow(&show_test);
+	}
+	if (show_other) {
+		ImGui::Begin("Another Window", &show_other, ImVec2(200,100));
+		ImGui::Text("Hello");
+		ImGui::End();
+	}
 }
 
-void DebugDrawer::draw() const {
-	ImGui::SetNewWindowDefaultPos(ImVec2(100, 20));        // Normally user code doesn't need/want to call it because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-	ImGui::ShowTestWindow();
+void Profiler::draw() const {
 	ImGui::Render();
 }

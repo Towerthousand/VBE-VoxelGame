@@ -28,7 +28,7 @@ SOURCES += main.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
 	SceneMain/world/Sun.cpp \
     SceneMain/debug/imgui.cpp \
-    SceneMain/debug/DebugDrawer.cpp
+    SceneMain/debug/Profiler.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -64,7 +64,7 @@ HEADERS += \
     SceneMain/debug/imconfig.hpp \
     SceneMain/debug/imgui.hpp \
     SceneMain/debug/stb_textedit.hpp \
-    SceneMain/debug/DebugDrawer.hpp
+    SceneMain/debug/Profiler.hpp
 
 OTHER_FILES += \
 	data/shaders/quad.vert \
