@@ -3,6 +3,7 @@
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
 #include "Sun.hpp"
+#include "SceneMain/debug/Profiler.hpp"
 
 struct FunctorComparevec3i{
 		bool operator()(const vec3i& a, const vec3i& b) {
@@ -133,6 +134,14 @@ void World::draw(Camera* cam) const{
 	}
 	for(unsigned int i = 0; i < chunksToDraw.size(); ++i)
 		chunksToDraw[i]->draw();
+
+	switch(renderer->getMode()) {
+		case DeferredContainer::Deferred:
+			Profiler::cameraChunksDrawn = chunksToDraw.size(); break;
+		case DeferredContainer::ShadowMap:
+			Profiler::sunChunksDrawn = chunksToDraw.size(); break;
+		default: break;
+	}
 }
 
 bool World::outOfBounds(int x, int y, int z) const {

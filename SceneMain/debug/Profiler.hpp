@@ -9,12 +9,6 @@ class Profiler : public GameObject {
 		~Profiler();
 
 		//Debug variables
-		static float frameTimeStart;
-		static float frameTimeEnd;
-		static float updateTimeStart;
-		static float updateTimeEnd;
-		static float drawTimeStart;
-		static float drawTimeEnd;
 		static int cameraChunksDrawn;
 		static int sunChunksDrawn;
 		static int columnsGenerated;
@@ -26,10 +20,16 @@ class Profiler : public GameObject {
 
 	private:
 		//internal debug vars
-		int frameCount;
-		float timePassed;
-		int FPS;
-		int colsPerSecond;
+		mutable float frameTimeStart;
+		mutable float frameTimeEnd;
+		mutable float updateTimeStart;
+		mutable float updateTimeEnd;
+		mutable float drawTimeStart;
+		mutable float drawTimeEnd;
+		mutable int frameCount;
+		mutable float timePassed;
+		mutable int FPS;
+		mutable int colsPerSecond;
 
 		//System stuff
 		static Profiler* instance;

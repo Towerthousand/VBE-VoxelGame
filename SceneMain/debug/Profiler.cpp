@@ -1,18 +1,17 @@
 #include "Profiler.hpp"
 #include "SceneMain/DeferredContainer.hpp"
 
-float Profiler::frameTimeStart = 0.0f;
-float Profiler::frameTimeEnd = 0.0f;
-float Profiler::updateTimeStart = 0.0f;
-float Profiler::updateTimeEnd = 0.0f;
-float Profiler::drawTimeStart = 0.0f;
-float Profiler::drawTimeEnd = 0.0f;
 int Profiler::cameraChunksDrawn = 0;
 int Profiler::sunChunksDrawn = 0;
 int Profiler::columnsGenerated = 0;
 Profiler* Profiler::instance = nullptr;
 
-Profiler::Profiler() : frameCount(0), timePassed(0.0f), FPS(0), colsPerSecond(0), tex(nullptr) {
+Profiler::Profiler() :
+	frameTimeStart(0.0f), frameTimeEnd(0.0f),
+	updateTimeStart(0.0f), updateTimeEnd(0.0f),
+	drawTimeStart(0.0f), drawTimeEnd(0.0f),
+	frameCount(0), timePassed(0.0f), FPS(0),
+	colsPerSecond(0), tex(nullptr) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
@@ -121,6 +120,8 @@ void Profiler::setClip(const char* text, const char* text_end) const {
 }
 
 void Profiler::update(float deltaTime) {
+	updateTimeEnd = Environment::getClock();
+	frameTimeEnd = updateTimeEnd;
 	//INPUT
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = deltaTime == 0.0f ? 0.00001f : deltaTime;
@@ -130,7 +131,7 @@ void Profiler::update(float deltaTime) {
 	io.MouseDown[0] = Environment::getMouse()->isButtonHeld(Mouse::Left);
 	io.MousePos = vec2f(Environment::getMouse()->getMousePos());
 	ImGui::NewFrame();
-	//UPDATE INTERNAL DEBUG VARS AND RESET EXTERNAL
+	//UPDATE INTERNAL DEBUG VARS
 	timePassed += deltaTime;
 	if(timePassed >= 1.0f) {
 		timePassed -= 1.0f;
@@ -138,23 +139,27 @@ void Profiler::update(float deltaTime) {
 		frameCount = 0;
 	}
 	frameCount += 1;
-	frameTimeStart = 0.0f;
-	frameTimeEnd = 0.0f;
-	updateTimeStart = 0.0f;
-	updateTimeEnd = 0.0f;
-	drawTimeStart = 0;
-	drawTimeEnd = 0;
+	//UI
+	ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
+	ImGui::Begin("VoxelGame", nullptr, ImVec2(225,150));
+	ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
+	ImGui::Text("FPS: %i", FPS);
+	ImGui::Text("Frame time: %f", frameTimeEnd-frameTimeStart);
+	ImGui::Text("Draw time: %f", drawTimeEnd-drawTimeStart);
+	ImGui::Text("Update time: %f", updateTimeEnd-updateTimeStart);
+	ImGui::Text("Player Camera Chunks: %i", cameraChunksDrawn);
+	ImGui::Text("Sun Camera Chunks: %i", sunChunksDrawn);
+	ImGui::End();
+	//RESET VARS FOR NEXT FRAME
 	cameraChunksDrawn = 0;
 	sunChunksDrawn = 0;
 	columnsGenerated = 0;
-	//UI
-	ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
-	ImGui::Begin("Profiler", nullptr, ImVec2(550,680));
-	ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-	ImGui::Text("%i", FPS);
-	ImGui::End();
+	drawTimeStart = updateTimeEnd;
+	frameTimeStart = drawTimeStart;
 }
 
 void Profiler::draw() const {
 	ImGui::Render();
+	drawTimeEnd = Environment::getClock();
+	updateTimeStart = drawTimeEnd;
 }
