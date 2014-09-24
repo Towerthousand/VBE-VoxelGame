@@ -30,6 +30,7 @@ class Profiler : public GameObject {
 		mutable float timePassed;
 		mutable int FPS;
 		mutable int colsPerSecond;
+		bool showProfiler;
 
 		//System stuff
 		static Profiler* instance;

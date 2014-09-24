@@ -167,7 +167,7 @@ void Chunk::rebuildVisibilityGraph() {
 		faces.reset(); //faces the current bfs has touched
 		q.empty();
 		q.push(src);
-		visited[src.x][src.y][src.z] = true; //visited by any bfs?
+		visited[src.x][src.y][src.z] = true; //visited by any bfs
 		while(!q.empty()) {
 			vec3c c = q.front(); q.pop(); //current
 			if(c.x == 0) faces.set(MINX);
@@ -179,8 +179,7 @@ void Chunk::rebuildVisibilityGraph() {
 			for(int j = 0; j < 6; ++j) {
 				vec3c n = c + d[j]; //neighbor
 				//cull out-of-chunk nodes
-				if(n.x < 0 || n.y < 0 || n.z < 0 ||
-				   n.x == CHUNKSIZE || n.y == CHUNKSIZE || n.z == CHUNKSIZE) continue;
+				if(n.x < 0 || n.y < 0 || n.z < 0 || n.x == CHUNKSIZE || n.y == CHUNKSIZE || n.z == CHUNKSIZE) continue;
 
 				//don't visit non-air nodes and omit already visited nodes
 				if(visited[n.x][n.y][n.z] || cubes[n.x][n.y][n.z] != 0) continue;

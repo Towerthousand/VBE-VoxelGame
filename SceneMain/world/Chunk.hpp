@@ -8,10 +8,10 @@ class Chunk {
 	public:
 		enum Face {
 			MINX = 0,
-			MINY = 1,
-			MINZ = 2,
-			MAXX = 3,
-			MAXY = 4,
+			MAXX = 1,
+			MINY = 2,
+			MAXY = 3,
+			MINZ = 4,
 			MAXZ = 5,
 			ALL_FACES = 6
 		};

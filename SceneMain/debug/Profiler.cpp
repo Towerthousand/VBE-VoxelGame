@@ -11,7 +11,7 @@ Profiler::Profiler() :
 	updateTimeStart(0.0f), updateTimeEnd(0.0f),
 	drawTimeStart(0.0f), drawTimeEnd(0.0f),
 	frameCount(0), timePassed(0.0f), FPS(0),
-	colsPerSecond(0), tex(nullptr) {
+	colsPerSecond(0), showProfiler(true), tex(nullptr) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
@@ -120,6 +120,7 @@ void Profiler::setClip(const char* text, const char* text_end) const {
 }
 
 void Profiler::update(float deltaTime) {
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::F1)) showProfiler = !showProfiler;
 	updateTimeEnd = Environment::getClock();
 	frameTimeEnd = updateTimeEnd;
 	//INPUT
@@ -140,16 +141,19 @@ void Profiler::update(float deltaTime) {
 	}
 	frameCount += 1;
 	//UI
-	ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
-	ImGui::Begin("VoxelGame", nullptr, ImVec2(225,150));
-	ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-	ImGui::Text("FPS: %i", FPS);
-	ImGui::Text("Frame time: %f", frameTimeEnd-frameTimeStart);
-	ImGui::Text("Draw time: %f", drawTimeEnd-drawTimeStart);
-	ImGui::Text("Update time: %f", updateTimeEnd-updateTimeStart);
-	ImGui::Text("Player Camera Chunks: %i", cameraChunksDrawn);
-	ImGui::Text("Sun Camera Chunks: %i", sunChunksDrawn);
-	ImGui::End();
+	if(showProfiler) {
+		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(225,150));
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
+		ImGui::Text("FPS: %i", FPS);
+		ImGui::Text("Frame time: %f", frameTimeEnd-frameTimeStart);
+		ImGui::Text("Draw time: %f", drawTimeEnd-drawTimeStart);
+		ImGui::Text("Update time: %f", updateTimeEnd-updateTimeStart);
+		ImGui::Text("Player Camera Chunks: %i", cameraChunksDrawn);
+		ImGui::Text("Sun Camera Chunks: %i", sunChunksDrawn);
+		ImGui::End();
+	}
+	//ImGui::ShowTestWindow();
 	//RESET VARS FOR NEXT FRAME
 	cameraChunksDrawn = 0;
 	sunChunksDrawn = 0;
