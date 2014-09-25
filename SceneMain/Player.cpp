@@ -67,9 +67,10 @@ void Player::processKeys() {
 
 	//look around
 	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
-	cam->rotateLocal(displacement.y, vec3f(1,0,0));
-	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
-
+	if(!Environment::getMouse()->isButtonHeld(Mouse::Middle)) {
+	   cam->rotateLocal(displacement.y, vec3f(1,0,0));
+		cam->rotateGlobal(displacement.x, vec3f(0,1,0));
+	}
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
 	bool recalc = false;
 	vec3i recalcBlock;

@@ -6,7 +6,7 @@ int main() {
 	Environment::setup().windowWidth = 1920;
 	Environment::setup().windowFlags = Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL;
 	Environment::setup().mouseGrab = true;
-	Environment::setup().mouseRelativeMode = false;
+	Environment::setup().mouseRelativeMode = true;
 	Game* game = new Game();
 	SceneMain* sc = new SceneMain();
 	sc->addTo(game);

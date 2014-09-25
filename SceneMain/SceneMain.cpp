@@ -33,7 +33,7 @@ SceneMain::SceneMain() {
 	world->addTo(renderer);
 
 	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, 1000.0f);
+	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, WORLDSIZE*CHUNKSIZE*0.5f*1.735f);
 	player->addTo(this);
 
 	Profiler* debug = new Profiler();
