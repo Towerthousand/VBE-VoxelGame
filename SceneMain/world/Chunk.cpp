@@ -157,15 +157,13 @@ void Chunk::initMesh() {
 }
 
 void Chunk::rebuildVisibilityGraph() {
-	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
 	visibilityGraph.reset();
-	std::queue<vec3c> q;
-	std::bitset<6> faces;
+	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
 	for(unsigned int i = 0; i < visibilityNodes.size(); ++i) {
 		vec3c& src = visibilityNodes[i];
 		if(visited[src.x][src.y][src.z] || cubes[src.x][src.y][src.z] != 0) continue;
-		faces.reset(); //faces the current bfs has touched
-		q.empty();
+		std::bitset<6> faces(0); //faces the current bfs has touched
+		std::queue<vec3c> q;
 		q.push(src);
 		visited[src.x][src.y][src.z] = true; //visited by any bfs
 		while(!q.empty()) {
@@ -191,6 +189,7 @@ void Chunk::rebuildVisibilityGraph() {
 		}
 		for(int i = 0; i < 6; ++ i)
 			for(int j = i+1; j < 6; ++j) {
+				if(!(faces.test(i) && faces.test(j))) continue;
 				visibilityGraph.set(getVisibilityIndex(i,j));
 				visibilityGraph.set(getVisibilityIndex(j,i));
 			}
