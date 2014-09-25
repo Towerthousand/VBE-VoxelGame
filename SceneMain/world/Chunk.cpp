@@ -16,7 +16,6 @@ const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, b
 								 };
 
 std::vector<vec3c> Chunk::visibilityNodes;
-bool Chunk::visited[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 vec3c Chunk::d[6] = {
 	vec3c(-1,0,0),
 	vec3c(1,0,0),
@@ -158,6 +157,7 @@ void Chunk::initMesh() {
 
 void Chunk::rebuildVisibilityGraph() {
 	visibilityGraph.reset();
+	bool visited[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 	memset(&visited,0, sizeof(bool)*CHUNKSIZE*CHUNKSIZE*CHUNKSIZE);
 	for(unsigned int i = 0; i < visibilityNodes.size(); ++i) {
 		vec3c& src = visibilityNodes[i];

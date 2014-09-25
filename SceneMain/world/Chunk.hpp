@@ -71,7 +71,6 @@ class Chunk {
 
 		static const int textureIndexes[9][6];
 		static std::vector<vec3c> visibilityNodes;
-		static bool visited[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
 		static vec3c d[6];
 
 		friend class ColumnGenerator;

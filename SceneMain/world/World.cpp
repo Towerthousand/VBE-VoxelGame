@@ -5,11 +5,12 @@
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
 
-struct FunctorComparevec3i{
-		bool operator()(const vec3i& a, const vec3i& b) {
-			if(a.x != b.x) return a.x < b.x;
-			if(a.y != b.y) return a.y < b.y;
-			if(a.z != b.z) return a.z < b.z;
+struct FunctorComparevec3iFace{
+		bool operator()(const std::pair<Chunk::Face, vec3i>& a, const std::pair<Chunk::Face, vec3i>& b) {
+			if(a.second.x != b.second.x) return a.second.x < b.second.x;
+			if(a.second.y != b.second.y) return a.second.y < b.second.y;
+			if(a.second.z != b.second.z) return a.second.z < b.second.z;
+			if(a.first != b.first) return (int)a.first < (int)b.first;
 			return false;
 		}
 };
@@ -78,10 +79,10 @@ void World::draw() const {
 }
 
 void World::draw(Camera* cam) const{
-	std::vector<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
+	std::set<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<std::pair<Chunk::Face, vec3i>>q; //bfs queue, each node is (entry face, chunkPos), in chunk coords
-	std::map<vec3i,int, FunctorComparevec3i> visited; //visited nodes.
+	std::map<std::pair<Chunk::Face, vec3i>,int, FunctorComparevec3iFace> visited; //visited nodes.
 	Chunk::Face faces[6] = {
 		Chunk::MINX, Chunk::MAXX,
 		Chunk::MINY, Chunk::MAXY,
@@ -92,13 +93,13 @@ void World::draw(Camera* cam) const{
 		vec3i(0,-1,0), vec3i(0,1,0),
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
-	//push initial
-	q.push(std::pair<Chunk::Face, vec3i>(Chunk::ALL_FACES, initialChunk));
-	visited.insert(std::pair<vec3i, int>(initialChunk, 0));
-	//push initial neighbors
 	for(int i = 0; i < 6; ++i) {
+		//push chunk with current face
+		q.push(std::pair<Chunk::Face, vec3i>(faces[i], initialChunk));
+		visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(std::pair<Chunk::Face, vec3i>(faces[i], initialChunk), 0));
+		//initial neighbor for this face
 		q.push(std::pair<Chunk::Face, vec3i>(Chunk::getOppositeFace(faces[i]), initialChunk+offsets[i]));
-		visited.insert(std::pair<vec3i, int>(initialChunk+offsets[i], 1));
+		visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(std::pair<Chunk::Face, vec3i>(Chunk::getOppositeFace(faces[i]), initialChunk+offsets[i]), 1));
 	}
 	//bfs
 	while(!q.empty()) {
@@ -106,20 +107,18 @@ void World::draw(Camera* cam) const{
 		q.pop();
 
 		//Process current chunk: if it exists, rebuild mesh+visibility graph and queue for drawing
-		Column* currentColumn = getColumn(currentChunkPos.second*CHUNKSIZE);
-		Chunk* currentChunk = nullptr; //used later inside neighbor loop
-		if(currentColumn != nullptr && (currentChunk = currentColumn->getChunk(currentChunkPos.second.y*CHUNKSIZE)) != nullptr) {
+		Chunk* currentChunk = getChunk(currentChunkPos.second*CHUNKSIZE); //used later inside neighbor loop
+		if(currentChunk != nullptr) {
 			currentChunk->rebuildMesh();
-			chunksToDraw.push_back(currentChunk);
+			chunksToDraw.insert(currentChunk);
 		}
-		int distance = visited.at(currentChunkPos.second)+1; //neighbor chunks's bfs distance
+		int distance = visited.at(currentChunkPos)+1; //neighbor chunks's bfs distance
 		//foreach face
 		for(int i = 0; i < 6; ++i) {
 			std::pair<Chunk::Face,vec3i> neighborChunkPos(Chunk::getOppositeFace(faces[i]), currentChunkPos.second + offsets[i]);
 
 			//visited culling
-			if(visited.find(neighborChunkPos.second) != visited.end()) continue;
-			visited.insert(std::pair<vec3i, int>(neighborChunkPos.second, distance));
+			if(visited.find(neighborChunkPos) != visited.end()) continue;
 			//manhattan culling
 			if(distance > Utils::manhattanDistance(initialChunk, neighborChunkPos.second)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
@@ -129,11 +128,12 @@ void World::draw(Camera* cam) const{
 			//fustrum culling
 			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborChunkPos.second*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), (CHUNKSIZE>>1)*1.74f))) continue;
 
+			visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(neighborChunkPos, distance));
 			q.push(neighborChunkPos);
 		}
 	}
-	for(unsigned int i = 0; i < chunksToDraw.size(); ++i)
-		chunksToDraw[i]->draw();
+	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it)
+		(*it)->draw();
 
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
@@ -152,6 +152,11 @@ bool World::outOfBounds(int x, int y, int z) const {
 Column* World::getColumn(int x, int y, int z) const {
 	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
 	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0)? nullptr:c;
+}
+
+Chunk* World::getChunk(int x, int y, int z) const {
+	Column* c = getColumn(x,y,z);
+	return c == nullptr ? nullptr : c->getChunk(y);
 }
 
 unsigned int World::getCube(int x, int y, int z) const {

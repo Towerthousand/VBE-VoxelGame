@@ -12,14 +12,14 @@
 #include "FunctionTerrainHeightmap.hpp"
 #include "FunctionTerrainJoin.hpp"
 
-#define GENERATIONHEIGHT 512
+#define GENERATIONHEIGHT 16
 #define NWORKERS 3
 
 ColumnGenerator::ColumnGenerator(int seed) :
 	TaskPool(NWORKERS),
 	entry(NULL) {
 	generator.seed(seed);
-	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-700,7000);
+	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
 	Function3DSimplex* simplex32 = new Function3DSimplex(&generator,70,-50,50);
 	Function3DSimplex* simplex33 = new Function3DSimplex(&generator,50,-30,30);
 	Function3DSimplex* simplex34 = new Function3DSimplex(&generator,25,-20,20);

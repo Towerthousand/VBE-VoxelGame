@@ -6,6 +6,7 @@
 class Column;
 class Camera;
 class DeferredContainer;
+class Chunk;
 class World : public GameObject {
 	public:
 		World();
@@ -19,6 +20,8 @@ class World : public GameObject {
 		unsigned int getCube(int x, int y, int z) const;
 		Column* getColumn(int x, int y, int z) const;
 		Column* getColumn(vec3i pos) const {return getColumn(pos.x,pos.y,pos.z);}
+		Chunk* getChunk(int x, int y, int z) const;
+		Chunk* getChunk(vec3i pos) const {return getChunk(pos.x,pos.y,pos.z);}
 
 		void setCube(int x, int y, int z, unsigned int cube);
 	private:
