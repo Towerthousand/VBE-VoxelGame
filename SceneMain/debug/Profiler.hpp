@@ -9,9 +9,16 @@ class Profiler : public GameObject {
 		~Profiler();
 
 		//Debug variables
-		static int cameraChunksDrawn;
+		static int playerChunksDrawn;
 		static int sunChunksDrawn;
 		static int columnsGenerated;
+		static float playerChunkRebuildTime;
+		static float playerChunkDrawTime;
+		static float playerChunkBFSTime;
+		static float sunChunkRebuildTime;
+		static float sunChunkDrawTime;
+		static float sunChunkBFSTime;
+		static float worldUpdateTime;
 
 		//Public callbacks
 		static void renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count);
@@ -26,11 +33,32 @@ class Profiler : public GameObject {
 		mutable float updateTimeEnd;
 		mutable float drawTimeStart;
 		mutable float drawTimeEnd;
+		mutable float frameTimeAccum;
+		mutable float updateTimeAccum;
+		mutable float drawTimeAccum;
 		mutable int frameCount;
-		mutable float timePassed;
+		mutable float timePassedAccum;
+		mutable float playerRebuildTimeAccum;
+		mutable float playerDrawTimeAccum;
+		mutable float playerBFSTimeAccum;
+		mutable float sunDrawTimeAccum;
+		mutable float sunRebuildTimeAccum;
+		mutable float sunBFSTimeAccum;
+		mutable float worldUpdateTimeAccum;
+		mutable float avgFrameTime;
+		mutable float avgUpdateTime;
+		mutable float avgDrawTime;
+		mutable float avgPlayerRebuildTime;
+		mutable float avgPlayerDrawTime;
+		mutable float avgPlayerBFSTime;
+		mutable float avgSunRebuildTime;
+		mutable float avgSunBFSTime;
+		mutable float avgSunDrawTime;
+		mutable float avgWorldUpdateTime;
 		mutable int FPS;
-		mutable int colsPerSecond;
+
 		bool showProfiler;
+		float sampleRate;
 
 		//System stuff
 		static Profiler* instance;

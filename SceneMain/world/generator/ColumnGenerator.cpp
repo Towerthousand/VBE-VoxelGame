@@ -13,7 +13,7 @@
 #include "FunctionTerrainJoin.hpp"
 
 #define GENERATIONHEIGHT 16
-#define NWORKERS 3
+#define NWORKERS 7
 
 ColumnGenerator::ColumnGenerator(int seed) :
 	TaskPool(NWORKERS),

@@ -22,8 +22,8 @@ void Sun::update(float deltaTime) {
 		for(int z = 0; z < WORLDSIZE; ++z) {
 			Column* col = w->columns[x][z];
 			if(col == nullptr) continue;
-			for(unsigned int y = 0; y < col->getChunks().size(); ++y) {
-				Chunk* actual = col->getChunks()[y];
+			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
+				Chunk* actual = col->getChunkCC(y);
 				if(actual != nullptr) {
 					occludersBox.extend(actual->getWorldSpaceBoundingBox());
 					if(Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox()))

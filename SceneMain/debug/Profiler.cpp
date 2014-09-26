@@ -1,17 +1,32 @@
 #include "Profiler.hpp"
 #include "SceneMain/DeferredContainer.hpp"
 
-int Profiler::cameraChunksDrawn = 0;
+int Profiler::playerChunksDrawn = 0;
 int Profiler::sunChunksDrawn = 0;
 int Profiler::columnsGenerated = 0;
+float Profiler::playerChunkRebuildTime = 0.0f;
+float Profiler::playerChunkDrawTime = 0.0f;
+float Profiler::playerChunkBFSTime = 0.0f;
+float Profiler::sunChunkRebuildTime = 0.0f;
+float Profiler::sunChunkDrawTime = 0.0f;
+float Profiler::sunChunkBFSTime = 0.0f;
+float Profiler::worldUpdateTime = 0.0f;
 Profiler* Profiler::instance = nullptr;
 
 Profiler::Profiler() :
 	frameTimeStart(0.0f), frameTimeEnd(0.0f),
 	updateTimeStart(0.0f), updateTimeEnd(0.0f),
 	drawTimeStart(0.0f), drawTimeEnd(0.0f),
-	frameCount(0), timePassed(0.0f), FPS(0),
-	colsPerSecond(0), showProfiler(true), tex(nullptr) {
+	frameTimeAccum(0.0f), updateTimeAccum(0.0f), drawTimeAccum(0.0f),
+	frameCount(0), timePassedAccum(0.0f),
+	playerRebuildTimeAccum(0.0f), playerDrawTimeAccum(0.0f), playerBFSTimeAccum(0.0f),
+	sunDrawTimeAccum(0.0f), sunRebuildTimeAccum(0.0f), sunBFSTimeAccum(0.0f),
+	avgFrameTime(0.0f), avgUpdateTime(0.0f), avgDrawTime(0.0f),
+	avgPlayerRebuildTime(0.0f), avgPlayerDrawTime(0.0f), avgPlayerBFSTime(0.0f),
+	avgSunRebuildTime(0.0f), avgSunBFSTime(0.0f), avgSunDrawTime(0.0f),
+	worldUpdateTimeAccum(0.0f),
+	FPS(0), showProfiler(true), sampleRate(0.5f),
+	tex(nullptr) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
@@ -133,31 +148,76 @@ void Profiler::update(float deltaTime) {
 	io.MousePos = vec2f(Environment::getMouse()->getMousePos());
 	ImGui::NewFrame();
 	//UPDATE INTERNAL DEBUG VARS
-	timePassed += deltaTime;
-	if(timePassed >= 1.0f) {
-		timePassed -= 1.0f;
-		FPS = frameCount;
+	timePassedAccum += deltaTime;
+	frameTimeAccum += frameTimeEnd-frameTimeStart;
+	updateTimeAccum += updateTimeEnd-updateTimeStart;
+	drawTimeAccum += drawTimeEnd-drawTimeStart;
+	playerRebuildTimeAccum += playerChunkRebuildTime;
+	playerDrawTimeAccum += playerChunkDrawTime;
+	playerBFSTimeAccum += playerChunkBFSTime;
+	sunDrawTimeAccum += sunChunkDrawTime;
+	sunRebuildTimeAccum += sunChunkRebuildTime;
+	sunBFSTimeAccum += sunChunkBFSTime;
+	worldUpdateTimeAccum += worldUpdateTime;
+	if(timePassedAccum >= sampleRate) {
+		timePassedAccum -= sampleRate;
+		FPS = float(frameCount)/sampleRate;
+		avgFrameTime = frameTimeAccum/float(frameCount);
+		avgUpdateTime = updateTimeAccum/float(frameCount);
+		avgDrawTime = drawTimeAccum/float(frameCount);
+		avgPlayerRebuildTime = playerRebuildTimeAccum/float(frameCount);
+		avgPlayerDrawTime =  playerDrawTimeAccum/float(frameCount);
+		avgPlayerBFSTime =  playerBFSTimeAccum/float(frameCount);
+		avgSunRebuildTime = sunRebuildTimeAccum/float(frameCount);
+		avgSunDrawTime = sunDrawTimeAccum/float(frameCount);
+		avgSunBFSTime = sunBFSTimeAccum/float(frameCount);
+		avgWorldUpdateTime = worldUpdateTime/float(frameCount);
+		frameTimeAccum = 0.0f;
+		updateTimeAccum = 0.0f;
+		drawTimeAccum = 0.0f;
+		playerRebuildTimeAccum = 0.0f;
+		playerDrawTimeAccum = 0.0f;
+		playerBFSTimeAccum = 0.0f;
+		sunDrawTimeAccum = 0.0f;
+		sunRebuildTimeAccum = 0.0f;
+		sunBFSTimeAccum = 0.0f;
 		frameCount = 0;
 	}
-	frameCount += 1;
+	frameCount++;
 	//UI
 	if(showProfiler) {
 		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(225,150));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(350,310));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
+		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 0.16");
 		ImGui::Text("FPS: %i", FPS);
-		ImGui::Text("Frame time: %f", frameTimeEnd-frameTimeStart);
-		ImGui::Text("Draw time: %f", drawTimeEnd-drawTimeStart);
-		ImGui::Text("Update time: %f", updateTimeEnd-updateTimeStart);
-		ImGui::Text("Player Camera Chunks: %i", cameraChunksDrawn);
+		ImGui::Text("Frame time: %f", avgFrameTime);
+		ImGui::Separator();
+		ImGui::Text("Draw time: %f", avgDrawTime);
+		ImGui::Text("Player Chunk Rebuilding time: %f", avgPlayerRebuildTime);
+		ImGui::Text("Player Chunk Drawing time: %f", avgPlayerDrawTime);
+		ImGui::Text("Player Camera Chunks: %i", playerChunksDrawn);
+		ImGui::Text("Player Chunk BFS time: %f", avgPlayerBFSTime);
+		ImGui::Text("Sun Chunk Rebuilding time: %f", avgSunRebuildTime);
+		ImGui::Text("Sun Chunk Drawing time: %f", avgSunDrawTime);
 		ImGui::Text("Sun Camera Chunks: %i", sunChunksDrawn);
+		ImGui::Text("Sun Chunk BFS time: %f", avgSunBFSTime);
+		ImGui::Separator();
+		ImGui::Text("Update time: %f", avgUpdateTime);
+		ImGui::Text("World Update time: %f", avgWorldUpdateTime);
 		ImGui::End();
 	}
 	//ImGui::ShowTestWindow();
 	//RESET VARS FOR NEXT FRAME
-	cameraChunksDrawn = 0;
+	playerChunksDrawn = 0;
 	sunChunksDrawn = 0;
 	columnsGenerated = 0;
+	playerChunkRebuildTime = 0.0f;
+	playerChunkDrawTime = 0.0f;
+	playerChunkBFSTime = 0.0f;
+	sunChunkRebuildTime = 0.0f;
+	sunChunkDrawTime = 0.0f;
+	sunChunkBFSTime = 0.0f;
 	drawTimeStart = updateTimeEnd;
 	frameTimeStart = drawTimeStart;
 }

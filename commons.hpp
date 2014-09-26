@@ -9,6 +9,7 @@
 #include <random>
 #include <algorithm>
 #include <bitset>
+#include <unordered_map>
 
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels
