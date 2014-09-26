@@ -35,6 +35,7 @@ class Chunk {
 		bool visibilityTest(Chunk::Face enter, Chunk::Face exit) const;
 		bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
 		bool hasMesh() const { return hasVertices; }
+		bool wasDrawedByPlayer() const { return drawedByPlayer; }
 
 	private:
 		struct Vert {
@@ -59,6 +60,7 @@ class Chunk {
 		const int XPOS; //in chunks
 		const unsigned int YPOS; //in chunks
 		const int ZPOS; //in chunks
+		mutable bool drawedByPlayer; //has been seen by a player this frame?
 		bool needsMeshRebuild; //does it need rebuilding?
 		bool hasVertices; //is there any face touching air?
 		std::bitset<30> visibilityGraph;

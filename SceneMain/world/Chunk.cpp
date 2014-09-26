@@ -28,6 +28,7 @@ vec3c Chunk::d[6] = {
 
 Chunk::Chunk(int x, unsigned int y, int z) :
 	XPOS(x), YPOS(y), ZPOS(z),
+	drawedByPlayer(false),
 	needsMeshRebuild(true), hasVertices(false),
 	visibilityGraph(0), modelMatrix(mat4f(1.0f)),
 	boundingBox(vec3f(0),vec3f(0)),
@@ -68,6 +69,7 @@ Chunk::Face Chunk::getOppositeFace(Chunk::Face f) {
 
 void Chunk::update(float deltaTime) {
 	(void) deltaTime;
+	drawedByPlayer = false;
 }
 
 void Chunk::draw() const {
@@ -80,6 +82,7 @@ void Chunk::draw() const {
 		terrainModel.program->uniform("V")->set(cam->getView());
 		terrainModel.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
 		terrainModel.draw();
+		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
 		terrainModel.program = Programs.get("depthShader");

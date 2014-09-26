@@ -14,9 +14,12 @@ Sun::~Sun() {
 }
 
 void Sun::update(float deltaTime) {
+	(void) deltaTime;
+}
+
+void Sun::updateCamera() {
 	AABB occludersBox;
 	AABB occludedBox;
-	Camera* playerCam = (Camera*)getGame()->getObjectByName("playerCam");
 	World* w = (World*)getGame()->getObjectByName("world");
 	for(int x = 0; x < WORLDSIZE; ++x)
 		for(int z = 0; z < WORLDSIZE; ++z) {
@@ -24,9 +27,9 @@ void Sun::update(float deltaTime) {
 			if(col == nullptr) continue;
 			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
 				Chunk* actual = col->getChunkCC(y);
-				if(actual != nullptr) {
+				if(actual != nullptr && actual->hasMesh()) {
 					occludersBox.extend(actual->getWorldSpaceBoundingBox());
-					if(Collision::intersects(playerCam->getFrustum(), actual->getWorldSpaceBoundingBox()))
+					if(actual->wasDrawedByPlayer())
 						occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}
@@ -67,5 +70,6 @@ void Sun::update(float deltaTime) {
 		p = vec3f(cam->getView()*vec4f(p, 1.0f));
 		min.z = (min.z > p.z)? p.z : min.z;
 	}
-	cam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+	cam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z-30.0f, max.z);
+	cam->recalculateFrustum();
 }

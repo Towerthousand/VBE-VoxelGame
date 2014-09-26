@@ -66,9 +66,9 @@ void main(void) {
 
     // Sample the shadow map 16 times, 4 texture() calls * 4 samples each call
     float visibility = 1.0;
-    float bias = 0.005*tan(acos(cosTheta));
+    float bias = 0.002*tan(acos(cosTheta));
     bias = clamp(bias, 0.0f,0.01f);
-    float sampleNum = 1;
+    float sampleNum = 16;
     for (int i=0;i<sampleNum;i++)
         visibility -= (1.0f/sampleNum)*(1.0-texture(sunDepth,vec3(shadowCoord.xy + poissonDisk[i]/700.0,(shadowCoord.z-bias)/shadowCoord.w)));
 

@@ -8,8 +8,9 @@ class Sun : public GameObject {
 		~Sun();
 
 		void update(float deltaTime);
+		void updateCamera();
 
-		vec3f getDirection() const {return vec3f(cos(angle), -sin(angle), 0);}
+		vec3f getDirection() const {return vec3f(cos(angle), -sin(angle), 0.25);}
 		float getAngle() const {return angle;}
 
 	private:

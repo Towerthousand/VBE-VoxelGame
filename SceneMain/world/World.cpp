@@ -64,7 +64,7 @@ void World::update(float deltaTime) {
 		}
 	std::sort(tasks.begin(),tasks.end());
 	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
-	Profiler::worldUpdateTime = Environment::getClock() - worldUpdateTime;
+	Profiler::timeVars[Profiler::WorldUpdateTime] = Environment::getClock() - worldUpdateTime;
 }
 
 void World::draw() const {
@@ -73,6 +73,7 @@ void World::draw() const {
 			draw((Camera*)getGame()->getObjectByName("playerCam"));
 			break;
 		case DeferredContainer::ShadowMap:
+			((Sun*)getGame()->getObjectByName("sun"))->updateCamera();
 			draw((Camera*)getGame()->getObjectByName("sunCamera"));
 			break;
 		default: break;
@@ -138,21 +139,21 @@ void World::draw(Camera* cam) const{
 		}
 	}
 	float chunkDrawTime = Environment::getClock();
-	chunkBFSTime = chunkDrawTime-chunkBFSTime;
+	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
 	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it)
 		(*it)->draw();
 
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
-			Profiler::playerChunkDrawTime = Environment::getClock() - chunkDrawTime;
-			Profiler::playerChunkRebuildTime = chunkRebuildTime;
-			Profiler::playerChunkBFSTime = chunkBFSTime - chunkRebuildTime;
-			Profiler::playerChunksDrawn = chunksToDraw.size(); break;
+			Profiler::timeVars[Profiler::PlayerChunkDrawTime] = Environment::getClock() - chunkDrawTime;
+			Profiler::timeVars[Profiler::PlayerChunkRebuildTime] = chunkRebuildTime;
+			Profiler::timeVars[Profiler::PlayerChunkBFSTime] = chunkBFSTime;
+			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunksToDraw.size(); break;
 		case DeferredContainer::ShadowMap:
-			Profiler::sunChunkDrawTime = Environment::getClock() - chunkDrawTime;
-			Profiler::sunChunkRebuildTime = chunkRebuildTime;
-			Profiler::sunChunkBFSTime = chunkBFSTime - chunkRebuildTime;
-			Profiler::sunChunksDrawn = chunksToDraw.size();
+			Profiler::timeVars[Profiler::SunChunkDrawTime] = Environment::getClock() - chunkDrawTime;
+			Profiler::timeVars[Profiler::SunChunkRebuildTime] = chunkRebuildTime;
+			Profiler::timeVars[Profiler::SunChunkBFSTime] = chunkBFSTime;
+			Profiler::intVars[Profiler::SunChunksDrawn] = chunksToDraw.size();
 			break;
 		default: break;
 	}

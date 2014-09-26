@@ -15,7 +15,7 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
-	sunTarget = new RenderTarget(1.0f);
+	sunTarget = new RenderTarget(3.0f);
 	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setComparison(GL_LESS);

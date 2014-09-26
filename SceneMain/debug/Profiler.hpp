@@ -8,17 +8,30 @@ class Profiler : public GameObject {
 		Profiler();
 		~Profiler();
 
-		//Debug variables
-		static int playerChunksDrawn;
-		static int sunChunksDrawn;
-		static int columnsGenerated;
-		static float playerChunkRebuildTime;
-		static float playerChunkDrawTime;
-		static float playerChunkBFSTime;
-		static float sunChunkRebuildTime;
-		static float sunChunkDrawTime;
-		static float sunChunkBFSTime;
-		static float worldUpdateTime;
+		enum IntVar {
+			PlayerChunksDrawn = 0,
+			SunChunksDrawn,
+			ColumnsAdded,
+			INT_VAR_COUNT
+		};
+
+		enum TimeVar {
+			PlayerChunkRebuildTime = 0,
+			PlayerChunkDrawTime,
+			PlayerChunkBFSTime,
+			SunChunkRebuildTime,
+			SunChunkDrawTime,
+			SunChunkBFSTime,
+			WorldUpdateTime,
+			FrameTime,
+			UpdateTime,
+			DrawTime,
+			TIME_VAR_COUNT
+		};
+
+		static int intVars[INT_VAR_COUNT];
+		static float timeVars[TIME_VAR_COUNT];
+		//static float floatVars[TIME_VAR_COUNT];
 
 		//Public callbacks
 		static void renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count);
@@ -26,37 +39,17 @@ class Profiler : public GameObject {
 		static void setClipHandle(const char* text, const char* text_end);
 
 	private:
+		float timeAccumVars[TIME_VAR_COUNT];
+		float timeAvgVars[TIME_VAR_COUNT];
 		//internal debug vars
-		mutable float frameTimeStart;
-		mutable float frameTimeEnd;
 		mutable float updateTimeStart;
 		mutable float updateTimeEnd;
 		mutable float drawTimeStart;
 		mutable float drawTimeEnd;
-		mutable float frameTimeAccum;
-		mutable float updateTimeAccum;
-		mutable float drawTimeAccum;
-		mutable int frameCount;
-		mutable float timePassedAccum;
-		mutable float playerRebuildTimeAccum;
-		mutable float playerDrawTimeAccum;
-		mutable float playerBFSTimeAccum;
-		mutable float sunDrawTimeAccum;
-		mutable float sunRebuildTimeAccum;
-		mutable float sunBFSTimeAccum;
-		mutable float worldUpdateTimeAccum;
-		mutable float avgFrameTime;
-		mutable float avgUpdateTime;
-		mutable float avgDrawTime;
-		mutable float avgPlayerRebuildTime;
-		mutable float avgPlayerDrawTime;
-		mutable float avgPlayerBFSTime;
-		mutable float avgSunRebuildTime;
-		mutable float avgSunBFSTime;
-		mutable float avgSunDrawTime;
-		mutable float avgWorldUpdateTime;
-		mutable int FPS;
 
+		mutable int frameCount;
+		mutable float timePassed;
+		mutable int FPS;
 		bool showProfiler;
 		float sampleRate;
 
