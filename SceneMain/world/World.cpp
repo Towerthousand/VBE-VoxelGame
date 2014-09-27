@@ -5,12 +5,9 @@
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
 
-struct FunctorComparevec3i{
-		bool operator()(const vec3i& a, const vec3i& b) {
-			if(a.x != b.x) return a.x < b.x;
-			if(a.y != b.y) return a.y < b.y;
-			if(a.z != b.z) return a.z < b.z;
-			return false;
+struct Hasher {
+		std::size_t operator()(const vec3i& a) const {
+			return 961*a.y + 31*a.z + a.x;
 		}
 };
 
@@ -100,7 +97,7 @@ void World::draw(Camera* cam) const{
 	};
 	float chunkRebuildTime = 0.0f;
 	float chunkBFSTime = Environment::getClock();
-	std::set<vec3i, FunctorComparevec3i> chunksToDraw; //push all the chunks that must be drawn here
+	std::unordered_set<vec3i, Hasher> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<Job>q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
