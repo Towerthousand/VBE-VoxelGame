@@ -27,6 +27,7 @@ vec3c Chunk::d[6] = {
 
 
 Chunk::Chunk(int x, unsigned int y, int z) :
+	facesVisited(0),
 	XPOS(x), YPOS(y), ZPOS(z),
 	drawedByPlayer(false),
 	needsMeshRebuild(true), hasVertices(false),
@@ -136,9 +137,12 @@ AABB Chunk::getWorldSpaceBoundingBox() const {
 	return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
 }
 
-bool Chunk::visibilityTest(Chunk::Face enter, Chunk::Face exit) const {
-	if(enter == ALL_FACES || exit == ALL_FACES) return true; //for starting node on chunk BFS
-	return visibilityGraph.test(getVisibilityIndex(enter, exit));
+bool Chunk::visibilityTest(Chunk::Face exit) const {
+	if(visibilityGraph.all()) return true;
+	for(int i = 0; i < 6; ++i)
+		if(facesVisited.test(i) && visibilityGraph.test(getVisibilityIndex(i, exit)))
+			return true;
+	return false;
 }
 
 int Chunk::getVisibilityIndex(int a, int b) {

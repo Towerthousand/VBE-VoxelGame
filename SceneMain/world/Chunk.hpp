@@ -32,10 +32,12 @@ class Chunk {
 		int getZ() const { return ZPOS; }
 		vec3i getAbsolutePos() const; //in cubes
 		AABB getWorldSpaceBoundingBox() const;
-		bool visibilityTest(Chunk::Face enter, Chunk::Face exit) const;
+		bool visibilityTest(Chunk::Face exit) const;
 		bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
 		bool hasMesh() const { return hasVertices; }
 		bool wasDrawedByPlayer() const { return drawedByPlayer; }
+
+		std::bitset<6> facesVisited;
 
 	private:
 		struct Vert {

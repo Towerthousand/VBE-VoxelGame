@@ -5,9 +5,12 @@
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
 
-struct Hasher {
-		std::size_t operator()(const std::pair<Chunk::Face, vec3i>& a) const {
-			return 29791*((int) a.first) + 961*a.second.y + 31*a.second.z + a.second.x;
+struct FunctorComparevec3i{
+		bool operator()(const vec3i& a, const vec3i& b) {
+			if(a.x != b.x) return a.x < b.x;
+			if(a.y != b.y) return a.y < b.y;
+			if(a.z != b.z) return a.z < b.z;
+			return false;
 		}
 };
 
@@ -81,12 +84,10 @@ void World::draw() const {
 }
 
 void World::draw(Camera* cam) const{
-	float chunkRebuildTime = 0.0f;
-	float chunkBFSTime = Environment::getClock();
-	std::set<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
-	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
-	std::queue<std::pair<Chunk::Face, vec3i>>q; //bfs queue, each node is (entry face, chunkPos), in chunk coords
-	std::unordered_map<std::pair<Chunk::Face, vec3i>,int, Hasher> visited; //visited nodes.
+	struct Job {
+			vec3i pos;
+			int distance;
+	};
 	Chunk::Face faces[6] = {
 		Chunk::MINX, Chunk::MAXX,
 		Chunk::MINY, Chunk::MAXY,
@@ -97,51 +98,58 @@ void World::draw(Camera* cam) const{
 		vec3i(0,-1,0), vec3i(0,1,0),
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
+	float chunkRebuildTime = 0.0f;
+	float chunkBFSTime = Environment::getClock();
+	std::set<vec3i, FunctorComparevec3i> chunksToDraw; //push all the chunks that must be drawn here
+	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
+	std::queue<Job>q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
 		//push chunk with current face
-		q.push(std::pair<Chunk::Face, vec3i>(faces[i], initialChunk));
-		visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(std::pair<Chunk::Face, vec3i>(faces[i], initialChunk), 0));
+		q.push({initialChunk, 0});
 		//initial neighbor for this face
-		q.push(std::pair<Chunk::Face, vec3i>(Chunk::getOppositeFace(faces[i]), initialChunk+offsets[i]));
-		visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(std::pair<Chunk::Face, vec3i>(Chunk::getOppositeFace(faces[i]), initialChunk+offsets[i]), 1));
+		q.push({initialChunk+offsets[i], 1});
 	}
 	//bfs
 	while(!q.empty()) {
-		std::pair<Chunk::Face, vec3i> currentChunkPos = q.front();
+		Job currentJob = q.front();
 		q.pop();
-
-		//Process current chunk: if it exists, rebuild mesh+visibility graph and queue for drawing
-		Chunk* currentChunk = getChunkCC(currentChunkPos.second); //used later inside neighbor loop
+		//Process current chunk
+		if(!chunksToDraw.insert(currentJob.pos).second) continue;
+		Chunk* currentChunk = getChunkCC(currentJob.pos); //used later inside neighbor loop
 		if(currentChunk != nullptr) {
 			float chunkRebuildTime0 = Environment::getClock();
 			currentChunk->rebuildMesh();
 			chunkRebuildTime += Environment::getClock() - chunkRebuildTime0;
-			chunksToDraw.insert(currentChunk);
 		}
-		int distance = visited.at(currentChunkPos)+1; //neighbor chunks's bfs distance
+		int distance = currentJob.distance+1; //neighbor chunks's bfs distance
 		//foreach face
 		for(int i = 0; i < 6; ++i) {
-			std::pair<Chunk::Face,vec3i> neighborChunkPos(Chunk::getOppositeFace(faces[i]), currentChunkPos.second + offsets[i]);
-
-			//visited culling
-			if(visited.find(neighborChunkPos) != visited.end()) continue;
+			Job neighborJob = {currentJob.pos + offsets[i], distance};
 			//manhattan culling
-			if(distance > Utils::manhattanDistance(initialChunk, neighborChunkPos.second)) continue;
+			if(distance > Utils::manhattanDistance(initialChunk, neighborJob.pos)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-			if((neighborChunkPos.second.y >= (int)highestChunkY && neighborChunkPos.first == Chunk::MINY) || getColumnCC(neighborChunkPos.second) == nullptr) continue;
+			if((neighborJob.pos.y >= (int)highestChunkY && i == 3) || getColumnCC(neighborJob.pos) == nullptr) continue;
 			//visibility culling
-			if(currentChunk != nullptr && !currentChunk->visibilityTest(currentChunkPos.first , faces[i])) continue;
+			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling
-			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborChunkPos.second*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), (CHUNKSIZE>>1)*1.74f))) continue;
-
-			visited.insert(std::pair<std::pair<Chunk::Face, vec3i>, int>(neighborChunkPos, distance));
-			q.push(neighborChunkPos);
+			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborJob.pos*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), (CHUNKSIZE>>1)*1.74f))) continue;
+			//push it
+			Chunk* neighborChunk = getChunkCC(neighborJob.pos);
+			if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace(faces[i]));
+			q.push(neighborJob);
 		}
 	}
 	float chunkDrawTime = Environment::getClock();
 	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
-	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it)
-		(*it)->draw();
+	int chunkCount = 0;
+	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it) {
+		Chunk* c = getChunkCC(*it);
+		if(c != nullptr) {
+			c->facesVisited.reset();
+			c->draw();
+			chunkCount++;
+		}
+	}
 
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
