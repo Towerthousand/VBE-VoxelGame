@@ -2,6 +2,7 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
+#include "debug/Profiler.hpp"
 
 Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
 	setName("player");
@@ -37,6 +38,8 @@ void Player::update(float deltaTime) {
 
 	//trace view
 	traceView();
+
+	Profiler::vec3fVars[Profiler::PlayerPos] = pos;
 }
 
 void Player::processKeys() {
@@ -100,7 +103,7 @@ void Player::processKeys() {
 		}
 	}
 
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::L)) {
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::L)) {
 		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);

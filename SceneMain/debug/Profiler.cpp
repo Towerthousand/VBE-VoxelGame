@@ -3,6 +3,7 @@
 
 int Profiler::intVars[Profiler::INT_VAR_COUNT];
 float Profiler::timeVars[Profiler::TIME_VAR_COUNT];
+vec3f Profiler::vec3fVars[Profiler::VEC3F_VAR_COUNT];
 Profiler* Profiler::instance = nullptr;
 
 Profiler::Profiler() :
@@ -13,6 +14,10 @@ Profiler::Profiler() :
 	tex(nullptr) {
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
+
+	memset(&intVars, 0, sizeof(intVars));
+	memset(&timeVars, 0, sizeof(timeVars));
+	memset(&vec3fVars, 0, sizeof(vec3fVars));
 
 	tex = Texture2D::createFromFile("data/debugFont.png");
 	tex->setFilter(GL_NEAREST, GL_NEAREST);
@@ -146,7 +151,7 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(350,310), -1.0f, ImGuiWindowFlags_NoResize);
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,380), -1.0f, ImGuiWindowFlags_NoResize);
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 0.16");
 		ImGui::Text("FPS: %i", FPS);
@@ -164,7 +169,11 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("Sun Chunk BFS time: %f", timeAvgVars[SunChunkBFSTime]);
 		ImGui::Separator();
 		ImGui::Text("Update time: %f", timeAvgVars[UpdateTime]);
-		ImGui::Text("World Update time: %f", timeAvgVars[DrawTime]);
+		ImGui::Text("World Update time: %f", timeAvgVars[WorldUpdateTime]);
+		ImGui::Separator();
+		ImGui::Text("Player Position: [%f, %f, %f]", vec3fVars[PlayerPos].x, vec3fVars[PlayerPos].y, vec3fVars[PlayerPos].z);
+		ImGui::Text("Player Chunk Coord: [%i, %i, %i]", int(std::floor(vec3fVars[PlayerPos].x)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].y)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].z)) >> CHUNKSIZE_POW2);
+		ImGui::Text("Columns added last frame: %i", intVars[ColumnsAdded]);
 		ImGui::End();
 	}
 	//ImGui::ShowTestWindow();

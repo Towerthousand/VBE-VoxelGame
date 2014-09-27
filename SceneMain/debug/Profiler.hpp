@@ -15,6 +15,11 @@ class Profiler : public GameObject {
 			INT_VAR_COUNT
 		};
 
+		enum Vec3fVar {
+			PlayerPos = 0,
+			VEC3F_VAR_COUNT
+		};
+
 		enum TimeVar {
 			PlayerChunkRebuildTime = 0,
 			PlayerChunkDrawTime,
@@ -31,6 +36,7 @@ class Profiler : public GameObject {
 
 		static int intVars[INT_VAR_COUNT];
 		static float timeVars[TIME_VAR_COUNT];
+		static vec3f vec3fVars[VEC3F_VAR_COUNT];
 		//static float floatVars[TIME_VAR_COUNT];
 
 		//Public callbacks

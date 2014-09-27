@@ -2,7 +2,7 @@
 #define DEFERREDCUBELIGHT_HPP
 #include "commons.hpp"
 
-#define LIGHTSIZE 64
+#define LIGHTSIZE 16
 
 class World;
 class DeferredContainer;
