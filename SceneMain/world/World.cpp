@@ -5,12 +5,6 @@
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
 
-struct Hasher {
-		std::size_t operator()(const vec3i& a) const {
-			return 961*a.y + 31*a.z + a.x;
-		}
-};
-
 World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	setName("world");
@@ -81,6 +75,11 @@ void World::draw() const {
 }
 
 void World::draw(Camera* cam) const{
+	struct Hasher {
+			std::size_t operator()(const vec3i& a) const {
+				return 961*a.y + 31*a.z + a.x;
+			}
+	};
 	struct Job {
 			vec3i pos;
 			int distance;
@@ -99,13 +98,15 @@ void World::draw(Camera* cam) const{
 	float chunkBFSTime = Environment::getClock();
 	std::unordered_set<vec3i, Hasher> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
-	std::queue<Job>q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
+	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
 		//push chunk with current face
 		q.push({initialChunk, 0});
 		//initial neighbor for this face
 		q.push({initialChunk+offsets[i], 1});
 	}
+	Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
+	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
 	//bfs
 	while(!q.empty()) {
 		Job currentJob = q.front();
@@ -129,7 +130,8 @@ void World::draw(Camera* cam) const{
 			//visibility culling
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling
-			if(!Collision::intersects(cam->getFrustum(), Sphere(vec3f(neighborJob.pos*CHUNKSIZE+vec3i(CHUNKSIZE >> 1)), (CHUNKSIZE>>1)*1.74f))) continue;
+			colliderSphere.center = neighborJob.pos*CHUNKSIZE+colliderOffset;
+			if(!Collision::intersects(cam->getFrustum(), colliderSphere)) continue;
 			//push it
 			Chunk* neighborChunk = getChunkCC(neighborJob.pos);
 			if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace(faces[i]));
@@ -153,12 +155,12 @@ void World::draw(Camera* cam) const{
 			Profiler::timeVars[Profiler::PlayerChunkDrawTime] = Environment::getClock() - chunkDrawTime;
 			Profiler::timeVars[Profiler::PlayerChunkRebuildTime] = chunkRebuildTime;
 			Profiler::timeVars[Profiler::PlayerChunkBFSTime] = chunkBFSTime;
-			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunksToDraw.size(); break;
+			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunkCount; break;
 		case DeferredContainer::ShadowMap:
 			Profiler::timeVars[Profiler::SunChunkDrawTime] = Environment::getClock() - chunkDrawTime;
 			Profiler::timeVars[Profiler::SunChunkRebuildTime] = chunkRebuildTime;
 			Profiler::timeVars[Profiler::SunChunkBFSTime] = chunkBFSTime;
-			Profiler::intVars[Profiler::SunChunksDrawn] = chunksToDraw.size();
+			Profiler::intVars[Profiler::SunChunksDrawn] = chunkCount;
 			break;
 		default: break;
 	}
