@@ -97,13 +97,18 @@ void World::draw(Camera* cam) const{
 	float chunkRebuildTime = 0.0f;
 	float chunkBFSTime = Environment::getClock();
 	std::unordered_set<vec3i, Hasher> chunksToDraw; //push all the chunks that must be drawn here
-	vec3i initialChunk(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
+	vec3i initialChunkPos(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
+		Chunk* aux;
 		//push chunk with current face
-		q.push({initialChunk, 0});
+		q.push({initialChunkPos, 0});
+		aux = getChunkCC(initialChunkPos); //used later inside neighbor loop
+		if(aux != nullptr) aux->facesVisited.set(i);
 		//initial neighbor for this face
-		q.push({initialChunk+offsets[i], 1});
+		q.push({initialChunkPos+offsets[i], 1});
+		aux = getChunkCC(initialChunkPos+offsets[i]); //used later inside neighbor loop
+		if(aux != nullptr) aux->facesVisited.set(Chunk::getOppositeFace(faces[i]));
 	}
 	Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
 	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
@@ -124,7 +129,7 @@ void World::draw(Camera* cam) const{
 		for(int i = 0; i < 6; ++i) {
 			Job neighborJob = {currentJob.pos + offsets[i], distance};
 			//manhattan culling
-			if(distance > Utils::manhattanDistance(initialChunk, neighborJob.pos)) continue;
+			if(distance > Utils::manhattanDistance(initialChunkPos, neighborJob.pos)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
 			if((neighborJob.pos.y >= (int)highestChunkY && i == 3) || getColumnCC(neighborJob.pos) == nullptr) continue;
 			//visibility culling

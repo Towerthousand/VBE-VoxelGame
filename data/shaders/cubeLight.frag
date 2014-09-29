@@ -63,5 +63,5 @@ void main(void) {
 
         gl_FragDepth = texture(depth, vTexCoord).x;
 
-		color = vec4(lightColor * cosTheta * attenuationFactor * blockLight * (matDiffuseColor + matSpecularColor * pow(cosAlpha, 1000) * blockLight), 1.0f);
+        color = vec4(lightColor * cosTheta * attenuationFactor * blockLight * (matDiffuseColor + matSpecularColor * pow(cosAlpha, 1000) * blockLight), 1.0f);
 }

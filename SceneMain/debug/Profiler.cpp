@@ -41,6 +41,7 @@ Profiler::Profiler() :
 	io.RenderDrawListsFn = &Profiler::renderHandle;
 	io.SetClipboardTextFn = &Profiler::setClipHandle;
 	io.GetClipboardTextFn = &Profiler::getClipHandle;
+	io.IniSavingRate = -1.0f; //disable ini
 }
 
 Profiler::~Profiler() {
@@ -150,8 +151,8 @@ void Profiler::update(float deltaTime) {
 	frameCount++;
 	//UI
 	if(showProfiler) {
-		ImGui::SetNewWindowDefaultPos(ImVec2(50, 20));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,380), -1.0f, ImGuiWindowFlags_NoResize);
+		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,380));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 0.16");
 		ImGui::Text("FPS: %i", FPS);

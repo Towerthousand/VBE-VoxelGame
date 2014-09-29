@@ -146,7 +146,7 @@ bool Chunk::visibilityTest(Chunk::Face exit) const {
 }
 
 int Chunk::getVisibilityIndex(int a, int b) {
-	if(a >= b) a--;
+	if(a >= b && a > 0) a--;
 	return a+b*5;
 }
 

@@ -7,7 +7,7 @@ BlurContainer::BlurContainer() {
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
 	noBlur->getTextureForAttachment(RenderTarget::COLOR0)->setWrap(GL_CLAMP_TO_EDGE);
 
-	float blurSize = 3;
+	float blurSize = 2;
 	float blurSizeDivisor = std::pow(2,blurSize);
 
 	blurMask = new RenderTarget();

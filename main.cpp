@@ -4,7 +4,7 @@ int main() {
 	Environment::setup().windowTitle = "VoxelGame";
 	Environment::setup().windowHeight = 1080;
 	Environment::setup().windowWidth = 1920;
-	Environment::setup().windowFlags = Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL;
+	Environment::setup().windowFlags = Screen::WINDOW_SHOWN | Screen::WINDOW_OPENGL | Screen::WINDOW_RESIZABLE;
 	Environment::setup().mouseGrab = false;
 	Environment::setup().mouseRelativeMode = true;
 	Game* game = new Game();
