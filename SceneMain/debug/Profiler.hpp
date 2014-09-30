@@ -28,6 +28,8 @@ class Profiler : public GameObject {
 			SunChunkDrawTime,
 			SunChunkBFSTime,
 			WorldUpdateTime,
+			LightDrawTime,
+			AmbinentShadowPassTime,
 			FrameTime,
 			UpdateTime,
 			DrawTime,

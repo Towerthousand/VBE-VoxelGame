@@ -35,22 +35,22 @@ void main(void) {
 	vec4 valColor0 = texture(color0, vTexCoord);
 	vec4 valColor1 = texture(color1, vTexCoord);
 
-	//material properties
-	vec3 matDiffuseColor = valColor0.xyz;
-	vec3 matSpecularColor = vec3(valColor1.w);
+        //material properties
+        vec3 matDiffuseColor = valColor0.xyz;
+        vec3 matSpecularColor = vec3(valColor1.w);
 
-	//fragment light parameters
-	vec3 lightVector = normalize(lightPos - fragmentPos); //view space
-	vec3 normalVector = decodeNormal(valColor1.xy);  //view space
+        //fragment light parameters
+        vec3 lightVector = normalize(lightPos - fragmentPos); //view space
+        vec3 normalVector = decodeNormal(valColor1.xy);  //view space
 
-	//Blinn-Phong shading
-	vec3 E = normalize(-fragmentPos);
-	vec3 H = normalize(lightVector + E);
-	float cosAlpha = clamp(dot(normalVector, H), 0.0f, 1.0f);
-	float cosTheta = max(dot(normalVector, lightVector), 0.0f);
-	float attenuationFactor = max(0.0, 1 - length(fragmentPos-lightPos) / lightRadius);
+        //Blinn-Phong shading
+        vec3 E = normalize(-fragmentPos);
+        vec3 H = normalize(lightVector + E);
+        float cosAlpha = clamp(dot(normalVector, H), 0.0f, 1.0f);
+        float cosTheta = max(dot(normalVector, lightVector), 0.0f);
+        float attenuationFactor = max(0.0, 1 - length(fragmentPos-lightPos) / lightRadius);
 
-	gl_FragDepth = texture(depth, vTexCoord).x;
-	color = vec4(matDiffuseColor * lightColor * cosTheta * attenuationFactor +
-				 matSpecularColor * lightColor * pow(cosAlpha, 1000) * cosTheta * attenuationFactor, 1.0f);
+        gl_FragDepth = texture(depth, vTexCoord).x;
+        color = vec4(matDiffuseColor * lightColor * cosTheta * attenuationFactor +
+                                 matSpecularColor * lightColor * pow(cosAlpha, 1000) * cosTheta * attenuationFactor, 1.0f);
 }

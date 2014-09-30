@@ -152,7 +152,7 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,380));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,400));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 0.16");
 		ImGui::Text("FPS: %i", FPS);
@@ -162,6 +162,8 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("Sun Camera Chunks: %i", intVars[SunChunksDrawn]);
 		ImGui::Separator();
 		ImGui::Text("Draw time: %f", timeAvgVars[DrawTime]);
+		ImGui::Text("Deferred Lights time: %f", timeAvgVars[LightDrawTime]);
+		ImGui::Text("Ambient + Shadow Pass time: %f", timeAvgVars[AmbinentShadowPassTime]);
 		ImGui::Text("Player Chunk Rebuilding time: %f", timeAvgVars[PlayerChunkRebuildTime]);
 		ImGui::Text("Player Chunk Drawing time: %f", timeAvgVars[PlayerChunkDrawTime]);
 		ImGui::Text("Player Chunk BFS time: %f", timeAvgVars[PlayerChunkBFSTime]);

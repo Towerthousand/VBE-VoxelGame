@@ -4,6 +4,7 @@
 #include "world/Chunk.hpp"
 #include "world/Column.hpp"
 #include "world/Sun.hpp"
+#include "debug/Profiler.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
@@ -53,13 +54,16 @@ void DeferredContainer::draw() const {
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
 	//DEFERRED LIGHTS
+	float lightTime = Environment::getClock();
 	GL_ASSERT(glEnable(GL_BLEND));
 	GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
 	GL_ASSERT(glDepthMask(GL_TRUE));
 	GL_ASSERT(glDepthFunc(GL_ALWAYS));
 	drawMode = Light;
 	ContainerObject::draw();
+	Profiler::timeVars[Profiler::LightDrawTime] = Environment::getClock()-lightTime;
 
+	float ambinentShadowPass = Environment::getClock();
 	//AMBIENT LIGHT AND SHADOWMAPPING
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Camera* sCam = (Camera*)getGame()->getObjectByName("sunCamera");
@@ -82,6 +86,7 @@ void DeferredContainer::draw() const {
 	quad.program->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTarget::DEPTH));
 	quad.program->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTarget::DEPTH));
 	quad.draw();
+	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Environment::getClock()-ambinentShadowPass;
 
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
