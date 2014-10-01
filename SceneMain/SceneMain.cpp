@@ -109,5 +109,6 @@ void SceneMain::loadResources() {
 }
 
 void SceneMain::update(float deltaTime) {
+	(void) deltaTime;
 	if(Environment::getKeyboard()->isKeyPressed(Keyboard::Escape)) getGame()->isRunning = false;
 }

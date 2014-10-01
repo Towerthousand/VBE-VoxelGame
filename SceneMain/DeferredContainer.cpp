@@ -36,24 +36,31 @@ void DeferredContainer::update(float deltaTime) {
 void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
 	const RenderTarget* screen = RenderTarget::getCurrent();
-	//G BUFFER
-	GL_ASSERT(glEnable(GL_DEPTH_TEST));
-	GL_ASSERT(glDisable(GL_BLEND)); //no transparency whatsoever
 
+	GL_ASSERT(glEnable(GL_DEPTH_TEST));
+	GL_ASSERT(glDisable(GL_BLEND));
+
+	//Deferred pass
+	float deferredTime = Environment::getClock();
 	drawMode = Deferred;
 	RenderTarget::bind(gBuffer);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 	ContainerObject::draw();
+	Profiler::timeVars[Profiler::DeferredPassTime] = Environment::getClock()-deferredTime;
 
+	//Shadowmap pass
+	float shadowTime = Environment::getClock();
 	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
+	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Environment::getClock()-shadowTime;
 
+	//bind output texture (screen)
 	RenderTarget::bind(screen);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
-	//DEFERRED LIGHTS
+	//Light pass
 	float lightTime = Environment::getClock();
 	GL_ASSERT(glEnable(GL_BLEND));
 	GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
@@ -61,10 +68,10 @@ void DeferredContainer::draw() const {
 	GL_ASSERT(glDepthFunc(GL_ALWAYS));
 	drawMode = Light;
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::LightDrawTime] = Environment::getClock()-lightTime;
+	Profiler::timeVars[Profiler::LightPassTime] = Environment::getClock()-lightTime;
 
+	//Ambient+Visibility pass
 	float ambinentShadowPass = Environment::getClock();
-	//AMBIENT LIGHT AND SHADOWMAPPING
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Camera* sCam = (Camera*)getGame()->getObjectByName("sunCamera");
 	quad.program = Programs.get("ambientPass");
@@ -88,10 +95,13 @@ void DeferredContainer::draw() const {
 	quad.draw();
 	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Environment::getClock()-ambinentShadowPass;
 
+	//Forward pass
+	float forwardPass = Environment::getClock();
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
 	drawMode = Forward;
 	ContainerObject::draw();
+	Profiler::timeVars[Profiler::ForwardPassTime] = Environment::getClock()-forwardPass;
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

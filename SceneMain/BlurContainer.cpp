@@ -1,4 +1,5 @@
 #include "BlurContainer.hpp"
+#include "debug/Profiler.hpp"
 
 BlurContainer::BlurContainer() {
 	noBlur = new RenderTarget();
@@ -41,6 +42,8 @@ void BlurContainer::draw() const {
 	RenderTarget::bind(noBlur);
 
 	ContainerObject::draw();
+
+	float blurTime = Environment::getClock();
 
 	GL_ASSERT(glBlendFunc(GL_ONE,GL_ONE));
 
@@ -85,4 +88,6 @@ void BlurContainer::draw() const {
 	quad.draw();
 
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+	Profiler::timeVars[Profiler::BlurPassTime] = Environment::getClock()-blurTime;
 }

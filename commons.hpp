@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <bitset>
 #include <unordered_set>
+#include <iomanip>
 
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels
@@ -25,6 +26,14 @@ namespace Utils {
 	inline int manhattanDistance(const glm::detail::tvec3<T>& a, const glm::detail::tvec3<T>& b) {
 		return std::abs(a.x-b.x)+std::abs(a.y-b.y)+std::abs(a.z-b.z);
 	}
+	template<typename T>
+	std::string toString(T arg) {
+	  std::ostringstream temp;
+	  temp << arg;
+	  return temp.str();
+	}
+
+	std::string toString(float f, int width, int precision, bool left);
 }
 
 #endif // COMMONS_HPP

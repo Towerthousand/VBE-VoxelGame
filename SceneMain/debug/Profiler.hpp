@@ -24,15 +24,23 @@ class Profiler : public GameObject {
 			PlayerChunkRebuildTime = 0,
 			PlayerChunkDrawTime,
 			PlayerChunkBFSTime,
-			SunChunkRebuildTime,
-			SunChunkDrawTime,
-			SunChunkBFSTime,
+			ShadowChunkRebuildTime,
+			ShadowChunkDrawTime,
+			ShadowChunkBFSTime,
 			WorldUpdateTime,
-			LightDrawTime,
+			BlurPassTime,
+			ForwardPassTime,
+			DeferredPassTime,
+			ShadowBuildPassTime,
+			LightPassTime,
 			AmbinentShadowPassTime,
+			ShadowWorldTime,
+			PlayerWorldTime,
 			FrameTime,
 			UpdateTime,
+			UIDrawTime,
 			DrawTime,
+			SwapTime,
 			TIME_VAR_COUNT
 		};
 
@@ -47,13 +55,26 @@ class Profiler : public GameObject {
 		static void setClipHandle(const char* text, const char* text_end);
 
 	private:
+		class Watcher : public GameObject {
+			public:
+				Watcher();
+				~Watcher();
+
+				void update(float deltaTime);
+				void draw() const;
+		};
+
 		float timeAccumVars[TIME_VAR_COUNT];
-		float timeAvgVars[TIME_VAR_COUNT];
+		float timeAvgVars[TIME_VAR_COUNT][100];
+		int timeAvgOffset;
+
 		//internal debug vars
 		mutable float updateTimeStart;
 		mutable float updateTimeEnd;
 		mutable float drawTimeStart;
 		mutable float drawTimeEnd;
+		mutable float swapTimeStart;
+		mutable float swapTimeEnd;
 
 		mutable int frameCount;
 		mutable float timePassed;

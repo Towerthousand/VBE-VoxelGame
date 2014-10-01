@@ -163,9 +163,9 @@ void World::draw(Camera* cam) const{
 			Profiler::timeVars[Profiler::PlayerChunkBFSTime] = chunkBFSTime;
 			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunkCount; break;
 		case DeferredContainer::ShadowMap:
-			Profiler::timeVars[Profiler::SunChunkDrawTime] = Environment::getClock() - chunkDrawTime;
-			Profiler::timeVars[Profiler::SunChunkRebuildTime] = chunkRebuildTime;
-			Profiler::timeVars[Profiler::SunChunkBFSTime] = chunkBFSTime;
+			Profiler::timeVars[Profiler::ShadowChunkDrawTime] = Environment::getClock() - chunkDrawTime;
+			Profiler::timeVars[Profiler::ShadowChunkRebuildTime] = chunkRebuildTime;
+			Profiler::timeVars[Profiler::ShadowChunkBFSTime] = chunkBFSTime;
 			Profiler::intVars[Profiler::SunChunksDrawn] = chunkCount;
 			break;
 		default: break;

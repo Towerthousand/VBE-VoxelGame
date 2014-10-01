@@ -7,24 +7,30 @@ vec3f Profiler::vec3fVars[Profiler::VEC3F_VAR_COUNT];
 Profiler* Profiler::instance = nullptr;
 
 Profiler::Profiler() :
+	timeAvgOffset(-1),
 	updateTimeStart(0.0f), updateTimeEnd(0.0f),
 	drawTimeStart(0.0f), drawTimeEnd(0.0f),
+	swapTimeStart(0.0f), swapTimeEnd(0.0f),
 	frameCount(0), timePassed(0.0f),
-	FPS(0), showProfiler(true), sampleRate(0.5f),
+	FPS(0), showProfiler(false), sampleRate(1.0f),
 	tex(nullptr) {
+	//setup singleton
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
 
+	//reset debug vars
 	memset(&intVars, 0, sizeof(intVars));
 	memset(&timeVars, 0, sizeof(timeVars));
 	memset(&vec3fVars, 0, sizeof(vec3fVars));
 
+	//font tenxture
 	tex = Texture2D::createFromFile("data/debugFont.png");
 	tex->setFilter(GL_NEAREST, GL_NEAREST);
 
 	setUpdatePriority(100);
 	setDrawPriority(100);
 
+	//setup UI model
 	model.program = Programs.get("debugDraw");
 	std::vector<Vertex::Element> elems = {
 		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 2),
@@ -34,6 +40,8 @@ Profiler::Profiler() :
 
 	Vertex::Format format(elems);
 	model.mesh = Mesh::loadEmpty(format, Mesh::STREAM, false);
+
+	//setup ui
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = Environment::getScreen()->getWidth();
 	io.DisplaySize.y = Environment::getScreen()->getHeight();
@@ -42,6 +50,10 @@ Profiler::Profiler() :
 	io.SetClipboardTextFn = &Profiler::setClipHandle;
 	io.GetClipboardTextFn = &Profiler::getClipHandle;
 	io.IniSavingRate = -1.0f; //disable ini
+
+	//add watcher
+	Watcher* w = new Watcher();
+	w->addTo(this);
 }
 
 Profiler::~Profiler() {
@@ -129,6 +141,9 @@ void Profiler::update(float deltaTime) {
 	timeVars[DrawTime] = drawTimeEnd-drawTimeStart;
 	timeVars[UpdateTime] = updateTimeEnd-updateTimeStart;
 	timeVars[FrameTime] = updateTimeEnd-drawTimeStart;
+	timeVars[SwapTime] = swapTimeEnd-swapTimeStart;
+	timeVars[ShadowWorldTime] = timeVars[ShadowChunkBFSTime]+timeVars[ShadowChunkRebuildTime]+timeVars[ShadowChunkDrawTime];
+	timeVars[PlayerWorldTime] = timeVars[PlayerChunkBFSTime]+timeVars[PlayerChunkRebuildTime]+timeVars[PlayerChunkDrawTime];
 	//INPUT
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = deltaTime == 0.0f ? 0.00001f : deltaTime;
@@ -142,9 +157,10 @@ void Profiler::update(float deltaTime) {
 	for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAccumVars[i] += timeVars[i];
 	timePassed += deltaTime;
 	if(timePassed >= sampleRate) {
+		timeAvgOffset = (timeAvgOffset + 1) % 100;
 		timePassed -= sampleRate;
 		FPS = float(frameCount)/sampleRate;
-		for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAvgVars[i] = (timeAccumVars[i]/float(frameCount))*1000.0f;
+		for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAvgVars[i][timeAvgOffset] = (timeAccumVars[i]/float(frameCount))*1000.0f;
 		memset(&timeAccumVars, 0, sizeof(timeAccumVars));
 		frameCount = 0;
 	}
@@ -152,44 +168,99 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,440));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,500));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
-		ImGui::Text("Frame time: %.2fms", timeAvgVars[FrameTime]);
-		ImGui::Separator();
-		ImGui::Text("Player Camera Chunks: %i", intVars[PlayerChunksDrawn]);
-		ImGui::Text("Sun Camera Chunks: %i", intVars[SunChunksDrawn]);
-		ImGui::Separator();
-		ImGui::Text("Draw time: %.2fms", timeAvgVars[DrawTime]);
-		ImGui::Text("Deferred Lights time: %.2fms", timeAvgVars[LightDrawTime]);
-		ImGui::Text("Ambient + Shadow Pass time: %.2fms", timeAvgVars[AmbinentShadowPassTime]);
-		ImGui::Text("Player World Draw Time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]+timeAvgVars[PlayerChunkDrawTime]+timeAvgVars[PlayerChunkBFSTime]);
-		ImGui::Text("Sun World Draw Time: %.2fms", timeAvgVars[SunChunkRebuildTime]+timeAvgVars[SunChunkDrawTime]+timeAvgVars[SunChunkBFSTime]);
-		ImGui::Text("Player Chunk Rebuilding time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]);
-		ImGui::Text("Player Chunk Drawing time: %.2fms", timeAvgVars[PlayerChunkDrawTime]);
-		ImGui::Text("Player Chunk BFS time: %.2fms", timeAvgVars[PlayerChunkBFSTime]);
-		ImGui::Text("Sun Chunk Rebuilding time: %.2fms", timeAvgVars[SunChunkRebuildTime]);
-		ImGui::Text("Sun Chunk Drawing time: %.2fms", timeAvgVars[SunChunkDrawTime]);
-		ImGui::Text("Sun Chunk BFS time: %.2fms", timeAvgVars[SunChunkBFSTime]);
-		ImGui::Separator();
-		ImGui::Text("Update time: %.2fms", timeAvgVars[UpdateTime]);
-		ImGui::Text("World Update time: %.2fms", timeAvgVars[WorldUpdateTime]);
+		std::string tag;
+		if(ImGui::CollapsingHeader("GENERAL TIMES")) {
+			tag = std::string("Frame Time (curr: ") + Utils::toString(timeAvgVars[FrameTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("50ms\n\n\n\n0 ms", timeAvgVars[FrameTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 50.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
+			tag = std::string("Update Time (curr: ") + Utils::toString(timeAvgVars[UpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[UpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) {
+				ImGui::SetTooltip("");
+				ImGui::BeginTooltip();
+				ImGui::SameLine();
+				ImGui::Text("Update Time Breakdown");
+				tag = std::string("World Update Time (curr: ") + Utils::toString(timeAvgVars[WorldUpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[WorldUpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				ImGui::EndTooltip();
+			}
+			tag = std::string("Draw Time (curr: ") + Utils::toString(timeAvgVars[DrawTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) {
+				ImGui::SetTooltip("");
+				ImGui::BeginTooltip();
+				ImGui::SameLine();
+				ImGui::Text("Draw Time Breakdown");
+				tag = std::string("Deferred Pass Time (curr: ") + Utils::toString(timeAvgVars[DeferredPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DeferredPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Shadow Build Pass Time (curr: ") + Utils::toString(timeAvgVars[ShadowBuildPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowBuildPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Light Pass Time (curr: ") + Utils::toString(timeAvgVars[LightPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[LightPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Ambient+Visibility Pass Time (curr: ") + Utils::toString(timeAvgVars[AmbinentShadowPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[AmbinentShadowPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Forward Pass Time (curr: ") + Utils::toString(timeAvgVars[ForwardPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ForwardPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Blur Pass Time (curr: ") + Utils::toString(timeAvgVars[BlurPassTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[BlurPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("UI Pass Time (curr: ") + Utils::toString(timeAvgVars[UIDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[UIDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				ImGui::EndTooltip();
+			}
+			tag = std::string("Swap Time (curr: ") + Utils::toString(timeAvgVars[SwapTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[SwapTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
+		}
+		//		ImGui::Text("Player World Draw Time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]+timeAvgVars[PlayerChunkDrawTime]+timeAvgVars[PlayerChunkBFSTime]);
+		//		ImGui::Text("Sun World Draw Time: %.2fms", timeAvgVars[SunChunkRebuildTime]+timeAvgVars[SunChunkDrawTime]+timeAvgVars[SunChunkBFSTime]);
+		//		ImGui::Text("Player Chunk Rebuilding time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]);
+		//		ImGui::Text("Player Chunk Drawing time: %.2fms", timeAvgVars[PlayerChunkDrawTime]);
+		//		ImGui::Text("Player Chunk BFS time: %.2fms", timeAvgVars[PlayerChunkBFSTime]);
+		//		ImGui::Text("Sun Chunk Rebuilding time: %.2fms", timeAvgVars[SunChunkRebuildTime]);
+		//		ImGui::Text("Sun Chunk Drawing time: %.2fms", timeAvgVars[SunChunkDrawTime]);
+		//		ImGui::Text("Sun Chunk BFS time: %.2fms", timeAvgVars[SunChunkBFSTime]);
 		ImGui::Separator();
 		ImGui::Text("Player Position: [%f, %f, %f]", vec3fVars[PlayerPos].x, vec3fVars[PlayerPos].y, vec3fVars[PlayerPos].z);
 		ImGui::Text("Player Chunk Coord: [%i, %i, %i]", int(std::floor(vec3fVars[PlayerPos].x)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].y)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].z)) >> CHUNKSIZE_POW2);
 		ImGui::Text("Columns added last frame: %i", intVars[ColumnsAdded]);
+		ImGui::Text("Player Chunks: %i", intVars[PlayerChunksDrawn]);
+		ImGui::Text("Shadow Chunks: %i", intVars[SunChunksDrawn]);
 		ImGui::End();
 	}
+	if(Environment::getKeyboard()->isKeyPressed(Keyboard::F1)) Environment::getMouse()->setRelativeMouseMode(!showProfiler);
 	//ImGui::ShowTestWindow();
 	//RESET VARS FOR NEXT FRAME
 	memset(&timeVars, 0, sizeof(timeVars));
 	memset(&intVars, 0, sizeof(intVars));
-	drawTimeStart = updateTimeEnd;
+	drawTimeStart = Environment::getClock();
 }
 
 void Profiler::draw() const {
+	float uiDrawTime = Environment::getClock();
 	ImGui::Render();
 	drawTimeEnd = Environment::getClock();
-	updateTimeStart = drawTimeEnd;
+	swapTimeStart = drawTimeEnd;
+	timeVars[UIDrawTime] = drawTimeEnd-uiDrawTime;
+}
+
+
+Profiler::Watcher::Watcher() {
+	setUpdatePriority(-100);
+	setDrawPriority(-100);
+}
+
+Profiler::Watcher::~Watcher() {
+}
+
+void Profiler::Watcher::update(float deltaTime) {
+	(void) deltaTime;
+	instance->swapTimeEnd = Environment::getClock();
+	instance->updateTimeStart = instance->swapTimeEnd;
+}
+
+void Profiler::Watcher::draw() const {
 }
