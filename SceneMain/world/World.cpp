@@ -26,6 +26,7 @@ void World::update(float deltaTime) {
 	while((newCol = generator.pullDone()) != nullptr) {
 		if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr) delete newCol;
 		else  {
+			Profiler::intVars[Profiler::ColumnsAdded]++;
 			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
 			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
 			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
@@ -131,7 +132,7 @@ void World::draw(Camera* cam) const{
 			//manhattan culling
 			if(distance > Utils::manhattanDistance(initialChunkPos, neighborJob.pos)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-			if((neighborJob.pos.y >= (int)highestChunkY && i == 3) || getColumnCC(neighborJob.pos) == nullptr) continue;
+			if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || getColumnCC(neighborJob.pos) == nullptr) continue;
 			//visibility culling
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling

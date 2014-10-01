@@ -144,7 +144,7 @@ void Profiler::update(float deltaTime) {
 	if(timePassed >= sampleRate) {
 		timePassed -= sampleRate;
 		FPS = float(frameCount)/sampleRate;
-		for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAvgVars[i] = timeAccumVars[i]/float(frameCount);
+		for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAvgVars[i] = (timeAccumVars[i]/float(frameCount))*1000.0f;
 		memset(&timeAccumVars, 0, sizeof(timeAccumVars));
 		frameCount = 0;
 	}
@@ -152,27 +152,29 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,400));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,440));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 0.16");
+		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
-		ImGui::Text("Frame time: %f", timeAvgVars[FrameTime]);
+		ImGui::Text("Frame time: %.2fms", timeAvgVars[FrameTime]);
 		ImGui::Separator();
 		ImGui::Text("Player Camera Chunks: %i", intVars[PlayerChunksDrawn]);
 		ImGui::Text("Sun Camera Chunks: %i", intVars[SunChunksDrawn]);
 		ImGui::Separator();
-		ImGui::Text("Draw time: %f", timeAvgVars[DrawTime]);
-		ImGui::Text("Deferred Lights time: %f", timeAvgVars[LightDrawTime]);
-		ImGui::Text("Ambient + Shadow Pass time: %f", timeAvgVars[AmbinentShadowPassTime]);
-		ImGui::Text("Player Chunk Rebuilding time: %f", timeAvgVars[PlayerChunkRebuildTime]);
-		ImGui::Text("Player Chunk Drawing time: %f", timeAvgVars[PlayerChunkDrawTime]);
-		ImGui::Text("Player Chunk BFS time: %f", timeAvgVars[PlayerChunkBFSTime]);
-		ImGui::Text("Sun Chunk Rebuilding time: %f", timeAvgVars[SunChunkRebuildTime]);
-		ImGui::Text("Sun Chunk Drawing time: %f", timeAvgVars[SunChunkDrawTime]);
-		ImGui::Text("Sun Chunk BFS time: %f", timeAvgVars[SunChunkBFSTime]);
+		ImGui::Text("Draw time: %.2fms", timeAvgVars[DrawTime]);
+		ImGui::Text("Deferred Lights time: %.2fms", timeAvgVars[LightDrawTime]);
+		ImGui::Text("Ambient + Shadow Pass time: %.2fms", timeAvgVars[AmbinentShadowPassTime]);
+		ImGui::Text("Player World Draw Time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]+timeAvgVars[PlayerChunkDrawTime]+timeAvgVars[PlayerChunkBFSTime]);
+		ImGui::Text("Sun World Draw Time: %.2fms", timeAvgVars[SunChunkRebuildTime]+timeAvgVars[SunChunkDrawTime]+timeAvgVars[SunChunkBFSTime]);
+		ImGui::Text("Player Chunk Rebuilding time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]);
+		ImGui::Text("Player Chunk Drawing time: %.2fms", timeAvgVars[PlayerChunkDrawTime]);
+		ImGui::Text("Player Chunk BFS time: %.2fms", timeAvgVars[PlayerChunkBFSTime]);
+		ImGui::Text("Sun Chunk Rebuilding time: %.2fms", timeAvgVars[SunChunkRebuildTime]);
+		ImGui::Text("Sun Chunk Drawing time: %.2fms", timeAvgVars[SunChunkDrawTime]);
+		ImGui::Text("Sun Chunk BFS time: %.2fms", timeAvgVars[SunChunkBFSTime]);
 		ImGui::Separator();
-		ImGui::Text("Update time: %f", timeAvgVars[UpdateTime]);
-		ImGui::Text("World Update time: %f", timeAvgVars[WorldUpdateTime]);
+		ImGui::Text("Update time: %.2fms", timeAvgVars[UpdateTime]);
+		ImGui::Text("World Update time: %.2fms", timeAvgVars[WorldUpdateTime]);
 		ImGui::Separator();
 		ImGui::Text("Player Position: [%f, %f, %f]", vec3fVars[PlayerPos].x, vec3fVars[PlayerPos].y, vec3fVars[PlayerPos].z);
 		ImGui::Text("Player Chunk Coord: [%i, %i, %i]", int(std::floor(vec3fVars[PlayerPos].x)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].y)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].z)) >> CHUNKSIZE_POW2);

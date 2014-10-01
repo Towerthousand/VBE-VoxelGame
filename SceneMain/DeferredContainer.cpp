@@ -8,7 +8,7 @@
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
-	gBuffer = new RenderTarget();
+	gBuffer = new RenderTarget(1.0f);
 	gBuffer->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
 	gBuffer->addTexture(RenderTarget::COLOR0, Texture::RGB8); //COLOR
 	gBuffer->addTexture(RenderTarget::COLOR1, Texture::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
