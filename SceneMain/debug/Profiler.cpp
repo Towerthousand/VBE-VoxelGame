@@ -63,6 +63,10 @@ Profiler::~Profiler() {
 	instance = nullptr;
 }
 
+bool Profiler::shown() {
+	return (instance != nullptr && instance->showProfiler);
+}
+
 void Profiler::renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count) {
 	instance->render(cmd_lists, cmd_lists_count);
 }
@@ -169,7 +173,7 @@ void Profiler::update(float deltaTime) {
 	if(showProfiler) {
 		std::string tag;
 		ImGui::SetNewWindowDefaultPos(ImVec2(50, 50));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,700));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,700), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
@@ -253,7 +257,7 @@ void Profiler::update(float deltaTime) {
 		ImGui::End();
 
 		ImGui::SetNewWindowDefaultPos(ImVec2(1500, 50));
-		ImGui::Begin("Controls", nullptr, ImVec2(300, 220), -1.0f, ImGuiWindowFlags_NoResize);
+		ImGui::Begin("Controls", nullptr, ImVec2(300, 220), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 		ImGui::Text("Controls for this demo:");
 		ImGui::Separator();
 		ImGui::Columns(2, nullptr, true);

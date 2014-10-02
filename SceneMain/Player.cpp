@@ -19,10 +19,10 @@ Player::~Player() {
 
 void Player::update(float deltaTime) {
 	//take input
-	processKeys();
+	if(!Profiler::shown()) processKeys();
 
 	//move and update camera position
-	movePos(deltaTime); //this handles collisions
+	if(!Profiler::shown()) movePos(deltaTime); //this handles collisions
 
 	//feedback to be used by the scene
 	onFloor = hitbox.collidesWithWorld(vec3f(0,-0.1,0));

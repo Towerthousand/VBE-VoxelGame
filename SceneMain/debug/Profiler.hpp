@@ -47,7 +47,8 @@ class Profiler : public GameObject {
 		static int intVars[INT_VAR_COUNT];
 		static float timeVars[TIME_VAR_COUNT];
 		static vec3f vec3fVars[VEC3F_VAR_COUNT];
-		//static float floatVars[TIME_VAR_COUNT];
+
+		static bool shown();
 
 		//Public callbacks
 		static void renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count);
