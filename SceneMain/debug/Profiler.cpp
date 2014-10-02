@@ -169,7 +169,7 @@ void Profiler::update(float deltaTime) {
 	if(showProfiler) {
 		std::string tag;
 		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(800,500));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,500));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
