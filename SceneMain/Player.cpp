@@ -4,7 +4,7 @@
 #include "DeferredContainer.hpp"
 #include "debug/Profiler.hpp"
 
-Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
+Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), xRot(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
 	setName("player");
 	cam = new Camera("playerCam", vec3f(0,1.5,0));
 	cam->addTo(this);
@@ -66,13 +66,17 @@ void Player::processKeys() {
 	}
 	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Space))
 		//if (onFloor && !isJumping)
-			vel.y = 15;
+		vel.y = 15;
 
 	//look around
-	vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
 	if(!Environment::getMouse()->isButtonHeld(Mouse::Middle)) {
-	   cam->rotateLocal(displacement.y, vec3f(1,0,0));
+		vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
 		cam->rotateGlobal(displacement.x, vec3f(0,1,0));
+		//limit x rotation
+		if(std::abs(xRot+displacement.y) < 90.0f) {
+			cam->rotateLocal(displacement.y, vec3f(1,0,0));
+			xRot += displacement.y;
+		}
 	}
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
 	bool recalc = false;
@@ -124,7 +128,7 @@ void Player::traceView() {
 			tDelta(tMax,tMax,tMax);
 
 	if (!w->outOfBounds(cpos.x,cpos.y,cpos.z) &&
-			w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
+		w->getCube(cpos.x,cpos.y,cpos.z) != 0) {
 		targetsBlock = true;
 		targetedBlock = vec3f(floor(cpos.x),floor(cpos.y),floor(cpos.z));
 		return;

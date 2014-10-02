@@ -19,6 +19,7 @@ class Player : public Entity {
 		unsigned int selectedID; //current blockID, used to place blocks
 		vec3i targetedBlock;
 		vec3i targetedBlockEnter;
+		float xRot;
 		bool onFloor;
 		bool isJumping;
 		bool targetsBlock;
