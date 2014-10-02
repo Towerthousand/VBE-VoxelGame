@@ -132,7 +132,7 @@ void World::draw(Camera* cam) const{
 			//manhattan culling
 			if(distance > Utils::manhattanDistance(initialChunkPos, neighborJob.pos)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-			if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || getColumnCC(neighborJob.pos) == nullptr) continue;
+			if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || (getColumnCC(neighborJob.pos) == nullptr && distance > WORLDSIZE/2)) continue;
 			//visibility culling
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling

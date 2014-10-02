@@ -77,7 +77,7 @@ void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
 		terrainModel.program = Programs.get("deferredChunk");
-		Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
+		Camera* cam = (Camera*)Game::i()->getObjectByName(Environment::getKeyboard()->isKeyHeld(Keyboard::Q)?"sunCamera":"playerCam");
 		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		terrainModel.program->uniform("M")->set(modelMatrix);
 		terrainModel.program->uniform("V")->set(cam->getView());

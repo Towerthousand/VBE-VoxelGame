@@ -70,9 +70,9 @@ void Sun::updateCamera() {
 		p = vec3f(cam->getView()*vec4f(p, 1.0f));
 		min.z = (min.z > p.z)? p.z : min.z;
 	}
-	cam->pos -= cam->getForward()*(glm::abs(min.z)+1.75f*CHUNKSIZE);
-	max.z += glm::abs(min.z)+1.75f*CHUNKSIZE;
-	min.z = -1.75f*CHUNKSIZE - 10.0f;
+	min.z -= 1.75f*CHUNKSIZE;
+	cam->pos -= cam->getForward()*(glm::abs(min.z));
+	max.z += glm::abs(min.z);
 	cam->projection = glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
 	cam->recalculateFrustum();
 }
