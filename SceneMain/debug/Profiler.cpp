@@ -168,13 +168,13 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		std::string tag;
-		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,500));
+		ImGui::SetNewWindowDefaultPos(ImVec2(50, 50));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,700));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
 		ImGui::Separator();
-		if(ImGui::CollapsingHeader("General frame times")) {
+		if(ImGui::CollapsingHeader("General frame times", nullptr, true, true)) {
 			tag = std::string("Frame Time (curr: ") + Utils::toString(timeAvgVars[FrameTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("50ms\n\n\n\n0 ms", timeAvgVars[FrameTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 50.0f, vec2f(350,60));
 			if (ImGui::IsHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
@@ -214,7 +214,7 @@ void Profiler::update(float deltaTime) {
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[SwapTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
 			if (ImGui::IsHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
 		}
-		if(ImGui::CollapsingHeader("World Draw Time")) {
+		if(ImGui::CollapsingHeader("World Draw Time", nullptr, true, true)) {
 			tag = std::string("Player Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
 			if (ImGui::IsHovered()) {
@@ -250,6 +250,26 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("Columns added last frame: %i", intVars[ColumnsAdded]);
 		ImGui::Text("Player Chunks: %i", intVars[PlayerChunksDrawn]);
 		ImGui::Text("Shadow Chunks: %i", intVars[SunChunksDrawn]);
+		ImGui::End();
+
+		ImGui::SetNewWindowDefaultPos(ImVec2(1500, 50));
+		ImGui::Begin("Controls", nullptr, ImVec2(300, 220), -1.0f, ImGuiWindowFlags_NoResize);
+		ImGui::Text("Controls for this demo:");
+		ImGui::Separator();
+		ImGui::Columns(2, nullptr, true);
+		ImGui::Text("Move"); ImGui::NextColumn();
+		ImGui::Text("W,A,S,D"); ImGui::NextColumn();
+		ImGui::Text("Look Around"); ImGui::NextColumn();
+		ImGui::Text("Mouse"); ImGui::NextColumn();
+		ImGui::Text("Jump"); ImGui::NextColumn();
+		ImGui::Text("Space"); ImGui::NextColumn();
+		ImGui::Text("Place a light"); ImGui::NextColumn();
+		ImGui::Text("L"); ImGui::NextColumn();
+		ImGui::Text("Toggle interface"); ImGui::NextColumn();
+		ImGui::Text("F1"); ImGui::NextColumn();
+		ImGui::Columns(1);
+		ImGui::Separator();
+		ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");
 		ImGui::End();
 	}
 	if(Environment::getKeyboard()->isKeyPressed(Keyboard::F1)) Environment::getMouse()->setRelativeMouseMode(!showProfiler);
