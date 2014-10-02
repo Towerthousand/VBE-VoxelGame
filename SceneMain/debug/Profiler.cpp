@@ -167,13 +167,14 @@ void Profiler::update(float deltaTime) {
 	frameCount++;
 	//UI
 	if(showProfiler) {
+		std::string tag;
 		ImGui::SetNewWindowDefaultPos(ImVec2(100, 100));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,500));
+		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(800,500));
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
 		ImGui::Text("FPS: %i", FPS);
-		std::string tag;
-		if(ImGui::CollapsingHeader("GENERAL TIMES")) {
+		ImGui::Separator();
+		if(ImGui::CollapsingHeader("General frame times")) {
 			tag = std::string("Frame Time (curr: ") + Utils::toString(timeAvgVars[FrameTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("50ms\n\n\n\n0 ms", timeAvgVars[FrameTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 50.0f, vec2f(350,60));
 			if (ImGui::IsHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
@@ -182,7 +183,6 @@ void Profiler::update(float deltaTime) {
 			if (ImGui::IsHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
-				ImGui::SameLine();
 				ImGui::Text("Update Time Breakdown");
 				tag = std::string("World Update Time (curr: ") + Utils::toString(timeAvgVars[WorldUpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
 				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[WorldUpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
@@ -193,7 +193,6 @@ void Profiler::update(float deltaTime) {
 			if (ImGui::IsHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
-				ImGui::SameLine();
 				ImGui::Text("Draw Time Breakdown");
 				tag = std::string("Deferred Pass Time (curr: ") + Utils::toString(timeAvgVars[DeferredPassTime][timeAvgOffset], 4, 2, true) + " ms)";
 				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DeferredPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
@@ -215,14 +214,36 @@ void Profiler::update(float deltaTime) {
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[SwapTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
 			if (ImGui::IsHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
 		}
-		//		ImGui::Text("Player World Draw Time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]+timeAvgVars[PlayerChunkDrawTime]+timeAvgVars[PlayerChunkBFSTime]);
-		//		ImGui::Text("Sun World Draw Time: %.2fms", timeAvgVars[SunChunkRebuildTime]+timeAvgVars[SunChunkDrawTime]+timeAvgVars[SunChunkBFSTime]);
-		//		ImGui::Text("Player Chunk Rebuilding time: %.2fms", timeAvgVars[PlayerChunkRebuildTime]);
-		//		ImGui::Text("Player Chunk Drawing time: %.2fms", timeAvgVars[PlayerChunkDrawTime]);
-		//		ImGui::Text("Player Chunk BFS time: %.2fms", timeAvgVars[PlayerChunkBFSTime]);
-		//		ImGui::Text("Sun Chunk Rebuilding time: %.2fms", timeAvgVars[SunChunkRebuildTime]);
-		//		ImGui::Text("Sun Chunk Drawing time: %.2fms", timeAvgVars[SunChunkDrawTime]);
-		//		ImGui::Text("Sun Chunk BFS time: %.2fms", timeAvgVars[SunChunkBFSTime]);
+		if(ImGui::CollapsingHeader("World Draw Time")) {
+			tag = std::string("Player Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) {
+				ImGui::SetTooltip("");
+				ImGui::BeginTooltip();
+				ImGui::Text("Player Cam World Draw Time Breakdown");
+				tag = std::string("Player Rebuild Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkRebuildTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkRebuildTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Player BFS Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkBFSTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkBFSTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Player Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				ImGui::EndTooltip();
+			}
+			tag = std::string("Shadow Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[ShadowWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
+			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+			if (ImGui::IsHovered()) {
+				ImGui::SetTooltip("");
+				ImGui::BeginTooltip();
+				ImGui::Text("Shadow Cam World Draw Time Breakdown");
+				tag = std::string("Shadow Rebuild Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkRebuildTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkRebuildTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Shadow BFS Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkBFSTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkBFSTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				tag = std::string("Shadow Draw Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
+				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
+				ImGui::EndTooltip();
+			}
+		}
 		ImGui::Separator();
 		ImGui::Text("Player Position: [%f, %f, %f]", vec3fVars[PlayerPos].x, vec3fVars[PlayerPos].y, vec3fVars[PlayerPos].z);
 		ImGui::Text("Player Chunk Coord: [%i, %i, %i]", int(std::floor(vec3fVars[PlayerPos].x)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].y)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].z)) >> CHUNKSIZE_POW2);
