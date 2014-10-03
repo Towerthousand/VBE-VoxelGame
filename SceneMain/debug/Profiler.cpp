@@ -257,7 +257,7 @@ void Profiler::update(float deltaTime) {
 		ImGui::End();
 
 		ImGui::SetNewWindowDefaultPos(ImVec2(1500, 50));
-		ImGui::Begin("Controls", nullptr, ImVec2(310, 230), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+		ImGui::Begin("Controls", nullptr, ImVec2(350, 270), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 		ImGui::Text("Controls for this demo:");
 		ImGui::Separator();
 		ImGui::Columns(2, nullptr, true);
@@ -273,6 +273,10 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("F1"); ImGui::NextColumn();
 		ImGui::Text("Toggle sun camera"); ImGui::NextColumn();
 		ImGui::Text("Q"); ImGui::NextColumn();
+		ImGui::Text("Decrease sun angle"); ImGui::NextColumn();
+		ImGui::Text("Z"); ImGui::NextColumn();
+		ImGui::Text("Increase sun angle"); ImGui::NextColumn();
+		ImGui::Text("X"); ImGui::NextColumn();
 		ImGui::Columns(1);
 		ImGui::Separator();
 		ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");

@@ -15,6 +15,8 @@ Sun::~Sun() {
 
 void Sun::update(float deltaTime) {
 	(void) deltaTime;
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Z)) angle -= 1.0f*deltaTime;
+	if(Environment::getKeyboard()->isKeyHeld(Keyboard::X)) angle += 1.0f*deltaTime;
 }
 
 void Sun::updateCamera() {
