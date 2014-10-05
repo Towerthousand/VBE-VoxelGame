@@ -22,7 +22,7 @@ SceneMain::SceneMain() {
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glEnable(GL_CULL_FACE)); //enable backface culling
 	GL_ASSERT(glCullFace(GL_BACK));
-
+	GL_ASSERT(glEnable(GL_FRAMEBUFFER_SRGB));
 	BlurContainer* blur = new BlurContainer();
 	blur->addTo(this);
 
@@ -92,7 +92,7 @@ void SceneMain::loadResources() {
 	Textures2D.add("nullBlack", Texture2D::createFromRaw(pixels4, 1, 1));
 	char pixels5[4] = {char(255), char(255), char(255), char(255)};
 	Textures2D.add("nullWhite", Texture2D::createFromRaw(pixels5, 1, 1));
-	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/blocks8.png"));
+	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/blocks8.png", Texture::RGBA, Texture::UNSIGNED_BYTE, Texture::SRGBA8));
 	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program
