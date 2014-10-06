@@ -1,2 +1,7 @@
 #version 420 core
-void main(){}
+
+//out float depth;
+
+void main() {
+    //depth = gl_FragCoord.z;
+}

@@ -17,10 +17,8 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
 	sunTarget = new RenderTarget(3.0f);
-	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
+	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32F); //Z-BUFFER
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
-	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setComparison(GL_LESS);
-
 	quad.mesh = Meshes.get("quad");
 	quad.program = Programs.get("ambientPass");
 }
@@ -52,7 +50,7 @@ void DeferredContainer::draw() const {
 	float shadowTime = Environment::getClock();
 	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
-	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
+	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
 	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Environment::getClock()-shadowTime;
 

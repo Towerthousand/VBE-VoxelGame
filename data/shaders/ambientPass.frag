@@ -2,7 +2,7 @@
 
 uniform sampler2D color0;
 uniform sampler2D color1;
-uniform sampler2DShadow sunDepth;
+uniform sampler2D sunDepth;
 uniform sampler2D depth;
 uniform mat4 depthMVP;
 uniform mat4 invCamProj;
@@ -51,7 +51,7 @@ void main(void) {
     vec4 valColor0 = texture(color0, vTexCoord);
     vec4 valColor1 = texture(color1, vTexCoord);
     if(texture(depth, vTexCoord).x > 0.9999999f) {
-            finalColor = vec4(110.0f/255.0f,150.0f/255.0f,0.9,1);
+            finalColor = vec4(50.0f/255.0f,90.0f/255.0f,255.0f/255.0f,1);
             return;
     }
 
@@ -66,11 +66,12 @@ void main(void) {
 
     // Sample the shadow map 16 times, 4 texture() calls * 4 samples each call
     float visibility = 1.0;
-    float bias = 0.002*tan(acos(cosTheta));
+    float bias = 0.0015f*tan(acos(cosTheta));
     bias = clamp(bias, 0.0f,0.01f);
-    float sampleNum = 16;
+    float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
+    float sampleNum = 16.0f;
     for (int i=0;i<sampleNum;i++)
-        visibility -= (1.0f/sampleNum)*(1.0-texture(sunDepth,vec3(shadowCoord.xy + poissonDisk[i]/700.0,(shadowCoord.z-bias)/shadowCoord.w)));
+       visibility -= (texture(sunDepth,shadowCoord.xy + poissonDisk[i]/700.0).r < shadowZ ? 1.0f/sampleNum : 0.0f);
 
     finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6)), 1.0);
 }
