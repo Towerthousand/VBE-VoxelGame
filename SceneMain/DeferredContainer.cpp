@@ -16,7 +16,7 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
-	sunTarget = new RenderTarget(3.0f);
+	sunTarget = new RenderTarget(2.0f);
 	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32F); //Z-BUFFER
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 	quad.mesh = Meshes.get("quad");
