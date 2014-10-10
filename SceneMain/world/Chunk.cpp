@@ -96,7 +96,7 @@ void Chunk::draw() const {
 void Chunk::drawBoundingBox() const {
 	if(boundingBox.getDimensions() == vec3f(0.0f)) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
+		Camera* cam = (Camera*)Game::i()->getObjectByName(Environment::getKeyboard()->isKeyHeld(Keyboard::Q)?"sunCamera":"playerCam");
 		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
 		boundingBoxModel.draw();
 	}

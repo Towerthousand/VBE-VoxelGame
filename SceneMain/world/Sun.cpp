@@ -20,7 +20,6 @@ void Sun::update(float deltaTime) {
 }
 
 void Sun::updateCamera() {
-	AABB occludersBox;
 	AABB occludedBox;
 	Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
 	World* w = (World*)getGame()->getObjectByName("world");
@@ -30,17 +29,18 @@ void Sun::updateCamera() {
 			if(col == nullptr) continue;
 			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
 				Chunk* actual = col->getChunkCC(y);
-				if(actual != nullptr && actual->hasMesh()) {
-					occludersBox.extend(actual->getWorldSpaceBoundingBox());
-					if(actual->wasDrawedByPlayer() && glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos()) < 16*1.8)
-						occludedBox.extend(actual->getWorldSpaceBoundingBox());
+				if(actual != nullptr && actual->wasDrawedByPlayer() && glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos()) < 8*1.8) {
+					Log::message() << actual->getWorldSpaceBoundingBox().getMin() << "YAY" << actual->getWorldSpaceBoundingBox().getMin() << Log::Flush;
+					occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}
 		}
+
+	Log::message() << occludedBox.getMin() << " JODER " <<  occludedBox.getMax() << " MIERDA " << occludedBox.getDimensions() << Log::Flush;
 	cam->pos = occludedBox.getCenter();
 	cam->lookInDir(getDirection());
 
-	vec3f min(1000000.0f), max(-1000000.0f);
+	vec3f min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
 	std::vector<vec3f> projections(8);
 	projections[0] = occludedBox.getMin();
 	projections[1] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0, 0, 1);
@@ -53,7 +53,7 @@ void Sun::updateCamera() {
 	for(int i = 0; i < 8; ++i) {
 		vec3f& p = projections[i];
 		p = vec3f(cam->getView()*vec4f(p, 1.0f));
-		max.x = std::max(max.x, p.x);
+		max.x = (max.x < p.x)? p.x : max.x;
 		min.x = (min.x > p.x)? p.x : min.x;
 		max.y = (max.y < p.y)? p.y : max.y;
 		min.y = (min.y > p.y)? p.y : min.y;

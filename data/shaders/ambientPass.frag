@@ -66,11 +66,11 @@ void main(void) {
 
     // Sample the shadow map 16 times, 4 texture() calls * 4 samples each call
     float visibility = 1.0;
-    float bias = 0.002f;
+    float bias = 0.0025f;
     float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
     float sampleNum = 16.0f;
     for (int i=0; i < sampleNum; i++)
-        visibility -= (texture(sunDepth,shadowCoord.xy + poissonDisk[i]/3000.0).r < shadowZ ? 1.0f/sampleNum : 0.0f);
+        visibility -= (texture(sunDepth,shadowCoord.xy + poissonDisk[i]/5000.0).r < shadowZ ? 1.0f/sampleNum : 0.0f);
 
     finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6)), 1.0);
 }
