@@ -1,6 +1,7 @@
 #include "DeferredCubeLight.hpp"
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
+#include "../Manager.hpp"
 
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -11,8 +12,7 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 	int z0 = int(floor(pos.z));
 	calcLight(x0, y0, z0);
 
-	quad.mesh = Meshes.get("quad");
-	quad.program = Programs.get("deferredCubeLight");
+	quad = Meshes.get("quad");
 }
 
 DeferredCubeLight::~DeferredCubeLight() {
@@ -97,7 +97,8 @@ void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
 	calcQuadrant(cx, cy, cz,  1,  1, -1);
 	calcQuadrant(cx, cy, cz,  1,  1,  1);
 
-	tex.loadFromRaw(data, LIGHTSIZE*2, LIGHTSIZE*2, LIGHTSIZE*2, Texture::RED, Texture::UNSIGNED_BYTE, Texture::R8, false, 15);
+	tex.loadFromRaw(data, vec3ui(LIGHTSIZE*2), TextureFormat::RED, TextureFormat::UNSIGNED_BYTE);
+	tex.setSlot(15);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);
 	tex.setWrap(GL_CLAMP_TO_BORDER);
 }
@@ -128,20 +129,20 @@ void DeferredCubeLight::draw() const {
 				  0      , 0      , 0      , 1);
 		t = glm::scale(rot, vec3f(LIGHTSIZE));
 		t = glm::translate(t, vec3f(0, 0, 1));
-		quad.program->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
+		Programs.get("deferredCubeLight")->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
 	}
 	else
-		quad.program->uniform("MVP")->set(t);
+		Programs.get("deferredCubeLight")->uniform("MVP")->set(t);
 
-	quad.program->uniform("invResolution")->set(vec2f(1.0f/Environment::getScreen()->getWidth(), 1.0f/Environment::getScreen()->getHeight()));
-	quad.program->uniform("color0")->set(renderer->getColor0());
-	quad.program->uniform("color1")->set(renderer->getColor1());
-	quad.program->uniform("depth")->set(renderer->getDepth());
-	quad.program->uniform("lightPos")->set(posViewSpace);
-	quad.program->uniform("invProj")->set(glm::inverse(cam->projection));
-	quad.program->uniform("invView")->set(glm::inverse(cam->getView()));
-	quad.program->uniform("lightColor")->set(color);
-	quad.program->uniform("lightRadius")->set(float(LIGHTSIZE));
-	quad.program->uniform("tex")->set(&tex);
-	quad.draw();
+	Programs.get("deferredCubeLight")->uniform("invResolution")->set(vec2f(1.0f/Window::getInstance()->getSize().x, 1.0f/Window::getInstance()->getSize().y));
+	Programs.get("deferredCubeLight")->uniform("color0")->set(renderer->getColor0());
+	Programs.get("deferredCubeLight")->uniform("color1")->set(renderer->getColor1());
+	Programs.get("deferredCubeLight")->uniform("depth")->set(renderer->getDepth());
+	Programs.get("deferredCubeLight")->uniform("lightPos")->set(posViewSpace);
+	Programs.get("deferredCubeLight")->uniform("invProj")->set(glm::inverse(cam->projection));
+	Programs.get("deferredCubeLight")->uniform("invView")->set(glm::inverse(cam->getView()));
+	Programs.get("deferredCubeLight")->uniform("lightColor")->set(color);
+	Programs.get("deferredCubeLight")->uniform("lightRadius")->set(float(LIGHTSIZE));
+	Programs.get("deferredCubeLight")->uniform("tex")->set(&tex);
+	quad->draw(Programs.get("deferredCubeLight"));
 }

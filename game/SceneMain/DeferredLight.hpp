@@ -15,7 +15,7 @@ class DeferredLight : public GameObject{
         float radius;
 	private:
 		DeferredContainer* renderer;
-        Model quad;
+		MeshBase* quad;
 };
 
 #endif // DEFERREDLIGHT_HPP

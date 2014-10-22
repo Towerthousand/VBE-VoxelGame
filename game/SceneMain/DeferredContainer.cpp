@@ -5,22 +5,22 @@
 #include "world/Column.hpp"
 #include "world/Sun.hpp"
 #include "debug/Profiler.hpp"
+#include "Manager.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
 	gBuffer = new RenderTarget(1.0f);
-	gBuffer->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32); //Z-BUFFER
-	gBuffer->addTexture(RenderTarget::COLOR0, Texture::RGB8); //COLOR
-	gBuffer->addTexture(RenderTarget::COLOR1, Texture::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
+	gBuffer->addTexture(RenderTarget::DEPTH, TextureFormat::DEPTH_COMPONENT32); //Z-BUFFER
+	gBuffer->addTexture(RenderTarget::COLOR0, TextureFormat::RGB8); //COLOR
+	gBuffer->addTexture(RenderTarget::COLOR1, TextureFormat::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
 	sunTarget = new RenderTarget(2048,2048);
-	sunTarget->addTexture(RenderTarget::DEPTH, Texture::DEPTH_COMPONENT32F); //Z-BUFFER
+	sunTarget->addTexture(RenderTarget::DEPTH, TextureFormat::DEPTH_COMPONENT32F); //Z-BUFFER
 	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
-	quad.mesh = Meshes.get("quad");
-	quad.program = Programs.get("ambientPass");
+	quad = Meshes.get("quad");
 }
 
 DeferredContainer::~DeferredContainer() {
@@ -39,67 +39,66 @@ void DeferredContainer::draw() const {
 	GL_ASSERT(glDisable(GL_BLEND));
 
 	//Deferred pass
-	float deferredTime = Environment::getClock();
+	float deferredTime = Clock::getSeconds();
 	drawMode = Deferred;
 	RenderTarget::bind(gBuffer);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::DeferredPassTime] = Environment::getClock()-deferredTime;
+	Profiler::timeVars[Profiler::DeferredPassTime] = Clock::getSeconds()-deferredTime;
 
 	//Shadowmap pass
-	float shadowTime = Environment::getClock();
+	float shadowTime = Clock::getSeconds();
 	drawMode = ShadowMap;
 	RenderTarget::bind(sunTarget);
 	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Environment::getClock()-shadowTime;
+	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Clock::getSeconds()-shadowTime;
 
 	//bind output texture (screen)
 	RenderTarget::bind(screen);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
 	//Light pass
-	float lightTime = Environment::getClock();
+	float lightTime = Clock::getSeconds();
 	GL_ASSERT(glEnable(GL_BLEND));
 	GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
 	GL_ASSERT(glDepthMask(GL_TRUE));
 	GL_ASSERT(glDepthFunc(GL_ALWAYS));
 	drawMode = Light;
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::LightPassTime] = Environment::getClock()-lightTime;
+	Profiler::timeVars[Profiler::LightPassTime] = Clock::getSeconds()-lightTime;
 
 	//Ambient+Visibility pass
-	float ambinentShadowPass = Environment::getClock();
+	float ambinentShadowPass = Clock::getSeconds();
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Camera* sCam = (Camera*)getGame()->getObjectByName("sunCamera");
-	quad.program = Programs.get("ambientPass");
-	quad.program->uniform("MVP")->set(mat4f(1.0f));
-	quad.program->uniform("camMV")->set(cam->getView()*fullTransform);
-	quad.program->uniform("color0")->set(getColor0());
-	quad.program->uniform("color1")->set(getColor1());
-	quad.program->uniform("invResolution")->set(vec2f(1.0f/screen->getWidth(), 1.0f/screen->getHeight()));
-	quad.program->uniform("invCamProj")->set(glm::inverse(cam->projection));
-	quad.program->uniform("invCamView")->set(glm::inverse(cam->getView()));
-	quad.program->uniform("lightDir")->set(sCam->getForward());
+	Programs.get("ambientPass")->uniform("MVP")->set(mat4f(1.0f));
+	Programs.get("ambientPass")->uniform("camMV")->set(cam->getView()*fullTransform);
+	Programs.get("ambientPass")->uniform("color0")->set(getColor0());
+	Programs.get("ambientPass")->uniform("color1")->set(getColor1());
+	Programs.get("ambientPass")->uniform("invResolution")->set(vec2f(1.0f/screen->getWidth(), 1.0f/screen->getHeight()));
+	Programs.get("ambientPass")->uniform("invCamProj")->set(glm::inverse(cam->projection));
+	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
+	Programs.get("ambientPass")->uniform("lightDir")->set(sCam->getForward());
 	glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
 						  0.5, 0.0, 0.0, 0.0,
 						  0.0, 0.5, 0.0, 0.0,
 						  0.0, 0.0, 0.5, 0.0,
 						  0.5, 0.5, 0.5, 1.0
 						  );
-	quad.program->uniform("depthMVP")->set(biasMatrix*(sCam->projection*sCam->getView()*fullTransform));
-	quad.program->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTarget::DEPTH));
-	quad.program->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTarget::DEPTH));
-	quad.draw();
-	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Environment::getClock()-ambinentShadowPass;
+	Programs.get("ambientPass")->uniform("depthMVP")->set(biasMatrix*(sCam->projection*sCam->getView()*fullTransform));
+	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTarget::DEPTH));
+	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTarget::DEPTH));
+	quad->draw(Programs.get("ambientPass"));
+	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Clock::getSeconds()-ambinentShadowPass;
 
 	//Forward pass
-	float forwardPass = Environment::getClock();
+	float forwardPass = Clock::getSeconds();
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
 	drawMode = Forward;
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::ForwardPassTime] = Environment::getClock()-forwardPass;
+	Profiler::timeVars[Profiler::ForwardPassTime] = Clock::getSeconds()-forwardPass;
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

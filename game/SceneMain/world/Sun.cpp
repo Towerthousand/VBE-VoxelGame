@@ -15,8 +15,8 @@ Sun::~Sun() {
 
 void Sun::update(float deltaTime) {
 	(void) deltaTime;
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Z)) angle -= 1.0f*deltaTime;
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::X)) angle += 1.0f*deltaTime;
+	if(Keyboard::pressed(Keyboard::Z)) angle -= 1.0f*deltaTime;
+	if(Keyboard::pressed(Keyboard::X)) angle += 1.0f*deltaTime;
 }
 
 void Sun::updateCamera() {
@@ -30,13 +30,13 @@ void Sun::updateCamera() {
 			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
 				Chunk* actual = col->getChunkCC(y);
 				if(actual != nullptr && actual->wasDrawedByPlayer() && glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos()) < 8*1.8) {
-					Log::message() << actual->getWorldSpaceBoundingBox().getMin() << "YAY" << actual->getWorldSpaceBoundingBox().getMin() << Log::Flush;
+					//Log::message() << actual->getWorldSpaceBoundingBox().getMin() << "YAY" << actual->getWorldSpaceBoundingBox().getMin() << Log::Flush;
 					occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}
 		}
 
-	Log::message() << occludedBox.getMin() << " JODER " <<  occludedBox.getMax() << " MIERDA " << occludedBox.getDimensions() << Log::Flush;
+	//Log::message() << occludedBox.getMin() << " JODER " <<  occludedBox.getMax() << " MIERDA " << occludedBox.getDimensions() << Log::Flush;
 	cam->pos = occludedBox.getCenter();
 	cam->lookInDir(getDirection());
 

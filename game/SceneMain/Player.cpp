@@ -45,45 +45,43 @@ void Player::update(float deltaTime) {
 void Player::processKeys() {
 	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
-	const float speed = 100.0f;
+	const float speed = 10.0f;
 	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
 	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::W)) {
+	if(Keyboard::pressed(Keyboard::W)) {
 		vel.x += dir.x*speed;
 		vel.z += dir.y*speed;
 	}
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::S)) {
+	if(Keyboard::pressed(Keyboard::S)) {
 		vel.x += -dir.x*speed;
 		vel.z += -dir.y*speed;
 	}
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::A)) {
+	if(Keyboard::pressed(Keyboard::A)) {
 		vel.x += dir.y*speed;
 		vel.z += -dir.x*speed;
 	}
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::D)) {
+	if(Keyboard::pressed(Keyboard::D)) {
 		vel.x += -dir.y*speed;
 		vel.z += dir.x*speed;
 	}
-	if(Environment::getKeyboard()->isKeyHeld(Keyboard::Space))
+	if(Keyboard::pressed(Keyboard::Space))
 		//if (onFloor && !isJumping)
 		vel.y = 15;
 
 	//look around
-	if(!Environment::getMouse()->isButtonHeld(Mouse::Middle)) {
-		vec2f displacement = vec2f(Environment::getMouse()->getMousePosRelative())*0.1f;
-		cam->rotateGlobal(displacement.x, vec3f(0,1,0));
-		//limit x rotation
-		if(std::abs(xRot+displacement.y) < 90.0f) {
-			cam->rotateLocal(displacement.y, vec3f(1,0,0));
-			xRot += displacement.y;
-		}
+	vec2f displacement = vec2f(Mouse::displacement())*0.1f;
+	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
+	//limit x rotation
+	if(std::abs(xRot+displacement.y) < 90.0f) {
+		cam->rotateLocal(displacement.y, vec3f(1,0,0));
+		xRot += displacement.y;
 	}
 	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
 	bool recalc = false;
 	vec3i recalcBlock;
 
 	//take block
-	if(Environment::getMouse()->isButtonPressed(Mouse::Left))
+	if(Mouse::justPressed(Mouse::Left))
 		if(targetsBlock) {
 			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
 			recalcBlock = targetedBlock;
@@ -91,7 +89,7 @@ void Player::processKeys() {
 		}
 
 	//put block
-	if(Environment::getMouse()->isButtonPressed(Mouse::Right))
+	if(Mouse::justPressed(Mouse::Right))
 		if(targetsBlock) {
 			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
 			recalcBlock = targetedBlockEnter;
@@ -107,7 +105,7 @@ void Player::processKeys() {
 		}
 	}
 
-	if(Environment::getKeyboard()->isKeyPressed(Keyboard::L)) {
+	if(Keyboard::justPressed(Keyboard::L)) {
 		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);

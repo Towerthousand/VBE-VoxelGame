@@ -1,6 +1,17 @@
-include(VBE/VBE.pro)
+QT -= gui
+
+TARGET = VoxelGame
+CONFIG -= app_bundle
+
+TEMPLATE = app
+
+include(../VBE/VBE.pri)
+include(../common.pri)
+
 INCLUDEPATH += .
+
 #DEFINES += __DLOG
+
 SOURCES += main.cpp \
 	commons.cpp \
 	SceneMain/SceneMain.cpp \
@@ -28,7 +39,8 @@ SOURCES += main.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
 	SceneMain/world/Sun.cpp \
     SceneMain/debug/imgui.cpp \
-    SceneMain/debug/Profiler.cpp
+    SceneMain/debug/Profiler.cpp \
+    SceneMain/Manager.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -64,21 +76,22 @@ HEADERS += \
     SceneMain/debug/imconfig.hpp \
     SceneMain/debug/imgui.hpp \
     SceneMain/debug/stb_textedit.hpp \
-    SceneMain/debug/Profiler.hpp
+    SceneMain/debug/Profiler.hpp \
+    SceneMain/Manager.hpp
 
 OTHER_FILES += \
-	data/shaders/quad.vert \
-	data/shaders/light.frag \
-	data/shaders/ambientPass.frag \
-	data/shaders/blurPassVertical.frag \
-	data/shaders/blurPassHoritzontal.frag \
-	data/shaders/quad.frag \
-	data/shaders/blurMaskPass.frag \
-	data/shaders/depth.frag \
-	data/shaders/depth.vert \
-	data/shaders/chunkDeferred.vert \
-	data/shaders/chunkDeferred.frag \
-	data/shaders/cubeLight.frag \
-    data/shaders/debugDraw.frag \
-    data/shaders/debugDraw.vert
+	../data/shaders/quad.vert \
+	../data/shaders/light.frag \
+	../data/shaders/ambientPass.frag \
+	../data/shaders/blurPassVertical.frag \
+	../data/shaders/blurPassHoritzontal.frag \
+	../data/shaders/quad.frag \
+	../data/shaders/blurMaskPass.frag \
+	../data/shaders/depth.frag \
+	../data/shaders/depth.vert \
+	../data/shaders/chunkDeferred.vert \
+	../data/shaders/chunkDeferred.frag \
+	../data/shaders/cubeLight.frag \
+    ../data/shaders/debugDraw.frag \
+    ../data/shaders/debugDraw.vert
 

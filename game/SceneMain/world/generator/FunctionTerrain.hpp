@@ -1,6 +1,6 @@
 #ifndef FUNCTIONTERRAIN_HPP
 #define FUNCTIONTERRAIN_HPP
-#include "tools.hpp"
+#include "commons.hpp"
 
 typedef std::vector<std::vector<std::vector<unsigned int> > > ID3Data;
 

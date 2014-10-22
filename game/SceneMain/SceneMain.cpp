@@ -6,13 +6,14 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "debug/Profiler.hpp"
+#include "Manager.hpp"
 
 SceneMain::SceneMain() {
 	this->setName("SCENE");
 
 	loadResources();
 
-	srand(Environment::getClock()*1000);
+	srand(Clock::getSeconds()*1000);
 
 	//GL stuff..:
 	GL_ASSERT(glClearColor(0, 0, 0, 1));
@@ -33,7 +34,7 @@ SceneMain::SceneMain() {
 	world->addTo(renderer);
 
 	Player* player = new Player();
-	player->getCam()->projection = glm::perspective(60.0f, float(Environment::getScreen()->getWidth())/float(Environment::getScreen()->getHeight()), 0.01f, WORLDSIZE*CHUNKSIZE*0.5f*1.735f);
+	player->getCam()->projection = glm::perspective(60.0f, float(Window::getInstance()->getSize().x)/float(Window::getInstance()->getSize().y), 0.01f, WORLDSIZE*CHUNKSIZE*0.5f*1.735f);
 	player->addTo(this);
 
 	Profiler* debug = new Profiler();
@@ -49,13 +50,13 @@ SceneMain::~SceneMain() {
 void SceneMain::loadResources() {
 	//meshes
 	std::vector<Vertex::Element> elems = {
-		Vertex::Element(Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 3))
+		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 3)
 	};
 	std::vector<vec3f> data = {
 		vec3f(1, -1, 0), vec3f(1, 1, 0), vec3f(-1, 1, 0),
 		vec3f(-1, 1, 0), vec3f(-1, -1, 0), vec3f(1, -1, 0)
 	};
-	Mesh* quad = Mesh::loadEmpty(Vertex::Format(elems));
+	Mesh* quad = new Mesh(Vertex::Format(elems));
 	quad->setVertexData(&data[0], 6);
 	quad->setPrimitiveType(Mesh::TRIANGLES);
 	Meshes.add("quad", quad);
@@ -75,24 +76,36 @@ void SceneMain::loadResources() {
 		0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
 	};
 
-	Mesh* cube = Mesh::loadEmpty(Vertex::Format(elems),Mesh::STATIC,true);
+	MeshIndexed* cube = new MeshIndexed(Vertex::Format(elems));
 	cube->setPrimitiveType(Mesh::TRIANGLE_STRIP);
 	cube->setVertexData(&cubeVertices[0],cubeVertices.size());
-	cube->setVertexIndices(&cubeIndices[0],cubeIndices.size());
+	cube->setIndexData(&cubeIndices[0],cubeIndices.size());
 	Meshes.add("1x1Cube",cube);
 
 	//textures
 	char pixels[4] = {char(200), char(20), char(20), char(255)};
-	Textures2D.add("nullRed", Texture2D::createFromRaw(pixels, 1, 1));
+	Texture2D* nullRed = new Texture2D();
+	nullRed->loadFromRaw(pixels, vec2ui(1));
+	Textures2D.add("nullRed", nullRed);
 	char pixels2[4] = {char(20), char(200), char(20), char(255)};
-	Textures2D.add("nullGreen", Texture2D::createFromRaw(pixels2, 1, 1));
+	Texture2D* nullGreen = new Texture2D();
+	nullRed->loadFromRaw(pixels2, vec2ui(1));
+	Textures2D.add("nullGreen", nullGreen);
 	char pixels3[4] = {char(20), char(20), char(200), char(255)};
-	Textures2D.add("nullBlue", Texture2D::createFromRaw(pixels3, 1, 1));
+	Texture2D* nullBlue = new Texture2D();
+	nullRed->loadFromRaw(pixels3, vec2ui(1));
+	Textures2D.add("nullBlue", nullBlue);
 	char pixels4[4] = {char(70), char(30), char(80), char(255)};
-	Textures2D.add("nullBlack", Texture2D::createFromRaw(pixels4, 1, 1));
+	Texture2D* nullBlack = new Texture2D();
+	nullRed->loadFromRaw(pixels4, vec2ui(1));
+	Textures2D.add("nullBlack", nullBlack);
 	char pixels5[4] = {char(255), char(255), char(255), char(255)};
-	Textures2D.add("nullWhite", Texture2D::createFromRaw(pixels5, 1, 1));
-	Textures2D.add("blocks",Texture2D::createFromFile("data/textures/blocks8.png", Texture::RGBA, Texture::UNSIGNED_BYTE, Texture::SRGBA8));
+	Texture2D* nullWhite = new Texture2D();
+	nullRed->loadFromRaw(pixels5, vec2ui(1));
+	Textures2D.add("nullWhite", nullWhite);
+	Texture2D* blocks = new Texture2D();
+	blocks->loadFromFile("data/textures/blocks8.png", TextureFormat::SRGBA8);
+	Textures2D.add("blocks", blocks);
 	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program
@@ -110,5 +123,5 @@ void SceneMain::loadResources() {
 
 void SceneMain::update(float deltaTime) {
 	(void) deltaTime;
-	if(Environment::getKeyboard()->isKeyPressed(Keyboard::Escape)) getGame()->isRunning = false;
+	if(Keyboard::pressed(Keyboard::Escape) || Window::getInstance()->isClosing()) getGame()->isRunning = false;
 }

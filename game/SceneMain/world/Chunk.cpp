@@ -1,6 +1,9 @@
 #include "Chunk.hpp"
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
+#include <cstring>
+#include "../Manager.hpp"
+
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 
 const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
@@ -33,6 +36,7 @@ Chunk::Chunk(int x, unsigned int y, int z) :
 	needsMeshRebuild(true), hasVertices(false),
 	visibilityGraph(0), modelMatrix(mat4f(1.0f)),
 	boundingBox(vec3f(0),vec3f(0)),
+	terrainModel(nullptr), boundingBoxModel(nullptr),
 	world(nullptr), renderer(nullptr) {
 	if(Game::i() != nullptr) {
 		world = (World*)Game::i()->getObjectByName("world");
@@ -43,7 +47,7 @@ Chunk::Chunk(int x, unsigned int y, int z) :
 }
 
 Chunk::~Chunk() {
-	delete terrainModel.mesh;
+	if(terrainModel != nullptr) delete terrainModel;
 }
 
 void Chunk::initStructures() {
@@ -76,41 +80,39 @@ void Chunk::update(float deltaTime) {
 void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		terrainModel.program = Programs.get("deferredChunk");
-		Camera* cam = (Camera*)Game::i()->getObjectByName(Environment::getKeyboard()->isKeyHeld(Keyboard::Q)?"sunCamera":"playerCam");
-		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
-		terrainModel.program->uniform("M")->set(modelMatrix);
-		terrainModel.program->uniform("V")->set(cam->getView());
-		terrainModel.program->uniform("diffuseTex")->set(Textures2D.get("blocks"));
-		terrainModel.draw();
+		Camera* cam = (Camera*)Game::i()->getObjectByName(Keyboard::pressed(Keyboard::Q)?"sunCamera":"playerCam");
+		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
+		Programs.get("deferredChunk")->uniform("M")->set(modelMatrix);
+		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
+		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
+		terrainModel->draw(Programs.get("deferredChunk"));
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		terrainModel.program = Programs.get("depthShader");
 		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
-		terrainModel.program->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
-		terrainModel.draw();
+		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
+		terrainModel->draw(Programs.get("depthShader"));
 	}
 }
 
 void Chunk::drawBoundingBox() const {
 	if(boundingBox.getDimensions() == vec3f(0.0f)) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName(Environment::getKeyboard()->isKeyHeld(Keyboard::Q)?"sunCamera":"playerCam");
-		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-		boundingBoxModel.draw();
+		Camera* cam = (Camera*)Game::i()->getObjectByName(Keyboard::pressed(Keyboard::Q)?"sunCamera":"playerCam");
+		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
 		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
-		boundingBoxModel.program->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-		boundingBoxModel.draw();
+		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 }
 
 void Chunk::rebuildMesh() {
 	if(!needsMeshRebuild) return;
 	needsMeshRebuild = false;
-	if(terrainModel.mesh == nullptr) initMesh();
+	if(terrainModel == nullptr) initMesh();
 	std::vector<Chunk::Vert> renderData;
 	boundingBox = AABB();
 	for(int z = 0; z < CHUNKSIZE; ++z)
@@ -124,7 +126,7 @@ void Chunk::rebuildMesh() {
 						boundingBox.extend(vec3f(x+1, y+1, z+1));
 					}
 				}
-	terrainModel.mesh->setVertexData(&renderData[0], renderData.size());
+	terrainModel->setVertexData(&renderData[0], renderData.size());
 	hasVertices = (renderData.size() != 0);
 	rebuildVisibilityGraph();
 }
@@ -156,10 +158,8 @@ void Chunk::initMesh() {
 		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
 		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat)
 	};
-	terrainModel.mesh = Mesh::loadEmpty(Vertex::Format(elements), Mesh::STATIC, false);
-	terrainModel.program = Programs.get("deferredChunk");
-	boundingBoxModel.mesh = Meshes.get("1x1Cube");
-	boundingBoxModel.program = Programs.get("depthShader");
+	terrainModel = new Mesh(Vertex::Format(elements));
+	boundingBoxModel = Meshes.get("1x1Cube");
 }
 
 void Chunk::rebuildVisibilityGraph() {

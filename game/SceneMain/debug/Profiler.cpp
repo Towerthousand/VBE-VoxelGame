@@ -1,5 +1,7 @@
 #include "Profiler.hpp"
 #include "SceneMain/DeferredContainer.hpp"
+#include <cstring>
+#include "SceneMain/Manager.hpp"
 
 int Profiler::intVars[Profiler::INT_VAR_COUNT];
 float Profiler::timeVars[Profiler::TIME_VAR_COUNT];
@@ -12,8 +14,7 @@ Profiler::Profiler() :
 	drawTimeStart(0.0f), drawTimeEnd(0.0f),
 	swapTimeStart(0.0f), swapTimeEnd(0.0f),
 	frameCount(0), timePassed(0.0f),
-	FPS(0), showProfiler(false), sampleRate(1.0f),
-	tex(nullptr) {
+	FPS(0), showProfiler(false), sampleRate(1.0f) {
 	//setup singleton
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
@@ -23,15 +24,14 @@ Profiler::Profiler() :
 	memset(&timeVars, 0, sizeof(timeVars));
 	memset(&vec3fVars, 0, sizeof(vec3fVars));
 
-	//font tenxture
-	tex = Texture2D::createFromFile("data/debugFont.png");
-	tex->setFilter(GL_NEAREST, GL_NEAREST);
+	//font texture
+	tex.loadFromFile("data/debugFont.png");
+	tex.setFilter(GL_NEAREST, GL_NEAREST);
 
 	setUpdatePriority(100);
 	setDrawPriority(100);
 
 	//setup UI model
-	model.program = Programs.get("debugDraw");
 	std::vector<Vertex::Element> elems = {
 		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 2),
 		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::Float, 2),
@@ -39,12 +39,12 @@ Profiler::Profiler() :
 	};
 
 	Vertex::Format format(elems);
-	model.mesh = Mesh::loadEmpty(format, Mesh::STREAM, false);
+	model = new Mesh(format, MeshBase::STREAM);
 
 	//setup ui
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = Environment::getScreen()->getWidth();
-	io.DisplaySize.y = Environment::getScreen()->getHeight();
+	io.DisplaySize.x = Window::getInstance()->getSize().x;
+	io.DisplaySize.y = Window::getInstance()->getSize().y;
 	io.IniFilename = "imgui.ini";
 	io.RenderDrawListsFn = &Profiler::renderHandle;
 	io.SetClipboardTextFn = &Profiler::setClipHandle;
@@ -57,8 +57,7 @@ Profiler::Profiler() :
 }
 
 Profiler::~Profiler() {
-	delete model.mesh;
-	delete tex;
+	delete model;
 	ImGui::Shutdown();
 	instance = nullptr;
 }
@@ -91,21 +90,21 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 	const float width = ImGui::GetIO().DisplaySize.x;
 	const float height = ImGui::GetIO().DisplaySize.y;
 	mat4f perspective = glm::ortho(0.0f, width, height, 0.0f, -1.0f, +1.0f);
-	model.program->uniform("MVP")->set(perspective);
+	Programs.get("debugDraw")->uniform("MVP")->set(perspective);
 
 	// Set texture for font
-	model.program->uniform("fontTex")->set(tex);
+	Programs.get("debugDraw")->uniform("fontTex")->set(&tex);
 
 	// Render command lists
 	for (int n = 0; n < cmd_lists_count; n++) {
 		const ImDrawList* cmd_list = cmd_lists[n];
-		model.mesh->setVertexData((const unsigned char*)cmd_list->vtx_buffer.begin(), cmd_list->vtx_buffer.size());
+		model->setVertexData((const unsigned char*)cmd_list->vtx_buffer.begin(), cmd_list->vtx_buffer.size());
 
 		int vtx_offset = 0;
 		const ImDrawCmd* pcmd_end = cmd_list->commands.end();
 		for (const ImDrawCmd* pcmd = cmd_list->commands.begin(); pcmd != pcmd_end; pcmd++) {
 			GL_ASSERT(glScissor((int)pcmd->clip_rect.x, (int)(height - pcmd->clip_rect.w), (int)(pcmd->clip_rect.z - pcmd->clip_rect.x), (int)(pcmd->clip_rect.w - pcmd->clip_rect.y)));
-			model.draw(vtx_offset, pcmd->vtx_count);
+			model->draw(Programs.get("debugDraw"), vtx_offset, pcmd->vtx_count);
 			vtx_offset += pcmd->vtx_count;
 		}
 	}
@@ -115,33 +114,33 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 }
 
 const char* Profiler::getClip() const {
-	char* c = SDL_GetClipboardText();
-	clip = std::string(c);
-	SDL_free(c);
+//	char* c = SDL_GetClipboardText();
+	clip = std::string("clipboard not implemented");
+//	SDL_free(c);
 	return clip.c_str();
 }
 
 void Profiler::setClip(const char* text, const char* text_end) const {
-	if (!text_end)
-		text_end = text + strlen(text);
+//	if (!text_end)
+//		text_end = text + strlen(text);
 
-	if (*text_end == 0) {
-		// Already got a zero-terminator at 'text_end', we don't need to add one
-		SDL_SetClipboardText(text);
-	}
-	else {
-		// Add a zero-terminator because sdl function doesn't take a size
-		char* buf = (char*)malloc(text_end - text + 1);
-		memcpy(buf, text, text_end-text);
-		buf[text_end-text] = '\0';
-		SDL_SetClipboardText(buf);
-		free(buf);
-	}
+//	if (*text_end == 0) {
+//		// Already got a zero-terminator at 'text_end', we don't need to add one
+//		SDL_SetClipboardText(text);
+//	}
+//	else {
+//		// Add a zero-terminator because sdl function doesn't take a size
+//		char* buf = (char*)malloc(text_end - text + 1);
+//		memcpy(buf, text, text_end-text);
+//		buf[text_end-text] = '\0';
+//		SDL_SetClipboardText(buf);
+//		free(buf);
+//	}
 }
 
 void Profiler::update(float deltaTime) {
-	if(Environment::getKeyboard()->isKeyPressed(Keyboard::F1)) showProfiler = !showProfiler;
-	updateTimeEnd = Environment::getClock();
+	if(Keyboard::justPressed(Keyboard::F1)) showProfiler = !showProfiler;
+	updateTimeEnd = Clock::getSeconds();
 	timeVars[DrawTime] = drawTimeEnd-drawTimeStart;
 	timeVars[UpdateTime] = updateTimeEnd-updateTimeStart;
 	timeVars[FrameTime] = updateTimeEnd-drawTimeStart;
@@ -151,11 +150,11 @@ void Profiler::update(float deltaTime) {
 	//INPUT
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = deltaTime == 0.0f ? 0.00001f : deltaTime;
-	io.MouseWheel = Environment::getMouse()->getMouseWheelMovement().y != 0 ? (Environment::getMouse()->getMouseWheelMovement().y > 0 ? 1 : -1) : 0;
-	io.KeyCtrl = Environment::getKeyboard()->isKeyHeld(Keyboard::LControl);
-	io.KeyShift = Environment::getKeyboard()->isKeyHeld(Keyboard::LShift);
-	io.MouseDown[0] = Environment::getMouse()->isButtonHeld(Mouse::Left);
-	io.MousePos = vec2f(Environment::getMouse()->getMousePos());
+	io.MouseWheel = Mouse::wheelMovement().y != 0 ? (Mouse::wheelMovement().y > 0 ? 1 : -1) : 0;
+	io.KeyCtrl = Keyboard::pressed(Keyboard::LControl);
+	io.KeyShift = Keyboard::pressed(Keyboard::LShift);
+	io.MouseDown[0] = Mouse::pressed(Mouse::Left);
+	io.MousePos = vec2f(Mouse::position());
 	ImGui::NewFrame();
 	//UPDATE INTERNAL DEBUG VARS
 	for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAccumVars[i] += timeVars[i];
@@ -282,18 +281,18 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");
 		ImGui::End();
 	}
-	if(Environment::getKeyboard()->isKeyPressed(Keyboard::F1)) Environment::getMouse()->setRelativeMouseMode(!showProfiler);
+	if(Keyboard::justPressed(Keyboard::F1)) Mouse::setRelativeMode(!showProfiler);
 	//ImGui::ShowTestWindow();
 	//RESET VARS FOR NEXT FRAME
 	memset(&timeVars, 0, sizeof(timeVars));
 	memset(&intVars, 0, sizeof(intVars));
-	drawTimeStart = Environment::getClock();
+	drawTimeStart = Clock::getSeconds();
 }
 
 void Profiler::draw() const {
-	float uiDrawTime = Environment::getClock();
+	float uiDrawTime = Clock::getSeconds();
 	ImGui::Render();
-	drawTimeEnd = Environment::getClock();
+	drawTimeEnd = Clock::getSeconds();
 	swapTimeStart = drawTimeEnd;
 	timeVars[UIDrawTime] = drawTimeEnd-uiDrawTime;
 }
@@ -309,7 +308,7 @@ Profiler::Watcher::~Watcher() {
 
 void Profiler::Watcher::update(float deltaTime) {
 	(void) deltaTime;
-	instance->swapTimeEnd = Environment::getClock();
+	instance->swapTimeEnd = Clock::getSeconds();
 	instance->updateTimeStart = instance->swapTimeEnd;
 }
 

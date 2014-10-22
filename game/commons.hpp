@@ -1,8 +1,8 @@
 #ifndef COMMONS_HPP
 #define COMMONS_HPP
-#include "VBE/includes.hpp"
-#include "VBE/dependencies/glm/gtc/random.hpp"
-#include "VBE/dependencies/glm/gtc/noise.hpp"
+#include <VBE/VBE.hpp>
+#include <VBE/dependencies/glm/gtc/random.hpp>
+#include <VBE/dependencies/glm/gtc/noise.hpp>
 #include <queue>
 #include <thread>
 #include <mutex>

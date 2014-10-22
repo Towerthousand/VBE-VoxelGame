@@ -22,7 +22,7 @@ class DeferredCubeLight : public GameObject {
 		unsigned char data[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2];
 		vec3f pos;
 		vec3f color;
-		Model quad;
+		MeshBase* quad;
 		Texture3D tex;
 		DeferredContainer* renderer;
 		World* world;

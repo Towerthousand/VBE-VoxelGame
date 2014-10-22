@@ -20,7 +20,7 @@ World::~World() {
 }
 
 void World::update(float deltaTime) {
-	float worldUpdateTime = Environment::getClock();
+	float worldUpdateTime = Clock::getSeconds();
 	generator.discardTasks();
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
@@ -59,7 +59,7 @@ void World::update(float deltaTime) {
 		}
 	std::sort(tasks.begin(),tasks.end());
 	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
-	Profiler::timeVars[Profiler::WorldUpdateTime] = Environment::getClock() - worldUpdateTime;
+	Profiler::timeVars[Profiler::WorldUpdateTime] = Clock::getSeconds() - worldUpdateTime;
 }
 
 void World::draw() const {
@@ -96,7 +96,7 @@ void World::draw(Camera* cam) const{
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
 	float chunkRebuildTime = 0.0f;
-	float chunkBFSTime = Environment::getClock();
+	float chunkBFSTime = Clock::getSeconds();
 	std::unordered_set<vec3i, Hasher> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunkPos(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
@@ -121,9 +121,9 @@ void World::draw(Camera* cam) const{
 		if(!chunksToDraw.insert(currentJob.pos).second) continue;
 		Chunk* currentChunk = getChunkCC(currentJob.pos); //used later inside neighbor loop
 		if(currentChunk != nullptr) {
-			float chunkRebuildTime0 = Environment::getClock();
+			float chunkRebuildTime0 = Clock::getSeconds();
 			currentChunk->rebuildMesh();
-			chunkRebuildTime += Environment::getClock() - chunkRebuildTime0;
+			chunkRebuildTime += Clock::getSeconds() - chunkRebuildTime0;
 		}
 		int distance = currentJob.distance+1; //neighbor chunks's bfs distance
 		//foreach face
@@ -144,7 +144,7 @@ void World::draw(Camera* cam) const{
 			q.push(neighborJob);
 		}
 	}
-	float chunkDrawTime = Environment::getClock();
+	float chunkDrawTime = Clock::getSeconds();
 	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
 	int chunkCount = 0;
 	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it) {
@@ -158,12 +158,12 @@ void World::draw(Camera* cam) const{
 
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
-			Profiler::timeVars[Profiler::PlayerChunkDrawTime] = Environment::getClock() - chunkDrawTime;
+			Profiler::timeVars[Profiler::PlayerChunkDrawTime] = Clock::getSeconds() - chunkDrawTime;
 			Profiler::timeVars[Profiler::PlayerChunkRebuildTime] = chunkRebuildTime;
 			Profiler::timeVars[Profiler::PlayerChunkBFSTime] = chunkBFSTime;
 			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunkCount; break;
 		case DeferredContainer::ShadowMap:
-			Profiler::timeVars[Profiler::ShadowChunkDrawTime] = Environment::getClock() - chunkDrawTime;
+			Profiler::timeVars[Profiler::ShadowChunkDrawTime] = Clock::getSeconds() - chunkDrawTime;
 			Profiler::timeVars[Profiler::ShadowChunkRebuildTime] = chunkRebuildTime;
 			Profiler::timeVars[Profiler::ShadowChunkBFSTime] = chunkBFSTime;
 			Profiler::intVars[Profiler::SunChunksDrawn] = chunkCount;

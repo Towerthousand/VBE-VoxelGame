@@ -13,7 +13,7 @@ class BlurContainer : public ContainerObject {
 		RenderTarget* blurMask;
 		RenderTarget* horitzontalBlurred;
 		RenderTarget* blurred;
-		mutable Model quad;
+		mutable MeshBase* quad;
 	private:
 };
 

@@ -26,7 +26,7 @@ class DeferredContainer : public ContainerObject {
 		RenderTarget* gBuffer;
 		RenderTarget* sunTarget;
         mutable DrawMode drawMode;
-		mutable Model quad;
+		mutable MeshBase* quad;
 };
 
 #endif // DEFERREDCONTAINER_HPP

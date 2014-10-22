@@ -1,9 +1,9 @@
 #include "DeferredLight.hpp"
 #include "DeferredContainer.hpp"
+#include "Manager.hpp"
 
 DeferredLight::DeferredLight() : pos(0.0f), color(1.0f), radius(30.0f), renderer((DeferredContainer*)getGame()->getObjectByName("deferred")) {
-	quad.mesh = Meshes.get("quad");
-	quad.program = Programs.get("deferredLight");
+	quad = Meshes.get("quad");
 }
 
 DeferredLight::~DeferredLight() {
@@ -34,18 +34,18 @@ void DeferredLight::draw() const{
 				  0      , 0      , 0      , 1);
 		t = glm::scale(rot, vec3f(radius));
 		t = glm::translate(t, vec3f(0, 0, 1));
-		quad.program->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
+		Programs.get("deferredLight")->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
 	}
 	else
-		quad.program->uniform("MVP")->set(t);
+		Programs.get("deferredLight")->uniform("MVP")->set(t);
 
-	quad.program->uniform("invResolution")->set(vec2f(1.0f/Environment::getScreen()->getWidth(), 1.0f/Environment::getScreen()->getHeight()));
-	quad.program->uniform("color0")->set(renderer->getColor0());
-	quad.program->uniform("color1")->set(renderer->getColor1());
-	quad.program->uniform("depth")->set(renderer->getDepth());
-	quad.program->uniform("lightPos")->set(posViewSpace);
-	quad.program->uniform("invProj")->set(glm::inverse(cam->projection));
-	quad.program->uniform("lightColor")->set(color);
-	quad.program->uniform("lightRadius")->set(radius);
-	quad.draw();
+	Programs.get("deferredLight")->uniform("invResolution")->set(vec2f(1.0f/Window::getInstance()->getSize().x, 1.0f/Window::getInstance()->getSize().y));
+	Programs.get("deferredLight")->uniform("color0")->set(renderer->getColor0());
+	Programs.get("deferredLight")->uniform("color1")->set(renderer->getColor1());
+	Programs.get("deferredLight")->uniform("depth")->set(renderer->getDepth());
+	Programs.get("deferredLight")->uniform("lightPos")->set(posViewSpace);
+	Programs.get("deferredLight")->uniform("invProj")->set(glm::inverse(cam->projection));
+	Programs.get("deferredLight")->uniform("lightColor")->set(color);
+	Programs.get("deferredLight")->uniform("lightRadius")->set(radius);
+	quad->draw(Programs.get("deferredLight"));
 }
