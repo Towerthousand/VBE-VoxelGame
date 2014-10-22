@@ -98,7 +98,6 @@ void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
 	calcQuadrant(cx, cy, cz,  1,  1,  1);
 
 	tex.loadFromRaw(data, vec3ui(LIGHTSIZE*2), TextureFormat::RED, TextureFormat::UNSIGNED_BYTE);
-	tex.setSlot(15);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);
 	tex.setWrap(GL_CLAMP_TO_BORDER);
 }
