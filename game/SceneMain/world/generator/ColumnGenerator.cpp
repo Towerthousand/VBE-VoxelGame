@@ -11,13 +11,14 @@
 #include "Function2DSimplex.hpp"
 #include "FunctionTerrainHeightmap.hpp"
 #include "FunctionTerrainJoin.hpp"
+#include "TaskPool.hpp"
 
 #define GENERATIONHEIGHT 16
 #define NWORKERS 2
 
 ColumnGenerator::ColumnGenerator(int seed) :
-	TaskPool(NWORKERS),
-	entry(NULL) {
+	entry(nullptr), pool(nullptr) {
+	pool = new TaskPool(NWORKERS);
 	generator.seed(seed);
 	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
 	Function3DSimplex* simplex32 = new Function3DSimplex(&generator,70,-50,50);
@@ -45,11 +46,17 @@ ColumnGenerator::ColumnGenerator(int seed) :
 }
 
 ColumnGenerator::~ColumnGenerator() {
+	pool->discard();
+	delete pool;
 	delete entry;
+	while(!done.empty()) {
+		delete done.front();
+		done.pop();
+	}
 }
 
 void ColumnGenerator::enqueueTask(vec2i colPos) {
-	enqueue([this, colPos]() {
+	pool->enqueue([this, colPos]() {
 		{
 			std::unique_lock<std::mutex> lock(currentMutex);
 			VBE_ASSERT(current.find(colPos) == current.end(), "You may not enqueue a colum that is already being worked on");
@@ -88,7 +95,7 @@ void ColumnGenerator::enqueueTask(vec2i colPos) {
 }
 
 void ColumnGenerator::discardTasks() {
-	discard();
+	pool->discard();
 }
 
 bool ColumnGenerator::currentlyWorking(vec2i column) {

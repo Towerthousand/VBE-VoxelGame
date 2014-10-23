@@ -1,11 +1,11 @@
 #ifndef WORLDGENERATOR_HPP
 #define WORLDGENERATOR_HPP
 #include "commons.hpp"
-#include "TaskPool.hpp"
 
 class FunctionTerrain;
+class TaskPool;
 class Column;
-class ColumnGenerator : protected TaskPool {
+class ColumnGenerator {
 	public:
 		 ColumnGenerator(int seed);
 		~ColumnGenerator();
@@ -30,12 +30,14 @@ class ColumnGenerator : protected TaskPool {
 				}
 		};
 
+
 		std::mutex              currentMutex;
 		std::set<vec2i, Comp>   current;
 		std::mutex          doneMutex;
 		std::queue<Column*> done;
 		std::mt19937 generator;
 		FunctionTerrain* entry;
+		TaskPool* pool;
 };
 
 #endif // WORLDGENERATOR_HPP

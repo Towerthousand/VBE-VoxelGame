@@ -56,7 +56,7 @@ inline TaskPool::~TaskPool() {
 		stop = true;
 	}
 	condition.notify_all();
-	for(size_t i = 0;i<workers.size();++i)
+	for(size_t i = 0; i < workers.size(); ++i)
 		workers[i].join();
 }
 

@@ -10,8 +10,8 @@ Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlo
 	cam->addTo(this);
 	acc = vec3f(0,-10,0);
 	pos = vec3f(160,256,160);
-	hitbox.type = Hitbox::BOX;
-	hitbox.radius = vec3f(0.6*scale.x,1.6*scale.y,0.6*scale.z);
+	hitbox->type = Hitbox::BOX;
+	hitbox->radius = vec3f(0.6*scale.x,1.6*scale.y,0.6*scale.z);
 }
 
 Player::~Player() {
@@ -25,7 +25,7 @@ void Player::update(float deltaTime) {
 	if(!Profiler::shown()) movePos(deltaTime); //this handles collisions
 
 	//feedback to be used by the scene
-	onFloor = hitbox.collidesWithWorld(vec3f(0,-0.1,0));
+	onFloor = hitbox->collidesWithWorld(vec3f(0,-0.1,0));
 	isJumping = (vel.y > 0);
 
 	//Limit movement

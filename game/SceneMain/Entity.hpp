@@ -16,7 +16,7 @@ class Entity : public GameObject {
 	protected:
 		virtual void movePos(float deltaTime);
 
-		Hitbox hitbox;
+		Hitbox* hitbox;
 		vec3f scale;
 		vec3f pos;
 };
