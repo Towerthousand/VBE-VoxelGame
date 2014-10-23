@@ -123,5 +123,5 @@ void SceneMain::loadResources() {
 
 void SceneMain::update(float deltaTime) {
 	(void) deltaTime;
-	if(Keyboard::pressed(Keyboard::Escape) || Window::getInstance()->isClosing()) getGame()->isRunning = false;
+	if(Keyboard::pressed(Keyboard::Escape) || Window::getInstance()->isClosing()) removeAndDelete();
 }

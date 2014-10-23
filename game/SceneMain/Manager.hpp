@@ -10,7 +10,7 @@ class Manager {
 
 		void add  (const std::string& resID, T* resource) {
 			VBE_ASSERT(resources.find(resID) == resources.end(), "Failed to add resource. resource " << resID << " already exists");
-			Log::message() << "* Adding resource with ID " << Log::Flush;
+			VBE_LOG("* Adding resource with ID " << resID);
 			resources.insert(std::pair<std::string, T*>(resID, resource));
 		}
 
