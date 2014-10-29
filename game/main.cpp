@@ -4,7 +4,7 @@ int main() {
 	Window w(Window::getFullscreenModes()[0]);
 	w.setTitle("VoxelGame");
 	Mouse::setGrab(false);
-	Mouse::setRelativeMode(false);
+	Mouse::setRelativeMode(true);
 	Game* game = new Game();
 	SceneMain* sc = new SceneMain();
 	sc->addTo(game);

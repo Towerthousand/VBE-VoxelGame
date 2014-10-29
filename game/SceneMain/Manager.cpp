@@ -1,6 +1,6 @@
 #include "Manager.hpp"
 
-Manager<RenderTarget> FrameBuffers = Manager<RenderTarget>();
+Manager<RenderTargetBase> FrameBuffers = Manager<RenderTargetBase>();
 Manager<Texture2D> Textures2D = Manager<Texture2D>();
 Manager<MeshBase> Meshes = Manager<MeshBase>();
 Manager<ShaderProgram> Programs = Manager<ShaderProgram>();

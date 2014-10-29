@@ -22,7 +22,6 @@ class Manager {
 		void erase(const std::string& resID) {
 			VBE_ASSERT(resources.find(resID) != resources.end(), "Failed to delete resource. resource " << resID << " doesn't exist");
 			VBE_LOG("* Deleting resource with ID " << resID );
-			Log::message() << "* Deleting resource with ID " << Log::Flush;
 			delete resources.at(resID);
 			resources.erase(resID);
 		}
@@ -40,7 +39,7 @@ class Manager {
 };
 
 //default Managers
-extern Manager<RenderTarget>	FrameBuffers;
+extern Manager<RenderTargetBase>	FrameBuffers;
 extern Manager<Texture2D>		Textures2D;
 extern Manager<MeshBase>		Meshes;
 extern Manager<ShaderProgram>	Programs;

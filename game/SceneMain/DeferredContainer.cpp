@@ -9,17 +9,17 @@
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
-	gBuffer = new RenderTarget(1.0f);
-	gBuffer->addTexture(RenderTarget::DEPTH, TextureFormat::DEPTH_COMPONENT32); //Z-BUFFER
-	gBuffer->addTexture(RenderTarget::COLOR0, TextureFormat::RGB8); //COLOR
-	gBuffer->addTexture(RenderTarget::COLOR1, TextureFormat::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
-	gBuffer->getTextureForAttachment(RenderTarget::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
-	gBuffer->getTextureForAttachment(RenderTarget::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
-	gBuffer->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer = new RenderTargetBase(1.0f);
+	gBuffer->addTexture(RenderTargetBase::DEPTH, TextureFormat::DEPTH_COMPONENT32); //Z-BUFFER
+	gBuffer->addTexture(RenderTargetBase::COLOR0, TextureFormat::RGB8); //COLOR
+	gBuffer->addTexture(RenderTargetBase::COLOR1, TextureFormat::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
+	gBuffer->getTextureForAttachment(RenderTargetBase::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer->getTextureForAttachment(RenderTargetBase::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 
-	sunTarget = new RenderTarget(2048,2048);
-	sunTarget->addTexture(RenderTarget::DEPTH, TextureFormat::DEPTH_COMPONENT32F); //Z-BUFFER
-	sunTarget->getTextureForAttachment(RenderTarget::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+	sunTarget = new RenderTargetBase(2048,2048);
+	sunTarget->addTexture(RenderTargetBase::DEPTH, TextureFormat::DEPTH_COMPONENT32F); //Z-BUFFER
+	sunTarget->getTextureForAttachment(RenderTargetBase::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
 	quad = Meshes.get("quad");
 }
 
@@ -33,7 +33,7 @@ void DeferredContainer::update(float deltaTime) {
 
 void DeferredContainer::draw() const {
 	//"The Screen". It may not be actually the screen since a upper container might be postprocessing
-	const RenderTarget* screen = RenderTarget::getCurrent();
+	const RenderTargetBase* screen = RenderTargetBase::getCurrent();
 
 	GL_ASSERT(glEnable(GL_DEPTH_TEST));
 	GL_ASSERT(glDisable(GL_BLEND));
@@ -41,7 +41,7 @@ void DeferredContainer::draw() const {
 	//Deferred pass
 	float deferredTime = Clock::getSeconds();
 	drawMode = Deferred;
-	RenderTarget::bind(gBuffer);
+	RenderTargetBase::bind(gBuffer);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 	ContainerObject::draw();
 	Profiler::timeVars[Profiler::DeferredPassTime] = Clock::getSeconds()-deferredTime;
@@ -49,13 +49,13 @@ void DeferredContainer::draw() const {
 	//Shadowmap pass
 	float shadowTime = Clock::getSeconds();
 	drawMode = ShadowMap;
-	RenderTarget::bind(sunTarget);
+	RenderTargetBase::bind(sunTarget);
 	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
 	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Clock::getSeconds()-shadowTime;
 
 	//bind output texture (screen)
-	RenderTarget::bind(screen);
+	RenderTargetBase::bind(screen);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
 	//Light pass
@@ -87,8 +87,8 @@ void DeferredContainer::draw() const {
 						  0.5, 0.5, 0.5, 1.0
 						  );
 	Programs.get("ambientPass")->uniform("depthMVP")->set(biasMatrix*(sCam->projection*sCam->getView()*fullTransform));
-	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTarget::DEPTH));
-	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTarget::DEPTH));
+	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH));
+	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTargetBase::DEPTH));
 	quad->draw(Programs.get("ambientPass"));
 	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Clock::getSeconds()-ambinentShadowPass;
 
@@ -106,14 +106,14 @@ DeferredContainer::DrawMode DeferredContainer::getMode() const {
 }
 
 Texture2D *DeferredContainer::getColor0() const {
-	return gBuffer->getTextureForAttachment(RenderTarget::COLOR0);
+	return gBuffer->getTextureForAttachment(RenderTargetBase::COLOR0);
 }
 
 Texture2D *DeferredContainer::getColor1() const {
-	return gBuffer->getTextureForAttachment(RenderTarget::COLOR1);
+	return gBuffer->getTextureForAttachment(RenderTargetBase::COLOR1);
 }
 
 Texture2D* DeferredContainer::getDepth() const {
-	return gBuffer->getTextureForAttachment(RenderTarget::DEPTH);
+	return gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH);
 }
 

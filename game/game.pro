@@ -80,18 +80,18 @@ HEADERS += \
     SceneMain/Manager.hpp
 
 OTHER_FILES += \
-	../data/shaders/quad.vert \
-	../data/shaders/light.frag \
-	../data/shaders/ambientPass.frag \
-	../data/shaders/blurPassVertical.frag \
-	../data/shaders/blurPassHoritzontal.frag \
-	../data/shaders/quad.frag \
-	../data/shaders/blurMaskPass.frag \
-	../data/shaders/depth.frag \
-	../data/shaders/depth.vert \
-	../data/shaders/chunkDeferred.vert \
-	../data/shaders/chunkDeferred.frag \
-	../data/shaders/cubeLight.frag \
-    ../data/shaders/debugDraw.frag \
-    ../data/shaders/debugDraw.vert
+        data/shaders/quad.vert \
+        data/shaders/light.frag \
+        data/shaders/ambientPass.frag \
+        data/shaders/blurPassVertical.frag \
+        data/shaders/blurPassHoritzontal.frag \
+        data/shaders/quad.frag \
+        data/shaders/blurMaskPass.frag \
+        data/shaders/depth.frag \
+        data/shaders/depth.vert \
+        data/shaders/chunkDeferred.vert \
+        data/shaders/chunkDeferred.frag \
+        data/shaders/cubeLight.frag \
+    data/shaders/debugDraw.frag \
+    data/shaders/debugDraw.vert
 
