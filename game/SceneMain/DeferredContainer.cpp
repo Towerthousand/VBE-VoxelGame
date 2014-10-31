@@ -10,20 +10,24 @@
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
 	//init g buffer texture
-	GBDepth.loadEmpty(vec2ui(0), TextureFormat::DEPTH_COMPONENT32);
+	GBDepth.loadEmpty(vec2ui(1), TextureFormat::DEPTH_COMPONENT32);
 	GBDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	GBColor0.loadEmpty(vec2ui(0), TextureFormat::RGB8);
+	GBColor0.loadEmpty(vec2ui(1), TextureFormat::RGB8);
 	GBColor0.setFilter(GL_NEAREST, GL_NEAREST);
-	GBColor1.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	GBColor1.loadEmpty(vec2ui(1), TextureFormat::RGBA16F);
 	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer = new RenderTarget(1.0f);
+	gBuffer->enableAttachment(RenderTargetBase::DEPTH);
+	gBuffer->enableAttachment(RenderTargetBase::COLOR0);
+	gBuffer->enableAttachment(RenderTargetBase::COLOR1);
 	gBuffer->setTexture(RenderTargetBase::DEPTH, &GBDepth); //Z-BUFFER
-	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBDepth); //COLOR
-	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBDepth); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
+	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
+	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
 	SDepth.loadEmpty(vec2ui(2048), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
 	sunTarget = new RenderTarget(2048, 2048);
+	sunTarget->enableAttachment(RenderTargetBase::DEPTH);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }

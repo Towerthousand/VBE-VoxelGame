@@ -69,7 +69,7 @@ void Player::processKeys() {
 		vel.y = 15;
 
 	//look around
-	vec2f displacement = vec2f(Mouse::displacement())*0.1f;
+	vec2f displacement = vec2f(Mouse::movement())*0.1f;
 	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
 	//limit x rotation
 	if(std::abs(xRot+displacement.y) < 90.0f) {

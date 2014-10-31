@@ -25,7 +25,7 @@ Profiler::Profiler() :
 	memset(&vec3fVars, 0, sizeof(vec3fVars));
 
 	//font texture
-	tex.loadFromFile("data/debugFont.png");
+	tex.load(Storage::openAsset("data/debugFont.png"));
 	tex.setFilter(GL_NEAREST, GL_NEAREST);
 
 	setUpdatePriority(100);
