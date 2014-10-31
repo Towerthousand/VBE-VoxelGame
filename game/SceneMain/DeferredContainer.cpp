@@ -9,22 +9,28 @@
 
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
-	gBuffer = new RenderTargetBase(1.0f);
-	gBuffer->addTexture(RenderTargetBase::DEPTH, TextureFormat::DEPTH_COMPONENT32); //Z-BUFFER
-	gBuffer->addTexture(RenderTargetBase::COLOR0, TextureFormat::RGB8); //COLOR
-	gBuffer->addTexture(RenderTargetBase::COLOR1, TextureFormat::RGBA16F); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
-	gBuffer->getTextureForAttachment(RenderTargetBase::COLOR0)->setFilter(GL_NEAREST, GL_NEAREST);
-	gBuffer->getTextureForAttachment(RenderTargetBase::COLOR1)->setFilter(GL_NEAREST, GL_NEAREST);
-	gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+	//init g buffer texture
+	GBDepth.loadEmpty(vec2ui(0), TextureFormat::DEPTH_COMPONENT32);
+	GBDepth.setFilter(GL_NEAREST, GL_NEAREST);
+	GBColor0.loadEmpty(vec2ui(0), TextureFormat::RGB8);
+	GBColor0.setFilter(GL_NEAREST, GL_NEAREST);
+	GBColor1.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer = new RenderTarget(1.0f);
+	gBuffer->setTexture(RenderTargetBase::DEPTH, &GBDepth); //Z-BUFFER
+	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBDepth); //COLOR
+	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBDepth); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
-	sunTarget = new RenderTargetBase(2048,2048);
-	sunTarget->addTexture(RenderTargetBase::DEPTH, TextureFormat::DEPTH_COMPONENT32F); //Z-BUFFER
-	sunTarget->getTextureForAttachment(RenderTargetBase::DEPTH)->setFilter(GL_NEAREST, GL_NEAREST);
+	SDepth.loadEmpty(vec2ui(2048), TextureFormat::DEPTH_COMPONENT32);
+	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
+	sunTarget = new RenderTarget(2048, 2048);
+	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }
 
 DeferredContainer::~DeferredContainer() {
 	delete gBuffer;
+	delete sunTarget;
 }
 
 void DeferredContainer::update(float deltaTime) {
@@ -87,8 +93,8 @@ void DeferredContainer::draw() const {
 						  0.5, 0.5, 0.5, 1.0
 						  );
 	Programs.get("ambientPass")->uniform("depthMVP")->set(biasMatrix*(sCam->projection*sCam->getView()*fullTransform));
-	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH));
-	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTextureForAttachment(RenderTargetBase::DEPTH));
+	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
+	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
 	quad->draw(Programs.get("ambientPass"));
 	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Clock::getSeconds()-ambinentShadowPass;
 
@@ -106,14 +112,14 @@ DeferredContainer::DrawMode DeferredContainer::getMode() const {
 }
 
 Texture2D *DeferredContainer::getColor0() const {
-	return gBuffer->getTextureForAttachment(RenderTargetBase::COLOR0);
+	return gBuffer->getTexture(RenderTargetBase::COLOR0);
 }
 
 Texture2D *DeferredContainer::getColor1() const {
-	return gBuffer->getTextureForAttachment(RenderTargetBase::COLOR1);
+	return gBuffer->getTexture(RenderTargetBase::COLOR1);
 }
 
 Texture2D* DeferredContainer::getDepth() const {
-	return gBuffer->getTextureForAttachment(RenderTargetBase::DEPTH);
+	return gBuffer->getTexture(RenderTargetBase::DEPTH);
 }
 

@@ -23,8 +23,18 @@ class DeferredContainer : public ContainerObject {
 		Texture2D* getDepth() const;
 
 	private:
-		RenderTargetBase* gBuffer;
-		RenderTargetBase* sunTarget;
+		RenderTarget* gBuffer;
+
+		//the textures for the gBuffer
+		Texture2D GBDepth;
+		Texture2D GBColor0;
+		Texture2D GBColor1;
+
+		RenderTarget* sunTarget;
+
+		//the texture for the sun target
+		Texture2D SDepth;
+
         mutable DrawMode drawMode;
 		mutable MeshBase* quad;
 };

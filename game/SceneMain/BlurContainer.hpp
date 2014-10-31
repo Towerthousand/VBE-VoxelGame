@@ -9,10 +9,11 @@ class BlurContainer : public ContainerObject {
 
 		virtual void draw() const;
 
-		RenderTargetBase* noBlur;
-		RenderTargetBase* blurMask;
-		RenderTargetBase* horitzontalBlurred;
-		RenderTargetBase* blurred;
+		RenderTarget* noBlur;
+		RenderTarget* blurMask;
+		RenderTarget* horitzontalBlurred;
+		RenderTarget* blurred;
+
 		mutable MeshBase* quad;
 	private:
 };
