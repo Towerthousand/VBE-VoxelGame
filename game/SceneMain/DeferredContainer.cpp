@@ -17,9 +17,6 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	GBColor1.loadEmpty(vec2ui(1), TextureFormat::RGBA16F);
 	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
 	gBuffer = new RenderTarget(1.0f);
-	gBuffer->enableAttachment(RenderTargetBase::DEPTH);
-	gBuffer->enableAttachment(RenderTargetBase::COLOR0);
-	gBuffer->enableAttachment(RenderTargetBase::COLOR1);
 	gBuffer->setTexture(RenderTargetBase::DEPTH, &GBDepth); //Z-BUFFER
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
@@ -27,7 +24,6 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	SDepth.loadEmpty(vec2ui(2048), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
 	sunTarget = new RenderTarget(2048, 2048);
-	sunTarget->enableAttachment(RenderTargetBase::DEPTH);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }
@@ -86,7 +82,7 @@ void DeferredContainer::draw() const {
 	Programs.get("ambientPass")->uniform("camMV")->set(cam->getView()*fullTransform);
 	Programs.get("ambientPass")->uniform("color0")->set(getColor0());
 	Programs.get("ambientPass")->uniform("color1")->set(getColor1());
-	Programs.get("ambientPass")->uniform("invResolution")->set(vec2f(1.0f/screen->getWidth(), 1.0f/screen->getHeight()));
+	Programs.get("ambientPass")->uniform("invResolution")->set(vec2f(1.0f/screen->getSize().x, 1.0f/screen->getSize().y));
 	Programs.get("ambientPass")->uniform("invCamProj")->set(glm::inverse(cam->projection));
 	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
 	Programs.get("ambientPass")->uniform("lightDir")->set(sCam->getForward());
