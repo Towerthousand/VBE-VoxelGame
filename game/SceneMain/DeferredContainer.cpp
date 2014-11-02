@@ -21,9 +21,9 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
-	SDepth.loadEmpty(vec2ui(2048), TextureFormat::DEPTH_COMPONENT32);
+	SDepth.loadEmpty(vec3ui(2048,2048,1), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	sunTarget = new RenderTarget(2048, 2048);
+	sunTarget = new RenderTargetLayered(2048, 2048, 1);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }

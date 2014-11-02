@@ -30,10 +30,10 @@ class DeferredContainer : public ContainerObject {
 		Texture2D GBColor0;
 		Texture2D GBColor1;
 
-		RenderTarget* sunTarget;
+		RenderTargetLayered* sunTarget;
 
 		//the texture for the sun target
-		Texture2D SDepth;
+		Texture2DArray SDepth;
 
         mutable DrawMode drawMode;
 		mutable MeshBase* quad;

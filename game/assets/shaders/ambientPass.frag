@@ -2,7 +2,7 @@
 
 uniform sampler2D color0;
 uniform sampler2D color1;
-uniform sampler2D sunDepth;
+uniform sampler2DArray sunDepth;
 uniform sampler2D depth;
 uniform mat4 depthMVP;
 uniform mat4 invCamProj;
@@ -70,7 +70,7 @@ void main(void) {
     float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
     float sampleNum = 16.0f;
     for (int i=0; i < sampleNum; i++)
-        visibility -= (texture(sunDepth,shadowCoord.xy + poissonDisk[i]/5000.0).r < shadowZ ? 1.0f/sampleNum : 0.0f);
+        visibility -= (texture(sunDepth,vec3(shadowCoord.xy + poissonDisk[i]/5000.0, 0)).r < shadowZ ? 1.0f/sampleNum : 0.0f);
 
     finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6)), 1.0);
 }
