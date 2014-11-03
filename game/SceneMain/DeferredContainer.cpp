@@ -21,9 +21,9 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
-	SDepth.loadEmpty(vec3ui(2048,2048,1), TextureFormat::DEPTH_COMPONENT32);
+	SDepth.loadEmpty(vec3ui(2048,2048,3), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	sunTarget = new RenderTargetLayered(2048, 2048, 1);
+	sunTarget = new RenderTargetLayered(2048, 2048, 3);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }
@@ -77,7 +77,17 @@ void DeferredContainer::draw() const {
 	//Ambient+Visibility pass
 	float ambinentShadowPass = Clock::getSeconds();
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-	Camera* sCam = (Camera*)getGame()->getObjectByName("sunCamera");
+	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+	glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
+						  0.5, 0.0, 0.0, 0.0,
+						  0.0, 0.5, 0.0, 0.0,
+						  0.0, 0.0, 0.5, 0.0,
+						  0.5, 0.5, 0.5, 1.0
+						  );
+	//compute each of the cascaded cameras's matrices
+	std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
+	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
+		depthMVP[i] = biasMatrix*(sun->getCam(i)->projection*sun->getCam(i)->getView()*fullTransform);
 	Programs.get("ambientPass")->uniform("MVP")->set(mat4f(1.0f));
 	Programs.get("ambientPass")->uniform("camMV")->set(cam->getView()*fullTransform);
 	Programs.get("ambientPass")->uniform("color0")->set(getColor0());
@@ -85,14 +95,8 @@ void DeferredContainer::draw() const {
 	Programs.get("ambientPass")->uniform("invResolution")->set(vec2f(1.0f/screen->getSize().x, 1.0f/screen->getSize().y));
 	Programs.get("ambientPass")->uniform("invCamProj")->set(glm::inverse(cam->projection));
 	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
-	Programs.get("ambientPass")->uniform("lightDir")->set(sCam->getForward());
-	glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
-						  0.5, 0.0, 0.0, 0.0,
-						  0.0, 0.5, 0.0, 0.0,
-						  0.0, 0.0, 0.5, 0.0,
-						  0.5, 0.5, 0.5, 1.0
-						  );
-	Programs.get("ambientPass")->uniform("depthMVP")->set(biasMatrix*(sCam->projection*sCam->getView()*fullTransform));
+	Programs.get("ambientPass")->uniform("lightDir")->set(sun->getCam(0)->getForward());
+	Programs.get("ambientPass")->uniform("depthMVP")->set(depthMVP);
 	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
 	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
 	quad->draw(Programs.get("ambientPass"));

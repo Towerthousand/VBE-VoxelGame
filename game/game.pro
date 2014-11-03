@@ -93,5 +93,6 @@ OTHER_FILES += \
         assets/shaders/chunkDeferred.frag \
         assets/shaders/cubeLight.frag \
     assets/shaders/debugDraw.frag \
-    assets/shaders/debugDraw.vert
+    assets/shaders/debugDraw.vert \
+    assets/shaders/depth.geom
 

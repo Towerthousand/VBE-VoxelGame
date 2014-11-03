@@ -68,7 +68,7 @@ void World::draw() const {
 			draw((Camera*)getGame()->getObjectByName("playerCam"));
 			break;
 		case DeferredContainer::ShadowMap:
-			((Sun*)getGame()->getObjectByName("sun"))->updateCamera();
+			((Sun*)getGame()->getObjectByName("sun"))->updateCameras();
 			draw((Camera*)getGame()->getObjectByName("sunCamera"));
 			break;
 		default: break;

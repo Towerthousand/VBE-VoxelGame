@@ -116,7 +116,7 @@ void SceneMain::loadResources() {
 	Programs.add("blurPassHoritzontal", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassHoritzontal.frag")));
 	Programs.add("textureToScreen", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/quad.frag")));
 	Programs.add("blurMaskPass", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag")));
-	Programs.add("depthShader", ShaderProgram::load(Storage::openAsset("shaders/depth.vert"),Storage::openAsset("shaders/depth.frag")));
+	Programs.add("depthShader", ShaderProgram::load(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shader/depth.geom"), Storage::openAsset("shaders/depth.frag")));
 	Programs.add("deferredChunk", ShaderProgram::load(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag")));
 	Programs.add("debugDraw", ShaderProgram::load(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag")));
 }

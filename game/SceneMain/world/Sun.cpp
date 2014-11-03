@@ -5,9 +5,19 @@
 
 Sun::Sun() : angle(45.0f) {
 	setName("sun");
-	cam = new Camera("sunCamera");
-	cam->projection = glm::ortho(-10,10,-10,10,-100,100);
-	cam->addTo(this);
+	float zFar = WORLDSIZE*CHUNKSIZE*0.5f*1.735f;
+	float numParts = pow(2, NUM_SUN_CASCADES) - 1;
+	float lastMax = 0.0f;
+	for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
+		cameras[i] = new Camera();
+		cameras[i]->projection = glm::ortho(-10,10,-10,10,-100,100);
+		cameras[i]->addTo(this);
+		minZ[i] = lastMax;
+		maxZ[i] = zFar*(pow(2,i)/numParts);
+		lastMax = maxZ[i];
+	}
+	minZ[0] = -10000;
+	maxZ[NUM_SUN_CASCADES-1] = std::numeric_limits<float>::max();
 }
 
 Sun::~Sun() {
@@ -19,7 +29,12 @@ void Sun::update(float deltaTime) {
 	if(Keyboard::pressed(Keyboard::X)) angle += 1.0f*deltaTime;
 }
 
-void Sun::updateCamera() {
+void Sun::updateCameras() {
+	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
+		updateSingleCam(i);
+}
+
+void Sun::updateSingleCam(int camID) {
 	AABB occludedBox;
 	Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
 	World* w = (World*)getGame()->getObjectByName("world");
@@ -29,17 +44,20 @@ void Sun::updateCamera() {
 			if(col == nullptr) continue;
 			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
 				Chunk* actual = col->getChunkCC(y);
-				if(actual != nullptr && actual->wasDrawedByPlayer() && glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos()) < 8*1.8) {
+				if(actual != nullptr && actual->wasDrawedByPlayer()) {
+					float dist = glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos());
+					if(dist < maxZ[camID] && dist > minZ[camID])
 					occludedBox.extend(actual->getWorldSpaceBoundingBox());
 				}
 			}
 		}
+	Camera* cam = cameras[i];
 
 	cam->pos = occludedBox.getCenter();
 	cam->lookInDir(getDirection());
 
-	vec3f min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
-	std::vector<vec3f> projections(8);
+	vec3f min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::lowest());
+	vec3f projections[8];
 	projections[0] = occludedBox.getMin();
 	projections[1] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0, 0, 1);
 	projections[2] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0, 1, 0);
@@ -50,13 +68,13 @@ void Sun::updateCamera() {
 	projections[7] = occludedBox.getMin() + occludedBox.getDimensions();
 	for(int i = 0; i < 8; ++i) {
 		vec3f& p = projections[i];
-		p = vec3f(cam->getView()*vec4f(p, 1.0f));
-		max.x = (max.x < p.x)? p.x : max.x;
-		min.x = (min.x > p.x)? p.x : min.x;
-		max.y = (max.y < p.y)? p.y : max.y;
-		min.y = (min.y > p.y)? p.y : min.y;
-		max.z = (max.z < p.z)? p.z : max.z;
-		min.z = (min.z > p.z)? p.z : min.z;
+		p = vec3f(cam->getView()*vec4f(p, 1.0f)); //project this corner onto the
+		max.x = std::max(max.x, p.x);
+		min.x = std::min(min.x, p.x);
+		max.y = std::max(max.y, p.y);
+		min.y = std::min(min.y, p.y);
+		max.z = std::max(max.z, p.z);
+		min.z = std::max(min.z, p.z);
 	}
 	cam->pos -= cam->getForward()*(glm::abs(min.z));
 	max.z += glm::abs(min.z);

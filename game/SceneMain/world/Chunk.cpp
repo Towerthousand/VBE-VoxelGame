@@ -89,7 +89,7 @@ void Chunk::draw() const {
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
+		Camera* cam = (Camera*)Game::i()->getObjectByName();
 		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		terrainModel->draw(Programs.get("depthShader"));
 	}
@@ -103,9 +103,9 @@ void Chunk::drawBoundingBox() const {
 		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
-		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-		boundingBoxModel->draw(Programs.get("depthShader"));
+//		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
+//		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+//		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 }
 
