@@ -89,7 +89,7 @@ void DeferredContainer::draw() const {
 	//compute each of the cascaded cameras's matrices
 	std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
 	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
-		depthMVP[i] = biasMatrix*(sun->getCam(i)->projection*sun->getCam(i)->getView()*fullTransform);
+		depthMVP[i] = biasMatrix*(sun->getVPMatrices()[i]*fullTransform);
 	Programs.get("ambientPass")->uniform("MVP")->set(mat4f(1.0f));
 	Programs.get("ambientPass")->uniform("camMV")->set(cam->getView()*fullTransform);
 	Programs.get("ambientPass")->uniform("color0")->set(getColor0());

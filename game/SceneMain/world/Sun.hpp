@@ -18,7 +18,7 @@ class Sun : public GameObject {
 		const Camera* getCam(unsigned int i) const {return cameras[i];}
 		const Camera* getGlobalCam() const {return globalCam;}
 		const std::vector<float>& getDepthPlanes() const {return maxZ;}
-		//const std::vector<mat4f>& getVPMatrices() const {return VP;}
+		const std::vector<mat4f>& getVPMatrices() const {return VP;}
 
 	private:
 		void calculateAABB(unsigned int camID);

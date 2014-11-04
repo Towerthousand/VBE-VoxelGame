@@ -24,7 +24,6 @@ class Chunk {
 
 		void update(float deltaTime);
 		void draw() const;
-		void drawBoundingBox() const;
 		void rebuildMesh();
 
 		int getX() const { return XPOS; }

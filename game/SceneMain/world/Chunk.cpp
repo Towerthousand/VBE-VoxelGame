@@ -94,23 +94,9 @@ void Chunk::draw() const {
 		Sun* sun = (Sun*)Game::i()->getObjectByName("sun");
 		std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
 		for(int i = 0; i < NUM_SUN_CASCADES; ++i)
-			depthMVP[i] = sun->getCam(i)->projection*sun->getCam(i)->getView()*modelMatrix;
+			depthMVP[i] = sun->getVPMatrices()[i]*modelMatrix;
 		Programs.get("depthShader")->uniform("MVP")->set(depthMVP);
 		terrainModel->draw(Programs.get("depthShader"));
-	}
-}
-
-void Chunk::drawBoundingBox() const {
-	if(boundingBox.getDimensions() == vec3f(0.0f)) return;
-	if(renderer->getMode() == DeferredContainer::Deferred) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName(Keyboard::pressed(Keyboard::Q)?"sunCamera":"playerCam");
-		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-		boundingBoxModel->draw(Programs.get("depthShader"));
-	}
-	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
-		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 }
 
