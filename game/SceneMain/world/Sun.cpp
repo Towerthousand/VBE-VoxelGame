@@ -8,6 +8,9 @@ Sun::Sun() : angle(45.0f) {
 	float zFar = WORLDSIZE*CHUNKSIZE*0.5f*1.735f;
 	float numParts = pow(2, NUM_SUN_CASCADES) - 1;
 	float lastMax = 0.0f;
+	globalCam = new Camera();
+	globalCam->projection = glm::ortho(-10,10,-10,10,-100,100);
+	globalCam->addTo(this);
 	for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
 		cameras[i] = new Camera();
 		cameras[i]->projection = glm::ortho(-10,10,-10,10,-100,100);
@@ -18,6 +21,7 @@ Sun::Sun() : angle(45.0f) {
 	}
 	minZ[0] = -10000;
 	maxZ[NUM_SUN_CASCADES-1] = std::numeric_limits<float>::max();
+	VP = std::vector<mat4f>(NUM_SUN_CASCADES, mat4f(1.0f));
 }
 
 Sun::~Sun() {
@@ -30,12 +34,19 @@ void Sun::update(float deltaTime) {
 }
 
 void Sun::updateCameras() {
-	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
-		updateSingleCam(i);
+	AABB globalAABB = AABB();
+	for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
+		numOccluders[i] = 0;
+		calculateAABB(i);
+		updateSingleCam(cameras[i], aabbs[i]);
+		VP[i] = cameras[i]->projection*cameras[i]->getView();
+		if(numOccluders[i] != 0) globalAABB.extend(aabbs[i]);
+	}
+	updateSingleCam(globalCam, globalAABB);
 }
 
-void Sun::updateSingleCam(int camID) {
-	AABB occludedBox;
+void Sun::calculateAABB(unsigned int camID) {
+	aabbs[camID] = AABB();
 	Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
 	World* w = (World*)getGame()->getObjectByName("world");
 	for(int x = 0; x < WORLDSIZE; ++x)
@@ -46,17 +57,19 @@ void Sun::updateSingleCam(int camID) {
 				Chunk* actual = col->getChunkCC(y);
 				if(actual != nullptr && actual->wasDrawedByPlayer()) {
 					float dist = glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos());
-					if(dist < maxZ[camID] && dist > minZ[camID])
-					occludedBox.extend(actual->getWorldSpaceBoundingBox());
+					if(dist < maxZ[camID] && dist > minZ[camID]) {
+						aabbs[camID].extend(actual->getWorldSpaceBoundingBox());
+						numOccluders[camID]++;
+					}
 				}
 			}
 		}
-	Camera* cam = cameras[i];
-
+}
+void Sun::updateSingleCam(Camera* cam, const AABB& occludedBox) {
 	cam->pos = occludedBox.getCenter();
 	cam->lookInDir(getDirection());
 
-	vec3f min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::lowest());
+	vec3f min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
 	vec3f projections[8];
 	projections[0] = occludedBox.getMin();
 	projections[1] = occludedBox.getMin() + occludedBox.getDimensions()*vec3f(0, 0, 1);
@@ -74,7 +87,7 @@ void Sun::updateSingleCam(int camID) {
 		max.y = std::max(max.y, p.y);
 		min.y = std::min(min.y, p.y);
 		max.z = std::max(max.z, p.z);
-		min.z = std::max(min.z, p.z);
+		min.z = std::min(min.z, p.z);
 	}
 	cam->pos -= cam->getForward()*(glm::abs(min.z));
 	max.z += glm::abs(min.z);

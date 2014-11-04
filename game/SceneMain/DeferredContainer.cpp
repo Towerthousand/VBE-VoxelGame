@@ -56,7 +56,7 @@ void DeferredContainer::draw() const {
 	float shadowTime = Clock::getSeconds();
 	drawMode = ShadowMap;
 	RenderTargetBase::bind(sunTarget);
-	GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
 	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Clock::getSeconds()-shadowTime;
 

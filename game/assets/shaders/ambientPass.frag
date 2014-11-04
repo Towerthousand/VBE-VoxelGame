@@ -4,7 +4,7 @@ uniform sampler2D color0;
 uniform sampler2D color1;
 uniform sampler2DArray sunDepth;
 uniform sampler2D depth;
-uniform mat4 depthMVP;
+uniform mat4 depthMVP[3];
 uniform mat4 invCamProj;
 uniform mat4 invCamView;
 uniform mat4 camMV;
@@ -57,7 +57,7 @@ void main(void) {
 
     vec3 fragmentViewPos = getFragPos(vTexCoord); //view space
     vec3 fragmentWorldPos = vec4(invCamView*vec4(fragmentViewPos,1.0)).xyz; //world space
-    vec4 shadowCoord = vec4(depthMVP*vec4(fragmentWorldPos,1.0)); //texture space (for shadow tex)
+    vec4 shadowCoord = vec4(depthMVP[0]*vec4(fragmentWorldPos,1.0)); //texture space (for shadow tex)
 
     vec3 normalVector = normalize(decodeNormal(valColor1.xy));  //view space
     vec3 lightVector = normalize(vec4(camMV*vec4(lightDir,0.0)).xyz);

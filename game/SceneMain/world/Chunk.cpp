@@ -3,6 +3,7 @@
 #include "../DeferredContainer.hpp"
 #include <cstring>
 #include "../Manager.hpp"
+#include "Sun.hpp"
 
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 
@@ -80,7 +81,8 @@ void Chunk::update(float deltaTime) {
 void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName(Keyboard::pressed(Keyboard::Q)?"sunCamera":"playerCam");
+		const Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
+		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getGlobalCam();
 		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		Programs.get("deferredChunk")->uniform("M")->set(modelMatrix);
 		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
@@ -89,8 +91,11 @@ void Chunk::draw() const {
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		Camera* cam = (Camera*)Game::i()->getObjectByName();
-		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
+		Sun* sun = (Sun*)Game::i()->getObjectByName("sun");
+		std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
+		for(int i = 0; i < NUM_SUN_CASCADES; ++i)
+			depthMVP[i] = sun->getCam(i)->projection*sun->getCam(i)->getView()*modelMatrix;
+		Programs.get("depthShader")->uniform("MVP")->set(depthMVP);
 		terrainModel->draw(Programs.get("depthShader"));
 	}
 }
@@ -103,9 +108,9 @@ void Chunk::drawBoundingBox() const {
 		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-//		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
-//		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
-//		boundingBoxModel->draw(Programs.get("depthShader"));
+		Camera* cam = (Camera*)Game::i()->getObjectByName("sunCamera");
+		Programs.get("depthShader")->uniform("MVP")->set(cam->projection*cam->getView()*glm::scale(glm::translate(modelMatrix,boundingBox.getMin()), boundingBox.getDimensions()));
+		boundingBoxModel->draw(Programs.get("depthShader"));
 	}
 }
 

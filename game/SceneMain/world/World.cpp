@@ -67,15 +67,17 @@ void World::draw() const {
 		case DeferredContainer::Deferred:
 			draw((Camera*)getGame()->getObjectByName("playerCam"));
 			break;
-		case DeferredContainer::ShadowMap:
-			((Sun*)getGame()->getObjectByName("sun"))->updateCameras();
-			draw((Camera*)getGame()->getObjectByName("sunCamera"));
+		case DeferredContainer::ShadowMap: {
+			Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+			sun->updateCameras();
+			draw(sun->getGlobalCam());
 			break;
+		}
 		default: break;
 	}
 }
 
-void World::draw(Camera* cam) const{
+void World::draw(const Camera* cam) const{
 	struct Hasher {
 			std::size_t operator()(const vec3i& a) const {
 				return 961*a.y + 31*a.z + a.x;

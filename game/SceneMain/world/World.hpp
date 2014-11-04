@@ -30,7 +30,7 @@ class World : public GameObject {
 	private:
 		void update(float deltaTime);
 		void draw() const;
-		void draw(Camera* cam) const;
+		void draw(const Camera* cam) const;
 
 		friend class Sun;
 		unsigned int highestChunkY;
