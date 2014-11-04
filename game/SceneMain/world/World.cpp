@@ -115,6 +115,8 @@ void World::draw(const Camera* cam) const{
 	}
 	Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
 	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
+	std::bitset<6> ommitedPlanes;
+	if(renderer->getMode() == DeferredContainer::ShadowMap) ommitedPlanes.set(Frustum::NEAR);
 	//bfs
 	while(!q.empty()) {
 		Job currentJob = q.front();
@@ -139,7 +141,7 @@ void World::draw(const Camera* cam) const{
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling
 			colliderSphere.center = neighborJob.pos*CHUNKSIZE+colliderOffset;
-			if(!Collision::intersects(cam->getFrustum(), colliderSphere)) continue;
+			if(!Collision::intersects(cam->getFrustum(), colliderSphere, ommitedPlanes)) continue;
 			//push it
 			Chunk* neighborChunk = getChunkCC(neighborJob.pos);
 			if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace(faces[i]));
