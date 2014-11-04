@@ -21,9 +21,9 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
-	SDepth.loadEmpty(vec3ui(2048,2048,3), TextureFormat::DEPTH_COMPONENT32);
+	SDepth.loadEmpty(vec3ui(2048,2048,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	sunTarget = new RenderTargetLayered(2048, 2048, 3);
+	sunTarget = new RenderTargetLayered(2048, 2048, NUM_SUN_CASCADES);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }
@@ -53,11 +53,13 @@ void DeferredContainer::draw() const {
 	Profiler::timeVars[Profiler::DeferredPassTime] = Clock::getSeconds()-deferredTime;
 
 	//Shadowmap pass
+	glEnable(GL_DEPTH_CLAMP);
 	float shadowTime = Clock::getSeconds();
 	drawMode = ShadowMap;
 	RenderTargetBase::bind(sunTarget);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
+	glDisable(GL_DEPTH_CLAMP);
 	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Clock::getSeconds()-shadowTime;
 
 	//bind output texture (screen)
@@ -97,6 +99,7 @@ void DeferredContainer::draw() const {
 	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
 	Programs.get("ambientPass")->uniform("lightDir")->set(sun->getCam(0)->getForward());
 	Programs.get("ambientPass")->uniform("depthMVP")->set(depthMVP);
+	Programs.get("ambientPass")->uniform("depthPlanes")->set(sun->getDepthPlanes());
 	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
 	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
 	quad->draw(Programs.get("ambientPass"));

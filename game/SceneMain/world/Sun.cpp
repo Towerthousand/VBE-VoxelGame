@@ -5,7 +5,8 @@
 
 Sun::Sun() : angle(45.0f) {
 	setName("sun");
-	float zFar = WORLDSIZE*CHUNKSIZE*0.5f*1.735f;
+	maxZ = std::vector<float>(NUM_SUN_CASCADES, 0.0f);
+	float zFar = WORLDSIZE*0.5f*CHUNKSIZE*0.5f;
 	float numParts = pow(2, NUM_SUN_CASCADES) - 1;
 	float lastMax = 0.0f;
 	globalCam = new Camera();
@@ -56,8 +57,8 @@ void Sun::calculateAABB(unsigned int camID) {
 			for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
 				Chunk* actual = col->getChunkCC(y);
 				if(actual != nullptr && actual->wasDrawedByPlayer()) {
-					float dist = glm::length(actual->getWorldSpaceBoundingBox().getCenter()-pCam->getWorldPos());
-					if(dist < maxZ[camID] && dist > minZ[camID]) {
+					float dist = glm::length(vec3f(pCam->getView() * vec4f(actual->getWorldSpaceBoundingBox().getCenter(), 1.0f)));
+					if(dist < maxZ[camID]+CHUNKSIZE*1.73 && dist > minZ[camID]-CHUNKSIZE*1.73) {
 						aabbs[camID].extend(actual->getWorldSpaceBoundingBox());
 						numOccluders[camID]++;
 					}
