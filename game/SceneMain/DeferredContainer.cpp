@@ -23,6 +23,7 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 
 	SDepth.loadEmpty(vec3ui(2048,2048,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
+	SDepth.setComparison(GL_GREATER);
 	sunTarget = new RenderTargetLayered(2048, 2048, NUM_SUN_CASCADES);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");

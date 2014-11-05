@@ -82,7 +82,7 @@ void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
 		const Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
-		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getGlobalCam();
+		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getCam(0);
 		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		Programs.get("deferredChunk")->uniform("M")->set(modelMatrix);
 		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
@@ -147,7 +147,8 @@ void Chunk::initMesh() {
 	std::vector<Vertex::Element> elements = {
 		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
 		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
-		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat)
+		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat),
+		Vertex::Element(Vertex::Attribute::get("a_light"), Vertex::Element::UnsignedByte, 1)
 	};
 	terrainModel = new Mesh(Vertex::Format(elements));
 	boundingBoxModel = Meshes.get("1x1Cube");

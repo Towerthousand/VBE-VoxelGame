@@ -39,15 +39,17 @@ class Chunk {
 		std::bitset<6> facesVisited;
 
 	private:
-		struct Vert {
+		struct __attribute__((packed)) Vert {
 				Vert(unsigned char vx = 0, unsigned char vy = 0, unsigned char vz = 0,
 							unsigned char n = 0,
 							unsigned short tx = 0, unsigned short ty = 0) :
 					vx(vx), vy(vy), vz(vz),
 					n(n),
-					tx(tx), ty(ty) {}
+					tx(tx), ty(ty),
+					l(0) {}
 				unsigned char vx,vy,vz,n;
 				unsigned short tx,ty;
+				unsigned char l;
 		};
 
 		static int getVisibilityIndex(int a, int b);
