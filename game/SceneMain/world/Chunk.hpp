@@ -39,14 +39,18 @@ class Chunk {
 		std::bitset<6> facesVisited;
 
 	private:
-		struct __attribute__((packed)) Vert {
+        void calcLightSum();
+        int sumRect(int x1, int y1, int z1, int x2, int y2, int z2);
+        float calcSubLight(int x, int y, int z, int dx, int dy, int dz, int d);
+        unsigned char calcLight(int x, int y, int z, int dx, int dy, int dz);
+        struct __attribute__((packed)) Vert {
 				Vert(unsigned char vx = 0, unsigned char vy = 0, unsigned char vz = 0,
 							unsigned char n = 0,
-							unsigned short tx = 0, unsigned short ty = 0) :
+                            unsigned short tx = 0, unsigned short ty = 0, unsigned short l = 0) :
 					vx(vx), vy(vy), vz(vz),
 					n(n),
 					tx(tx), ty(ty),
-					l(0) {}
+                    l(l) {}
 				unsigned char vx,vy,vz,n;
 				unsigned short tx,ty;
 				unsigned char l;

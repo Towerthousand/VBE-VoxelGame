@@ -100,12 +100,89 @@ void Chunk::draw() const {
 	}
 }
 
+#define MAX_RAD 9
+#define LIGHTSUM_SIZE (CHUNKSIZE+MAX_RAD+MAX_RAD)
+static int lightSum[LIGHTSUM_SIZE][LIGHTSUM_SIZE][LIGHTSUM_SIZE];
+
+void Chunk::calcLightSum() {
+    for(int x = 0; x < LIGHTSUM_SIZE; x++)
+        for(int y = 0; y < LIGHTSUM_SIZE; y++)
+            for(int z = 0; z < LIGHTSUM_SIZE; z++)
+                lightSum[x][y][z] = (getCube(x-MAX_RAD, y-MAX_RAD, z-MAX_RAD) == 0) ? 1 : 0;
+
+    for(int x = 1; x < LIGHTSUM_SIZE; x++)
+        for(int y = 0; y < LIGHTSUM_SIZE; y++)
+            for(int z = 0; z < LIGHTSUM_SIZE; z++)
+                lightSum[x][y][z] += lightSum[x-1][y][z];
+    for(int x = 0; x < LIGHTSUM_SIZE; x++)
+        for(int y = 1; y < LIGHTSUM_SIZE; y++)
+            for(int z = 0; z < LIGHTSUM_SIZE; z++)
+                lightSum[x][y][z] += lightSum[x][y-1][z];
+    for(int x = 0; x < LIGHTSUM_SIZE; x++)
+        for(int y = 0; y < LIGHTSUM_SIZE; y++)
+            for(int z = 1; z < LIGHTSUM_SIZE; z++)
+                lightSum[x][y][z] += lightSum[x][y][z-1];
+}
+
+int Chunk::sumRect(int x1, int y1, int z1, int x2, int y2, int z2) {
+    using std::swap;
+    if(x1 > x2) swap(x1, x2);
+    if(y1 > y2) swap(y1, y2);
+    if(z1 > z2) swap(z1, z2);
+
+    x1--;
+    y1--;
+    z1--;
+
+    x1 += MAX_RAD;
+    y1 += MAX_RAD;
+    z1 += MAX_RAD;
+    x2 += MAX_RAD;
+    y2 += MAX_RAD;
+    z2 += MAX_RAD;
+
+    return    lightSum[x2][y2][z2]
+            - lightSum[x2][y2][z1] - lightSum[x2][y1][z2] - lightSum[x1][y2][z2]
+            + lightSum[x2][y1][z1] + lightSum[x1][y2][z1] + lightSum[x1][y1][z2]
+            - lightSum[x1][y1][z1];
+}
+
+float Chunk::calcSubLight(int x, int y, int z, int dx, int dy, int dz, int d) {
+    int x1 = dx ==  1 ? x : x-d;
+    int x2 = dx == -1 ? x : x+d;
+    int y1 = dy ==  1 ? y : y-d;
+    int y2 = dy == -1 ? y : y+d;
+    int z1 = dz ==  1 ? z : z-d;
+    int z2 = dz == -1 ? z : z+d;
+
+    return sumRect(x1, y1, z1, x2-1, y2-1, z2-1) / float(d*d*d*4);
+}
+
+unsigned char Chunk::calcLight(int x, int y, int z, int dx, int dy, int dz) {
+//    return (x+y+z) % 2 == 0 ? 255 : 0;
+
+    float light = 0;
+    light += calcSubLight(x, y, z, dx, dy, dz, 1) * 1.0;
+    light += calcSubLight(x, y, z, dx, dy, dz, 2) * 1.0;
+    light += calcSubLight(x, y, z, dx, dy, dz, 4) * 1.0;
+    light += calcSubLight(x, y, z, dx, dy, dz, 8) * 1.0;
+    light *= 0.4;
+    light -= 0.8;
+
+    if(light > 1.0) light = 1.0;
+    if(light < 0.0) light = 0.0;
+    return light*255;
+}
+
 void Chunk::rebuildMesh() {
 	if(!needsMeshRebuild) return;
 	needsMeshRebuild = false;
 	if(terrainModel == nullptr) initMesh();
 	std::vector<Chunk::Vert> renderData;
 	boundingBox = AABB();
+
+    calcLightSum();
+
 	for(int z = 0; z < CHUNKSIZE; ++z)
 		for(int y = 0; y < CHUNKSIZE; ++y)
 			for(int x = 0; x < CHUNKSIZE; ++x)
@@ -148,8 +225,8 @@ void Chunk::initMesh() {
 		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
 		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
 		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat),
-		Vertex::Element(Vertex::Attribute::get("a_light"), Vertex::Element::UnsignedByte, 1)
-	};
+        Vertex::Element(Vertex::Attribute::get("a_light"), Vertex::Element::UnsignedByte, 1, Vertex::Element::ConvertToFloatNormalized)
+    };
 	terrainModel = new Mesh(Vertex::Format(elements));
 	boundingBoxModel = Meshes.get("1x1Cube");
 }
@@ -211,72 +288,72 @@ void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> 
 		texX = (textureIndexes[cubeID][0] % (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
 		texY = (textureIndexes[cubeID][0] / (512/TEXSIZE))*TEXSIZE; // TEXSIZE/2 = number of textures/row
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 0, texX          , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE  , texY          ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX          , texY+TEXSIZE  ));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 0, texX        , texY          , calcLight(x+1, y+1, z+1, 0, 0, 1)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE, texY          , calcLight(x  , y+1, z+1, 0, 0, 1)));
+        renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX        , texY+TEXSIZE  , calcLight(x+1, y  , z+1, 0, 0, 1)));
 
-		renderData.push_back(Chunk::Vert(x  , y  , z+1, 0, texX+TEXSIZE  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX          , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE  , texY          ));
+        renderData.push_back(Chunk::Vert(x  , y  , z+1, 0, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x  , y  , z+1, 0, 0, 1)));
+        renderData.push_back(Chunk::Vert(x+1, y  , z+1, 0, texX        , texY+TEXSIZE  , calcLight(x+1, y  , z+1, 0, 0, 1)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 0, texX+TEXSIZE, texY          , calcLight(x  , y+1, z+1, 0, 0, 1)));
 	}
 	if(getCube(x, y, z-1) == 0) { // back face
 		texX = (textureIndexes[cubeID][1] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][1] / (512/TEXSIZE))*TEXSIZE;
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z, 1, texX          , texY          ));
+        renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  , calcLight(x+1, y  , z, 0, 0, -1)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          , calcLight(x  , y+1, z, 0, 0, -1)));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z, 1, texX          , texY          , calcLight(x+1, y+1, z, 0, 0, -1)));
 
-		renderData.push_back(Chunk::Vert(x  , y  , z, 1, texX+TEXSIZE  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  ));
+        renderData.push_back(Chunk::Vert(x  , y  , z, 1, texX+TEXSIZE  , texY+TEXSIZE  , calcLight(x  , y  , z, 0, 0, -1)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z, 1, texX+TEXSIZE  , texY          , calcLight(x  , y+1, z, 0, 0, -1)));
+        renderData.push_back(Chunk::Vert(x+1, y  , z, 1, texX          , texY+TEXSIZE  , calcLight(x+1, y  , z, 0, 0, -1)));
 	}
 	if(getCube(x+1, y, z) == 0) { // left face
 		texX = (textureIndexes[cubeID][2] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][2] / (512/TEXSIZE))*TEXSIZE;
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z+1, 2, texX        , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          ));
+        renderData.push_back(Chunk::Vert(x+1, y  , z+1, 2, texX        , texY+TEXSIZE  , calcLight(x+1, y  , z+1, 1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x+1, y  , z  , 1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          , calcLight(x+1, y+1, z+1, 1, 0, 0)));
 
-		renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 2, texX+TEXSIZE, texY));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          ));
+        renderData.push_back(Chunk::Vert(x+1, y  , z  , 2, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x+1, y  , z  , 1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z  , 2, texX+TEXSIZE, texY          , calcLight(x+1, y+1, z  , 1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 2, texX        , texY          , calcLight(x+1, y+1, z+1, 1, 0, 0)));
 	}
 	if(getCube(x-1, y, z) == 0) { // right face
 		texX = (textureIndexes[cubeID][3] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][3] / (512/TEXSIZE))*TEXSIZE;
 
-		renderData.push_back(Chunk::Vert(x  , y  , z+1, 3, texX, texY+TEXSIZE          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE));
+        renderData.push_back(Chunk::Vert(x  , y  , z+1, 3, texX, texY+TEXSIZE          , calcLight(x  , y  , z+1, -1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          , calcLight(x  , y+1, z+1, -1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x  , y  , z  , -1, 0, 0)));
 
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z  , 3, texX+TEXSIZE, texY          ));
-		renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE			));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 3, texX        , texY          , calcLight(x  , y+1, z+1, -1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z  , 3, texX+TEXSIZE, texY          , calcLight(x  , y+1, z  , -1, 0, 0)));
+        renderData.push_back(Chunk::Vert(x  , y  , z  , 3, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x  , y  , z  , -1, 0, 0)));
 	}
 	if(getCube(x, y-1, z) == 0) { // bottom face
 		texX = (textureIndexes[cubeID][4] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][4] / (512/TEXSIZE))*TEXSIZE;
 
-		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x  , y, z  , 4, texX  , texY  ));
+        renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY          , calcLight(x+1, y, z  , 0, -1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX          , texY+TEXSIZE  , calcLight(x  , y, z+1, 0, -1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y, z  , 4, texX          , texY          , calcLight(x  , y, z  , 0, -1, 0)));
 
-		renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x+1, y, z+1, 4, texX+TEXSIZE    , texY+TEXSIZE    ));
-		renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX  , texY+TEXSIZE  ));
+        renderData.push_back(Chunk::Vert(x+1, y, z  , 4, texX+TEXSIZE  , texY          , calcLight(x+1, y, z  , 0, -1, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y, z+1, 4, texX+TEXSIZE  , texY+TEXSIZE  , calcLight(x+1, y, z+1, 0, -1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y, z+1, 4, texX          , texY+TEXSIZE  , calcLight(x  , y, z+1, 0, -1, 0)));
 	}
 	if(getCube(x, y+1, z) == 0) { // top face
 		texX = (textureIndexes[cubeID][5] % (512/TEXSIZE))*TEXSIZE;
 		texY = (textureIndexes[cubeID][5] / (512/TEXSIZE))*TEXSIZE;
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z  , 5, texX  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+TEXSIZE  ));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE, texY          , calcLight(x+1, y+1, z  , 0, 1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z  , 5, texX        , texY          , calcLight(x  , y+1, z  , 0, 1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX        , texY+TEXSIZE  , calcLight(x  , y+1, z+1, 0, 1, 0)));
 
-		renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE  , texY  ));
-		renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX  , texY+TEXSIZE  ));
-		renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 5, texX+TEXSIZE    , texY+TEXSIZE    ));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z  , 5, texX+TEXSIZE, texY          , calcLight(x+1, y+1, z  , 0, 1, 0)));
+        renderData.push_back(Chunk::Vert(x  , y+1, z+1, 5, texX        , texY+TEXSIZE  , calcLight(x  , y+1, z+1, 0, 1, 0)));
+        renderData.push_back(Chunk::Vert(x+1, y+1, z+1, 5, texX+TEXSIZE, texY+TEXSIZE  , calcLight(x+1, y+1, z+1, 0, 1, 0)));
 	}
 }
