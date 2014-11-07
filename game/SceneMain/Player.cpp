@@ -45,7 +45,7 @@ void Player::update(float deltaTime) {
 void Player::processKeys() {
 	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
-	const float speed = 100.0f;
+	const float speed = 10.0f;
 	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
 	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
 	if(Keyboard::pressed(Keyboard::W)) {

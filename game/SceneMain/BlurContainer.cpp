@@ -10,7 +10,7 @@ BlurContainer::BlurContainer() : noBlurDepth(vec2ui(0), TextureFormat::DEPTH_COM
 	noBlur->setBuffer(RenderTargetBase::DEPTH, &noBlurDepth);
 	noBlur->setTexture(RenderTargetBase::COLOR0, &noBlurColor0);
 
-	float blurSize = 2;
+	float blurSize = 1;
 	float blurSizeDivisor = std::pow(2,blurSize);
 
 	blurMaskColor0.loadEmpty(vec2ui(0), TextureFormat::RGBA8);

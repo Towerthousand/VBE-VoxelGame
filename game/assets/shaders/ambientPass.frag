@@ -33,6 +33,8 @@ vec2 poissonDisk[16] = {
     vec2( 0.14383161, -0.14100790 )
 };
 
+vec4 skyColor = vec4(50.0f/255.0f,90.0f/255.0f,255.0f/255.0f,1);
+
 vec3 getFragPos(vec2 texCoord) {
     vec4 sPos = vec4(texCoord * 2 - 1, texture(depth, texCoord).x * 2 - 1, 1.0);
     sPos = invCamProj * sPos;
@@ -51,10 +53,6 @@ void main(void) {
     vec2 vTexCoord = gl_FragCoord.xy * invResolution;
     vec4 valColor0 = texture(color0, vTexCoord);
     vec4 valColor1 = texture(color1, vTexCoord);
-    if(texture(depth, vTexCoord).x > 0.9999999f) {
-            finalColor = vec4(50.0f/255.0f,90.0f/255.0f,255.0f/255.0f,1);
-            return;
-    }
 
     vec3 fragmentViewPos = getFragPos(vTexCoord); //view space
     int shadowIndex = 0;
@@ -70,7 +68,7 @@ void main(void) {
 
     float cosTheta = max(-dot(lightVector, normalVector), 0.0f);
 
-    // Sample the shadow map 16 times, 4 texture() calls * 4 samples each call
+    // Compute visibility. Sample the shadow map 16 times
     float visibility = 1.0;
     float bias = 0.0025f;
     float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
@@ -79,5 +77,11 @@ void main(void) {
     for (int i=0; i < sampleNum; i++)
         visibility -= (1.0f/sampleNum)*(texture(sunDepth,vec4(shadowCoord.xy + poissonDisk[i]/1000.0, shadowIndex, shadowZ)));
 
-    finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6)), 1.0);
+    // Abs distance to player:
+    vec4 camPos = invCamView * vec4(vec3(0.0), 1.0);
+
+    //Compute fog percentage
+    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(16.0*16.0), 0.0, 1.0);
+    fog = pow(fog, 9);
+    finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6))*(1-fog) + skyColor.xyz*fog, 1.0);
 }
