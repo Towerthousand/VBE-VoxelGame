@@ -158,19 +158,12 @@ float Chunk::calcSubLight(int x, int y, int z, int dx, int dy, int dz, int d) {
 }
 
 unsigned char Chunk::calcLight(int x, int y, int z, int dx, int dy, int dz) {
-
 	float light = 0;
-	light += calcSubLight(x, y, z, dx, dy, dz, 1) * 1.0;
-	light += calcSubLight(x, y, z, dx, dy, dz, 2) * 1.0;
-	light += calcSubLight(x, y, z, dx, dy, dz, 4) * 1.0;
-	light += calcSubLight(x, y, z, dx, dy, dz, 8) * 1.0;
-	light *= 0.4;
-	light -= 0.8;
-
-	light = pow(light, 1);
-
-	if(light > 1.0) light = 1.0;
-	if(light < 0.0) light = 0.0;
+	light += calcSubLight(x, y, z, dx, dy, dz, 1) * 0.5;
+	light += calcSubLight(x, y, z, dx, dy, dz, 2) * 0.25;
+	light += calcSubLight(x, y, z, dx, dy, dz, 4) * 0.15;
+	light += calcSubLight(x, y, z, dx, dy, dz, 8) * 0.1;
+	light = pow(light, 2);
 	return light*255;
 }
 

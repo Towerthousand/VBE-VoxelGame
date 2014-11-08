@@ -39,7 +39,7 @@ Profiler::Profiler() :
 	};
 
 	Vertex::Format format(elems);
-	model = new Mesh(format, MeshBase::STREAM);
+	model = new Mesh(format, MeshSeparate::STREAM);
 
 	//setup ui
 	ImGuiIO& io = ImGui::GetIO();
