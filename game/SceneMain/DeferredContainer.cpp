@@ -79,8 +79,9 @@ void DeferredContainer::draw() const {
 
 	//Ambient+Visibility pass
 	float ambinentShadowPass = Clock::getSeconds();
-	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
+	const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+	if(Keyboard::pressed(Keyboard::Q)) cam = sun->getGlobalCam(); //sun cam mode
 	glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
 						  0.5, 0.0, 0.0, 0.0,
 						  0.0, 0.5, 0.0, 0.0,

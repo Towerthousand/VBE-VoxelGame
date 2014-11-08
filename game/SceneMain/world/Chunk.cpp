@@ -82,7 +82,7 @@ void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
 		const Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
-		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getCam(0);
+		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getGlobalCam();
 		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
 		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
 		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
