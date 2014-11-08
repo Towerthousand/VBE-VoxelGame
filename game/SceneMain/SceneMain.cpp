@@ -54,10 +54,14 @@ void SceneMain::loadResources() {
 	};
 	std::vector<vec3f> data = {
 		vec3f(1, -1, 0), vec3f(1, 1, 0), vec3f(-1, 1, 0),
-		vec3f(-1, 1, 0), vec3f(-1, -1, 0), vec3f(1, -1, 0)
+		vec3f(-1, -1, 0)
 	};
-	Mesh* quad = new Mesh(Vertex::Format(elems));
+	std::vector<unsigned int> indexes = {
+		0, 1, 2, 3, 0, 2
+	};
+	MeshIndexed* quad = new MeshIndexed(Vertex::Format(elems));
 	quad->setVertexData(&data[0], 6);
+	quad->setIndexData(&indexes[0], 6);
 	quad->setPrimitiveType(Mesh::TRIANGLES);
 	Meshes.add("quad", quad);
 
