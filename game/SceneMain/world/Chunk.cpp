@@ -84,7 +84,6 @@ void Chunk::draw() const {
 		const Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
 		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getCam(0);
 		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
-		Programs.get("deferredChunk")->uniform("M")->set(modelMatrix);
 		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
 		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
 		terrainModel->draw(Programs.get("deferredChunk"));

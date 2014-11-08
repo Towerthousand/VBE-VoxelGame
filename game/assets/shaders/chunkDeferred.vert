@@ -1,7 +1,6 @@
 #version 420
 
 uniform mat4 MVP;
-uniform mat4 M;
 uniform mat4 V;
 
 in vec3 a_position;
@@ -25,7 +24,7 @@ const vec3[6] normals = {
 };
 
 void main(void) {
-	v_normal = normalize(vec4(V*M*vec4(normals[a_normal], 0.0)).xyz);
+        v_normal = vec3(V*vec4(normals[a_normal],0.0));
 	v_texCoord = a_texCoord/512;
         v_light = a_light;
         gl_Position = MVP * vec4(a_position, 1.0);
