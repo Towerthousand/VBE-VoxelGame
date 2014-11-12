@@ -18,7 +18,6 @@ const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, b
 										  {8, 8, 8, 8, 8, 8}, //7 = planks
 										  {9, 9, 9, 9, 9, 9}  //8 = sand
 										};
-
 std::vector<vec3c> Chunk::visibilityNodes;
 vec3c Chunk::d[6] = {
 	vec3c(-1,0,0),
@@ -182,25 +181,12 @@ void Chunk::rebuildMesh() {
 	rebuildVisibilityGraph();
 }
 
-vec3i Chunk::getAbsolutePos() const {
-	return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
-}
-
-AABB Chunk::getWorldSpaceBoundingBox() const {
-	return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
-}
-
 bool Chunk::visibilityTest(Chunk::Face exit) const {
 	if(visibilityGraph.all()) return true;
 	for(int i = 0; i < 6; ++i)
 		if(facesVisited.test(i) && visibilityGraph.test(getVisibilityIndex(i, exit)))
 			return true;
 	return false;
-}
-
-int Chunk::getVisibilityIndex(int a, int b) {
-	if(a >= b && a > 0) a--;
-	return a+b*5;
 }
 
 void Chunk::initMesh() {
@@ -255,12 +241,6 @@ void Chunk::rebuildVisibilityGraph() {
 
 		if(visibilityGraph.all()) return;
 	}
-}
-
-unsigned int Chunk::getCube(int x, int y, int z) const { //in local space
-	if(x >= 0 && x < CHUNKSIZE && y >= 0 && y < CHUNKSIZE && z >= 0 && z < CHUNKSIZE)
-		return cubes[x][y][z];
-	return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
 }
 
 void Chunk::pushCubeToArray(short x, short y, short z, std::vector<Chunk::Vert> &renderData) { //I DON'T KNOW HOW TO MAKE THIS COMPACT

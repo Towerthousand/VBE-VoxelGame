@@ -1,8 +1,8 @@
 #ifndef CHUNK_HPP
 #define CHUNK_HPP
 #include "commons.hpp"
+#include "World.hpp"
 
-class World;
 class DeferredContainer;
 class Chunk {
 	public:
@@ -26,15 +26,19 @@ class Chunk {
 		void draw() const;
 		void rebuildMesh();
 
-		int getX() const { return XPOS; }
-		unsigned int getY() const { return YPOS; }
-		int getZ() const { return ZPOS; }
-		vec3i getAbsolutePos() const; //in cubes
-		AABB getWorldSpaceBoundingBox() const;
+		inline int getX() const { return XPOS; }
+		inline unsigned int getY() const { return YPOS; }
+		inline int getZ() const { return ZPOS; }
+		inline vec3i getAbsolutePos() const { //in cubes
+			return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
+		}
+		inline AABB getWorldSpaceBoundingBox() const {
+			return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
+		}
 		bool visibilityTest(Chunk::Face exit) const;
-		bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
-		bool hasMesh() const { return hasVertices; }
-		bool wasDrawedByPlayer() const { return drawedByPlayer; }
+		inline bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
+		inline bool hasMesh() const { return hasVertices; }
+		inline bool wasDrawedByPlayer() const { return drawedByPlayer; }
 
 		std::bitset<6> facesVisited;
 
@@ -56,11 +60,18 @@ class Chunk {
 				unsigned char l;
 		};
 
-		static int getVisibilityIndex(int a, int b);
+		static inline int getVisibilityIndex(int a, int b) {
+			if(a >= b && a > 0) a--;
+			return a+b*5;
+		}
 
 		void initMesh();
 		void rebuildVisibilityGraph();
-		unsigned int getCube(int x, int y, int z) const; //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
+		inline unsigned int getCube(int x, int y, int z) const { //local coords, (0,0,0) is (XPOS*CS,YPOS*CS,ZPOS*CS) in absolute
+			if(x >= 0 && x < CHUNKSIZE && y >= 0 && y < CHUNKSIZE && z >= 0 && z < CHUNKSIZE)
+				return cubes[x][y][z];
+			return world->getCube(x+(XPOS*CHUNKSIZE), y+(YPOS*CHUNKSIZE), z+(ZPOS*CHUNKSIZE)); //in another chunk
+		}
 		void pushCubeToArray(short x, short y, short z, std::vector<Vert>& renderData);
 
 		unsigned int cubes[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];

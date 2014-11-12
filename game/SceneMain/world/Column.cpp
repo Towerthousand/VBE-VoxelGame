@@ -33,16 +33,3 @@ void Column::rebuildMeshes() {
 		if(chunks[i] != nullptr)
 			chunks[i]->needsMeshRebuild = true;
 }
-
-vec3i Column::getAbolutePos() const {
-	return vec3i(XPOS*CHUNKSIZE,0,ZPOS*CHUNKSIZE);
-}
-
-Chunk* Column::getChunk(int y) const {
-	int realY = y >> CHUNKSIZE_POW2;
-	return (realY < 0 || realY >= (int)chunks.size()) ? nullptr : chunks[realY];
-}
-
-Chunk*Column::getChunkCC(int y) const {
-	return (y < 0 || y >= (int)chunks.size()) ? nullptr : chunks[y];
-}

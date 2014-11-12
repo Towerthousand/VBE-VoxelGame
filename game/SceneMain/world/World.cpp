@@ -5,6 +5,7 @@
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
 #include "../Manager.hpp"
+#include <cstring>
 
 World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -79,28 +80,23 @@ void World::draw() const {
 }
 
 void World::draw(const Camera* cam) const{
-	struct Hasher {
-			std::size_t operator()(const vec3i& a) const {
-				return 961*a.y + 31*a.z + a.x;
-			}
-	};
 	struct Job {
 			vec3i pos;
 			int distance;
 	};
-	Chunk::Face faces[6] = {
+	static Chunk::Face faces[6] = {
 		Chunk::MINX, Chunk::MAXX,
 		Chunk::MINY, Chunk::MAXY,
 		Chunk::MINZ, Chunk::MAXZ
 	};
-	vec3i offsets[6] = {
+	static vec3i offsets[6] = {
 		vec3i(-1,0,0), vec3i(1,0,0),
 		vec3i(0,-1,0), vec3i(0,1,0),
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
 	float chunkRebuildTime = 0.0f;
 	float chunkBFSTime = Clock::getSeconds();
-	std::unordered_set<vec3i, Hasher> chunksToDraw; //push all the chunks that must be drawn here
+	std::list<vec3i> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunkPos(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
@@ -118,17 +114,21 @@ void World::draw(const Camera* cam) const{
 	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
 	std::bitset<6> ommitedPlanes;
 	if(renderer->getMode() == DeferredContainer::ShadowMap) ommitedPlanes.set(Frustum::NEAR);
+	static bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
+	memset(visited, 0, sizeof(visited));
 	//bfs
 	while(!q.empty()) {
 		Job currentJob = q.front();
 		q.pop();
 		//Process current chunk
-		if(!chunksToDraw.insert(currentJob.pos).second) continue;
+		if(visited[currentJob.pos.x & WORLDSIZE_MASK][currentJob.pos.y & WORLDSIZE_MASK][currentJob.pos.z & WORLDSIZE_MASK]) continue;
+		visited[currentJob.pos.x & WORLDSIZE_MASK][currentJob.pos.y & WORLDSIZE_MASK][currentJob.pos.z & WORLDSIZE_MASK] = true;
 		Chunk* currentChunk = getChunkCC(currentJob.pos); //used later inside neighbor loop
 		if(currentChunk != nullptr) {
 			float chunkRebuildTime0 = Clock::getSeconds();
 			currentChunk->rebuildMesh();
 			chunkRebuildTime += Clock::getSeconds() - chunkRebuildTime0;
+			chunksToDraw.push_back(currentJob.pos);
 		}
 		int distance = currentJob.distance+1; //neighbor chunks's bfs distance
 		//foreach face
@@ -205,40 +205,4 @@ void World::draw(const Camera* cam) const{
 			break;
 		default: break;
 	}
-}
-
-bool World::outOfBounds(int x, int y, int z) const {
-	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
-	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0);
-}
-
-Column* World::getColumn(int x, int y, int z) const {
-	Column* c = columns[(x >> CHUNKSIZE_POW2) & WORLDSIZE_MASK][(z >> CHUNKSIZE_POW2) & WORLDSIZE_MASK];
-	return (c == nullptr || c->getX() != (x >> CHUNKSIZE_POW2) || c->getZ() != (z >> CHUNKSIZE_POW2) || y < 0)? nullptr:c;
-}
-
-Chunk* World::getChunk(int x, int y, int z) const {
-	Column* c = getColumn(x,y,z);
-	return c == nullptr ? nullptr : c->getChunk(y);
-}
-
-Column* World::getColumnCC(int x, int y, int z) const {
-	Column* c = columns[x & WORLDSIZE_MASK][z & WORLDSIZE_MASK];
-	return (c == nullptr || c->getX() != x || c->getZ() != z || y < 0)? nullptr:c;
-}
-
-Chunk* World::getChunkCC(int x, int y, int z) const {
-	Column* c = getColumnCC(x,y,z);
-	return c == nullptr ? nullptr : c->getChunkCC(y);
-}
-
-unsigned int World::getCube(int x, int y, int z) const {
-	Column* c = getColumn(x,y,z);
-	return (c == nullptr)? 0 : c->getCube(x & CHUNKSIZE_MASK,y,z & CHUNKSIZE_MASK);
-}
-
-void World::setCube(int x, int y, int z, unsigned int cube) {
-	Column* c = getColumn(x,y,z);
-	if(c == nullptr) return;
-	c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
 }
