@@ -105,10 +105,6 @@ void World::draw(const Camera* cam) const{
 		q.push({initialChunkPos, 0});
 		aux = getChunkCC(initialChunkPos); //used later inside neighbor loop
 		if(aux != nullptr) aux->facesVisited.set(i);
-		//initial neighbor for this face
-		q.push({initialChunkPos+offsets[i], 1});
-		aux = getChunkCC(initialChunkPos+offsets[i]); //used later inside neighbor loop
-		if(aux != nullptr) aux->facesVisited.set(Chunk::getOppositeFace(faces[i]));
 	}
 	Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
 	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
