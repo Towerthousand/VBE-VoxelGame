@@ -81,21 +81,11 @@ void Chunk::update(float deltaTime) {
 void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		const Camera* cam = (Camera*)Game::i()->getObjectByName("playerCam");
-		if(Keyboard::pressed(Keyboard::Q)) cam = ((Sun*)Game::i()->getObjectByName("sun"))->getGlobalCam();
-		Programs.get("deferredChunk")->uniform("MVP")->set(cam->projection*cam->getView()*modelMatrix);
-		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
-		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
-		terrainModel->draw(Programs.get("deferredChunk"));
+		terrainModel->drawBatched(Programs.get("deferredChunk"));
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		Sun* sun = (Sun*)Game::i()->getObjectByName("sun");
-		std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
-		for(int i = 0; i < NUM_SUN_CASCADES; ++i)
-			depthMVP[i] = sun->getVPMatrices()[i]*modelMatrix;
-		Programs.get("depthShader")->uniform("MVP")->set(depthMVP);
-		terrainModel->draw(Programs.get("depthShader"));
+		terrainModel->drawBatched(Programs.get("depthShader"));
 	}
 }
 
@@ -220,7 +210,7 @@ void Chunk::initMesh() {
 		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat),
 		Vertex::Element(Vertex::Attribute::get("a_light"), Vertex::Element::UnsignedByte, 1, Vertex::Element::ConvertToFloatNormalized)
 	};
-	terrainModel = new Mesh(Vertex::Format(elements));
+	terrainModel = new MeshBatched(Vertex::Format(elements));
 	boundingBoxModel = Meshes.get("1x1Cube");
 }
 

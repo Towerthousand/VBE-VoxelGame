@@ -4,6 +4,7 @@
 #include "../DeferredContainer.hpp"
 #include "Sun.hpp"
 #include "SceneMain/debug/Profiler.hpp"
+#include "../Manager.hpp"
 
 World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -150,15 +151,45 @@ void World::draw(const Camera* cam) const{
 	}
 	float chunkDrawTime = Clock::getSeconds();
 	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
+	if(renderer->getMode() == DeferredContainer::Deferred)  {
+		Programs.get("deferredChunk")->uniform("V")->set(cam->getView());
+		Programs.get("deferredChunk")->uniform("VP")->set(cam->projection*cam->getView());
+		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
+	}
+	else {
+		Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+		Programs.get("depthShader")->uniform("VP")->set(sun->getVPMatrices());
+	}
+	static std::vector<vec3i> transforms(400);
 	int chunkCount = 0;
-	for(auto it = chunksToDraw.begin(); it != chunksToDraw.end(); ++it) {
-		Chunk* c = getChunkCC(*it);
+	int batchCount = 0;
+	MeshBatched::startBatch();
+	for(const vec3i& pos : chunksToDraw) {
+		Chunk* c = getChunkCC(pos);
 		if(c != nullptr) {
 			c->facesVisited.reset();
 			c->draw();
-			chunkCount++;
+			transforms[batchCount] = c->getAbsolutePos();
+			++chunkCount;
+			++batchCount;
+		}
+		if(batchCount == 400) {
+			batchCount -= 400;
+			if(renderer->getMode() == DeferredContainer::Deferred)
+				Programs.get("deferredChunk")->uniform("transforms")->set(transforms);
+			else
+				Programs.get("depthShader")->uniform("transforms")->set(transforms);
+			MeshBatched::endBatch();
+			MeshBatched::startBatch();
 		}
 	}
+	if(batchCount > 0) {
+		if(renderer->getMode() == DeferredContainer::Deferred)
+			Programs.get("deferredChunk")->uniform("transforms")->set(transforms);
+		else
+			Programs.get("depthShader")->uniform("transforms")->set(transforms);
+	}
+	MeshBatched::endBatch();
 
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
