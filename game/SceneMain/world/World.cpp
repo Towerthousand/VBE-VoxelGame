@@ -147,9 +147,10 @@ void World::draw(const Camera* cam) const{
 	}
 	float chunkDrawTime = Clock::getSeconds();
 	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
+	Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
 	if(renderer->getMode() == DeferredContainer::Deferred)  {
 		const Camera* cam2 = cam;
-		if(Keyboard::pressed(Keyboard::Q)) cam2 = ((Sun*)getGame()->getObjectByName("sun"))->getGlobalCam();
+		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getGlobalCam();
 		Programs.get("deferredChunk")->uniform("V")->set(cam2->getView());
 		Programs.get("deferredChunk")->uniform("VP")->set(cam2->projection*cam2->getView());
 		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
@@ -166,6 +167,17 @@ void World::draw(const Camera* cam) const{
 		Chunk* c = getChunkCC(pos);
 		if(c != nullptr) {
 			c->facesVisited.reset();
+			if(renderer->getMode() == DeferredContainer::ShadowMap) {
+				const Frustum& f = ((Camera*)getGame()->getObjectByName("playerCam"))->getFrustum();
+				colliderSphere.center = c->getAbsolutePos()+colliderOffset;
+				bool pass = true;
+				for(int i = 0; i < 6; ++i) {
+					Plane p = f.getPlane((Frustum::PlaneID)i);
+					if(p.inside(colliderSphere) && glm::dot(p.n, sun->getDirection()) > 0)
+						pass = false;
+				}
+				if(pass) continue;
+			}
 			c->draw();
 			transforms[batchCount] = c->getAbsolutePos();
 			++chunkCount;
