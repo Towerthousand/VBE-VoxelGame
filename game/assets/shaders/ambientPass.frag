@@ -9,6 +9,7 @@ uniform float depthPlanes[4];
 uniform mat4 invCamProj;
 uniform mat4 invCamView;
 uniform mat4 camMV;
+uniform int worldsize;
 uniform vec2 invResolution;
 uniform vec3 lightDir;
 
@@ -55,10 +56,12 @@ void main(void) {
     vec4 valColor1 = texture(color1, vTexCoord);
 
     vec3 fragmentViewPos = getFragPos(vTexCoord); //view space
-    int shadowIndex = 0;
+    float fragmentWorldZ = abs(fragmentViewPos.z);
+    int shadowIndex = -1;
     for(int i = 0; i < 4; ++i) {
-        shadowIndex = i;
-        if(abs(fragmentViewPos.z) < depthPlanes[i]) break;
+        if(abs(fragmentViewPos.z) < depthPlanes[i]) {
+            shadowIndex = i; break;
+        }
     }
     vec3 fragmentWorldPos = vec4(invCamView*vec4(fragmentViewPos,1.0)).xyz; //world space
     vec4 shadowCoord = vec4(depthMVP[shadowIndex]*vec4(fragmentWorldPos,1.0)); //texture space (for shadow tex)
@@ -74,14 +77,18 @@ void main(void) {
     float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
     float sampleNum = 16.0f;
 
-    for (int i=0; i < sampleNum; i++)
-        visibility -= (1.0f/sampleNum)*(texture(sunDepth,vec4(shadowCoord.xy + poissonDisk[i]/1000.0, shadowIndex, shadowZ)));
+    if(shadowIndex != -1 && fragmentWorldZ < depthPlanes[3]) {
+        for (int i=0; i < sampleNum; i++)
+            visibility -= (1.0f/sampleNum)*(texture(sunDepth,vec4(shadowCoord.xy + poissonDisk[i]/1000.0, shadowIndex, shadowZ)));
+        if(fragmentWorldZ > depthPlanes[3]-10)
+            visibility = mix(visibility, 1.0, (fragmentWorldZ - (depthPlanes[3]-10.0))/10.0);
+    }
 
     // Abs distance to player:
     vec4 camPos = invCamView * vec4(vec3(0.0), 1.0);
 
     //Compute fog percentage
-    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(32.0*16.0), 0.0, 1.0);
+    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(worldsize << 3), 0.0, 1.0);
     fog = pow(fog, 5);
     finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6))*(1-fog) + skyColor.xyz*fog, 1.0);
 }

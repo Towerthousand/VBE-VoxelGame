@@ -170,11 +170,11 @@ void World::draw(const Camera* cam) const{
 			if(renderer->getMode() == DeferredContainer::ShadowMap) {
 				const Frustum& f = ((Camera*)getGame()->getObjectByName("playerCam"))->getFrustum();
 				colliderSphere.center = c->getAbsolutePos()+colliderOffset;
-				bool pass = true;
+				bool pass = false;
 				for(int i = 0; i < 6; ++i) {
 					Plane p = f.getPlane((Frustum::PlaneID)i);
-					if(p.inside(colliderSphere) && glm::dot(p.n, sun->getDirection()) > 0)
-						pass = false;
+					if(!p.inside(colliderSphere) && glm::dot(p.n, sun->getDirection()) > 0)
+						pass = true;
 				}
 				if(pass) continue;
 			}

@@ -6,7 +6,7 @@
 Sun::Sun() : angle(45.0f) {
 	setName("sun");
 	maxZ = std::vector<float>(NUM_SUN_CASCADES, 0.0f);
-	float zFar = WORLDSIZE*CHUNKSIZE*0.25f;
+	float zFar = std::min(WORLDSIZE*CHUNKSIZE, 256);
 	float numParts = pow(2, NUM_SUN_CASCADES) - 1;
 	float lastMax = 0.0f;
 	globalCam = new Camera();

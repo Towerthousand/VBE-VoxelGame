@@ -100,6 +100,7 @@ void DeferredContainer::draw() const {
 	Programs.get("ambientPass")->uniform("invCamProj")->set(glm::inverse(cam->projection));
 	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
 	Programs.get("ambientPass")->uniform("lightDir")->set(sun->getCam(0)->getForward());
+	Programs.get("ambientPass")->uniform("worldsize")->set(WORLDSIZE);
 	Programs.get("ambientPass")->uniform("depthMVP")->set(depthMVP);
 	Programs.get("ambientPass")->uniform("depthPlanes")->set(sun->getDepthPlanes());
 	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
