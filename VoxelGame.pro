@@ -5,10 +5,13 @@ CONFIG += ordered
 
 # All the projects in your application are sub-projects of your solution
 SUBDIRS = VBE \
+	  VBE-Scenegraph \
           game
 
+
 # Use .depends to specify that a project depends on another.
-game.depends = VBE
+VBE-Scenegraph.depends = VBE
+game.depends = VBE VBE-Scenegraph
 
 OTHER_FILES += \
         common.pri

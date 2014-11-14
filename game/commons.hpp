@@ -1,6 +1,7 @@
 #ifndef COMMONS_HPP
 #define COMMONS_HPP
 #include <VBE/VBE.hpp>
+#include <VBE-Scenegraph/VBE-Scenegraph.hpp>
 #include <VBE/dependencies/glm/gtc/random.hpp>
 #include <VBE/dependencies/glm/gtc/noise.hpp>
 #include <queue>
