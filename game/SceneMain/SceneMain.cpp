@@ -11,6 +11,10 @@
 SceneMain::SceneMain() {
 	this->setName("SCENE");
 
+    Window::getInstance()->setTitle("VoxelGame");
+    Mouse::setGrab(false);
+    Mouse::setRelativeMode(true);
+
 	loadResources();
 
 	srand(Clock::getSeconds()*1000);

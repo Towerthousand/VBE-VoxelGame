@@ -3,12 +3,8 @@
 int main() {
 	ContextSettings s;
 	s.versionMajor = 4;
-	s.versionMinor = 3;
-	Window w(Window::getFullscreenModes()[0], s);
-	w.setTitle("VoxelGame");
-	Mouse::setGrab(false);
-	Mouse::setRelativeMode(true);
-	Game* game = new Game();
+    s.versionMinor = 3;
+    Game* game = new Game(Window::getFullscreenModes()[0], s);
 	SceneMain* sc = new SceneMain();
 	sc->addTo(game);
 	game->run();
