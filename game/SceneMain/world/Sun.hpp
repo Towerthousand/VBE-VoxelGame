@@ -16,21 +16,23 @@ class Sun : public GameObject {
 		float getAngle() const {return angle;}
 
 		const Camera* getCam(unsigned int i) const {return cameras[i];}
-		const Camera* getGlobalCam() const {return globalCam;}
+		const Camera* getGlobalCam() const {return cameras[NUM_SUN_CASCADES];}
 		const std::vector<float>& getDepthPlanes() const {return maxZ;}
 		const std::vector<mat4f>& getVPMatrices() const {return VP;}
 
 	private:
-		void calculateAABB(unsigned int camID);
-		void updateSingleCam(Camera* cam, const AABB& occludedBox);
+		void recalculateCameras();
+		void recalculateAABBs();
+		void extend(std::vector<unsigned int> index, const AABB& occludedBox);
 
 		float angle; //sun always moves on the x-y plane (z never changes)
-		Camera* cameras[NUM_SUN_CASCADES];
-		Camera* globalCam;
-		float minZ[NUM_SUN_CASCADES];
+		vec3f min[NUM_SUN_CASCADES+1];
+		vec3f max[NUM_SUN_CASCADES+1];
+		Camera* cameras[NUM_SUN_CASCADES+1];
+		AABB aabbs[NUM_SUN_CASCADES+1];
+		int numOccluders[NUM_SUN_CASCADES+1];
+		std::vector<float> minZ;
 		std::vector<float> maxZ;
-		AABB aabbs[NUM_SUN_CASCADES];
-		int numOccluders[NUM_SUN_CASCADES];
 		std::vector<mat4f> VP;
 };
 
