@@ -34,7 +34,7 @@ Chunk::Chunk(int x, unsigned int y, int z) :
 	XPOS(x), YPOS(y), ZPOS(z),
 	drawedByPlayer(false),
 	needsMeshRebuild(true), hasVertices(false),
-	visibilityGraph(0), modelMatrix(mat4f(1.0f)),
+	visibilityGraph(0),
 	boundingBox(vec3f(0),vec3f(0)),
 	terrainModel(nullptr), boundingBoxModel(nullptr),
 	world(nullptr), renderer(nullptr) {
@@ -42,7 +42,6 @@ Chunk::Chunk(int x, unsigned int y, int z) :
 		world = (World*)Game::i()->getObjectByName("world");
 		renderer = (DeferredContainer*)Game::i()->getObjectByName("deferred");
 	}
-	modelMatrix = glm::translate(modelMatrix, vec3f(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE));
 	memset(cubes,0,sizeof(cubes));
 }
 

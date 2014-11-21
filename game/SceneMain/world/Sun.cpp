@@ -12,15 +12,22 @@ Sun::Sun() : angle(45.0f) {
 	float lastMax = 0.0f;
 	for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
 		cameras[i] = new Camera();
-		cameras[i]->projection = glm::ortho(-10,10,-10,10,-100,100);
 		cameras[i]->addTo(this);
 		minZ[i] = lastMax;
-		maxZ[i] = zFar*((1 << i)/numParts);
+		maxZ[i] = zFar*(float(1 << i)/float(numParts));
 		lastMax = maxZ[i];
 	}
 	cameras[NUM_SUN_CASCADES] = new Camera();
 	cameras[NUM_SUN_CASCADES]->projection = glm::ortho(-10,10,-10,10,-100,100);
 	cameras[NUM_SUN_CASCADES]->addTo(this);
+	//TODO: figure out best partitioning instead of hard-coding this
+	maxZ[0] = 8.0f;
+	minZ[1] = 8.0f;
+	maxZ[1] = 32.0f;
+	minZ[2] = 32.0f;
+	maxZ[2] = 128.0f;
+	minZ[3] = 128.0f;
+	maxZ[3] = 256.0f;
 	minZ[0] = -10000;
 	maxZ[NUM_SUN_CASCADES-1] = zFar;
 	VP = std::vector<mat4f>(NUM_SUN_CASCADES, mat4f(1.0f));
@@ -39,6 +46,7 @@ void Sun::updateCameras() {
 	for(int i = 0; i < NUM_SUN_CASCADES+1; ++i) {
 		cameras[i]->pos = vec3f(0.0f);
 		cameras[i]->lookInDir(getDirection());
+		cameras[i]->projection = glm::ortho(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 		aabbs[i] = AABB(); //sun view space bounding box for the player-drawn geometry
 	}
 	//extend the view-space bounding box to enclose the user-seen chunks
@@ -73,9 +81,10 @@ void Sun::extendFrustums() {
 				Chunk* actual = col->getChunkCC(y);
 				if(actual != nullptr && actual->wasDrawedByPlayer()) {
 					std::vector<unsigned int> indexes;
+					AABB bbox = actual->getWorldSpaceBoundingBox();
 					for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
-						float dist = glm::abs(vec3f(pCam->getView() * vec4f(actual->getWorldSpaceBoundingBox().getCenter(), 1.0f)).z);
-						if(dist < maxZ[i]+CHUNKSIZE*1.73 && dist > minZ[i]-CHUNKSIZE*1.73)
+						float dist = glm::abs(vec3f(pCam->getView() * vec4f(bbox.getCenter(), 1.0f)).z);
+						if(dist < maxZ[i]+bbox.getRadius() && dist > minZ[i]-bbox.getRadius())
 							indexes.push_back(i);
 					}
 					if(!indexes.empty()) {

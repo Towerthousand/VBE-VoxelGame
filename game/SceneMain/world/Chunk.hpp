@@ -33,7 +33,8 @@ class Chunk {
 			return vec3i(XPOS*CHUNKSIZE, YPOS*CHUNKSIZE, ZPOS*CHUNKSIZE);
 		}
 		inline AABB getWorldSpaceBoundingBox() const {
-			return AABB(vec3f(modelMatrix*vec4f(boundingBox.getMin(),1)), vec3f(modelMatrix*vec4f(boundingBox.getMax(),1)));
+			vec3f absPos = vec3f(getAbsolutePos());
+			return AABB(boundingBox.getMin()+absPos, boundingBox.getMax()+absPos);
 		}
 		bool visibilityTest(Chunk::Face exit) const;
 		inline bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
@@ -82,7 +83,6 @@ class Chunk {
 		bool needsMeshRebuild; //does it need rebuilding?
 		bool hasVertices; //is there any face touching air?
 		std::bitset<30> visibilityGraph;
-		mat4f modelMatrix;
 		AABB boundingBox;
 		MeshBatched* terrainModel;
 		MeshBase* boundingBoxModel;
