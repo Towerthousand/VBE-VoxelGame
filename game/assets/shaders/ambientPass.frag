@@ -88,7 +88,7 @@ void main(void) {
     vec4 camPos = invCamView * vec4(vec3(0.0), 1.0);
 
     //Compute fog percentage
-    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(worldsize << 3), 0.0, 1.0);
+    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(worldsize << 10), 0.0, 1.0);
     fog = pow(fog, 5);
     finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6))*(1-fog) + skyColor.xyz*fog, 1.0);
 }

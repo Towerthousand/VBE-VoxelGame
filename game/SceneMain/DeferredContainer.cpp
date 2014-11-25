@@ -10,9 +10,9 @@
 DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
 	//init g buffer texture
-	GBDepth.loadEmpty(vec2ui(1), TextureFormat::DEPTH_COMPONENT32);
+	GBDepth.loadEmpty(vec2ui(1), TextureFormat::DEPTH_COMPONENT32F);
 	GBDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	GBColor0.loadEmpty(vec2ui(1), TextureFormat::RGB8);
+	GBColor0.loadEmpty(vec2ui(1), TextureFormat::RGBA16F);
 	GBColor0.setFilter(GL_NEAREST, GL_NEAREST);
 	GBColor1.loadEmpty(vec2ui(1), TextureFormat::RGBA16F);
 	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
@@ -21,10 +21,10 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
-	SDepth.loadEmpty(vec3ui(2048,2048,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32);
+	SDepth.loadEmpty(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
 	SDepth.setComparison(GL_GREATER);
-	sunTarget = new RenderTargetLayered(2048, 2048, NUM_SUN_CASCADES);
+	sunTarget = new RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
 	quad = Meshes.get("quad");
 }
