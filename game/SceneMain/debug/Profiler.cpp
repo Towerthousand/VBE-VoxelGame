@@ -32,10 +32,10 @@ Profiler::Profiler() :
 	setDrawPriority(100);
 
 	//setup UI model
-	std::vector<Vertex::Element> elems = {
-		Vertex::Element("a_position", Vertex::Element::Float, 2),
-		Vertex::Element("a_texCoord", Vertex::Element::Float, 2),
-		Vertex::Element("a_color", Vertex::Element::UnsignedByte, 4, Vertex::Element::ConvertToFloatNormalized)
+	std::vector<Vertex::Attribute> elems = {
+		Vertex::Attribute("a_position", Vertex::Attribute::Float, 2),
+		Vertex::Attribute("a_texCoord", Vertex::Attribute::Float, 2),
+		Vertex::Attribute("a_color", Vertex::Attribute::UnsignedByte, 4, Vertex::Attribute::ConvertToFloatNormalized)
 	};
 
 	Vertex::Format format(elems);

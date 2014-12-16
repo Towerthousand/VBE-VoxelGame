@@ -53,8 +53,8 @@ SceneMain::~SceneMain() {
 
 void SceneMain::loadResources() {
 	//meshes
-	std::vector<Vertex::Element> elems = {
-		Vertex::Element("a_position", Vertex::Element::Float, 3)
+	std::vector<Vertex::Attribute> elems = {
+		Vertex::Attribute("a_position", Vertex::Attribute::Float, 3)
 	};
 	std::vector<vec3f> data = {
 		vec3f(1, -1, 0), vec3f(1, 1, 0), vec3f(-1, 1, 0),
