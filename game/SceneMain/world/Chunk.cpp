@@ -190,10 +190,10 @@ bool Chunk::visibilityTest(Chunk::Face exit) const {
 
 void Chunk::initMesh() {
 	std::vector<Vertex::Element> elements = {
-		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
-		Vertex::Element(Vertex::Attribute::Normal, Vertex::Element::UnsignedByte, 1),
-		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat),
-		Vertex::Element(Vertex::Attribute::get("a_light"), Vertex::Element::UnsignedByte, 1, Vertex::Element::ConvertToFloatNormalized)
+		Vertex::Element("a_position", Vertex::Element::UnsignedByte, 3, Vertex::Element::ConvertToFloat),
+		Vertex::Element("a_normal", Vertex::Element::UnsignedByte, 1),
+		Vertex::Element("a_texCoord", Vertex::Element::UnsignedShort, 2, Vertex::Element::ConvertToFloat),
+		Vertex::Element("a_light", Vertex::Element::UnsignedByte, 1, Vertex::Element::ConvertToFloatNormalized)
 	};
 	terrainModel = new MeshBatched(Vertex::Format(elements));
 	boundingBoxModel = Meshes.get("1x1Cube");

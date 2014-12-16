@@ -10,6 +10,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include "commons.hpp"
 
 
 class TaskPool {
@@ -66,7 +67,7 @@ auto TaskPool::enqueue(F&& f, Args&&... args)
 -> std::future<typename std::result_of<F(Args...)>::type> {
 	typedef typename std::result_of<F(Args...)>::type return_type;
 
-	if(stop) throw std::runtime_error("enqueue on stopped ThreadPool");
+	VBE_ASSERT(!stop, "enqueue on stopped ThreadPool");
 	auto task = std::make_shared< std::packaged_task<return_type()> >(
 					std::bind(std::forward<F>(f), std::forward<Args>(args)...)
 					);

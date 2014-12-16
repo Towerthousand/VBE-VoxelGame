@@ -33,9 +33,9 @@ Profiler::Profiler() :
 
 	//setup UI model
 	std::vector<Vertex::Element> elems = {
-		Vertex::Element(Vertex::Attribute::Position, Vertex::Element::Float, 2),
-		Vertex::Element(Vertex::Attribute::TexCoord, Vertex::Element::Float, 2),
-		Vertex::Element(Vertex::Attribute::Color, Vertex::Element::UnsignedByte, 4, Vertex::Element::ConvertToFloatNormalized)
+		Vertex::Element("a_position", Vertex::Element::Float, 2),
+		Vertex::Element("a_texCoord", Vertex::Element::Float, 2),
+		Vertex::Element("a_color", Vertex::Element::UnsignedByte, 4, Vertex::Element::ConvertToFloatNormalized)
 	};
 
 	Vertex::Format format(elems);
