@@ -51,8 +51,7 @@ HEADERS += \
 	SceneMain/world/World.hpp \
 	SceneMain/BlurContainer.hpp \
 	SceneMain/world/Column.hpp \
-	SceneMain/world/Chunk.hpp \
-	SceneMain/world/Cube.hpp \
+        SceneMain/world/Chunk.hpp \
 	SceneMain/world/generator/Function2D.hpp \
 	SceneMain/world/generator/Function2DConst.hpp \
 	SceneMain/world/generator/Function2DSimplex.hpp \
