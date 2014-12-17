@@ -90,5 +90,5 @@ void main(void) {
     //Compute fog percentage
     float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(worldsize << 3), 0.0, 1.0);
     fog = pow(fog, 5);
-    finalColor = vec4(vec3(valColor0.xyz*(0.05 + valColor1.z + visibility*cosTheta*0.6))*(1-fog) + skyColor.xyz*fog, 1.0);
+    finalColor = vec4(vec3(valColor0.xyz*valColor1.z*(0.15 + visibility*cosTheta*0.6))*(1-fog) + skyColor.xyz*fog, 1.0);
 }
