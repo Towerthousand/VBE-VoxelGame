@@ -14,5 +14,5 @@ void main(void) {
 	vec3 normal = normalize(v_normal);
 	float p = sqrt(normal.z*8+8);
 	vec2 encodedNormal = normal.xy/p;
-        color1 = vec4(encodedNormal, v_light*v_light, 1);
+        color1 = vec4(encodedNormal, v_light, 1);
 }
