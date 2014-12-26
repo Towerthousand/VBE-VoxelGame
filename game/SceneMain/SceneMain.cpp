@@ -117,16 +117,36 @@ void SceneMain::loadResources() {
 	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program
-	Programs.add("deferredLight", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/light.frag")));
-	Programs.add("deferredCubeLight", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/cubeLight.frag")));
-	Programs.add("ambientPass", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/ambientPass.frag")));
-	Programs.add("blurPassVertical", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassVertical.frag")));
-	Programs.add("blurPassHoritzontal", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassHoritzontal.frag")));
-	Programs.add("textureToScreen", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/quad.frag")));
-	Programs.add("blurMaskPass", ShaderProgram::load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag")));
-	Programs.add("depthShader", ShaderProgram::load(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag")));
-	Programs.add("deferredChunk", ShaderProgram::load(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag")));
-	Programs.add("debugDraw", ShaderProgram::load(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag")));
+	ShaderProgram* s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/light.frag"));
+	Programs.add("deferredLight", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/cubeLight.frag"));
+	Programs.add("deferredCubeLight", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/ambientPass.frag"));
+	Programs.add("ambientPass", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassVertical.frag"));
+	Programs.add("blurPassVertical", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassHoritzontal.frag"));
+	Programs.add("blurPassHoritzontal", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/quad.frag"));
+	Programs.add("textureToScreen", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag"));
+	Programs.add("blurMaskPass", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag"));
+	Programs.add("depthShader", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag"));
+	Programs.add("deferredChunk", s);
+	s = new ShaderProgram();
+	s->load(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag"));
+	Programs.add("debugDraw", s);
 }
 
 void SceneMain::update(float deltaTime) {
