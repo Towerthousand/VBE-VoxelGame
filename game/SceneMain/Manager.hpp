@@ -3,7 +3,7 @@
 #include "commons.hpp"
 
 template<class T>
-class Manager {
+class Manager : NonCopyable {
 	public:
 		Manager() {}
 		virtual ~Manager() {}
