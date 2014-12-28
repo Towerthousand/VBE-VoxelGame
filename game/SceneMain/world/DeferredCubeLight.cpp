@@ -13,6 +13,7 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 	calcLight(x0, y0, z0);
 
 	quad = Meshes.get("quad");
+	tex = Texture3D(vec3ui(LIGHTSIZE*2), TextureFormat::RED);
 }
 
 DeferredCubeLight::~DeferredCubeLight() {
@@ -97,7 +98,7 @@ void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
 	calcQuadrant(cx, cy, cz,  1,  1, -1);
 	calcQuadrant(cx, cy, cz,  1,  1,  1);
 
-	tex.loadFromRaw(data, vec3ui(LIGHTSIZE*2), TextureFormat::RED, TextureFormat::UNSIGNED_BYTE);
+	tex.setData(data, TextureFormat::RED, TextureFormat::UNSIGNED_BYTE);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);
 	tex.setWrap(GL_CLAMP_TO_BORDER);
 }
@@ -143,5 +144,5 @@ void DeferredCubeLight::draw() const {
 	Programs.get("deferredCubeLight")->uniform("lightColor")->set(color);
 	Programs.get("deferredCubeLight")->uniform("lightRadius")->set(float(LIGHTSIZE));
 	Programs.get("deferredCubeLight")->uniform("tex")->set(&tex);
-	quad->draw(Programs.get("deferredCubeLight"));
+	quad->draw(*Programs.get("deferredCubeLight"));
 }

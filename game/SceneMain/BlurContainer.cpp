@@ -3,7 +3,7 @@
 #include "Manager.hpp"
 
 BlurContainer::BlurContainer() : noBlurDepth(vec2ui(0), TextureFormat::DEPTH_COMPONENT32) {
-	noBlurColor0.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	noBlurColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
 	noBlurColor0.setFilter(GL_NEAREST, GL_NEAREST);
 	noBlurColor0.setWrap(GL_CLAMP_TO_EDGE);
 	noBlur = new RenderTarget(1.0f);
@@ -13,19 +13,19 @@ BlurContainer::BlurContainer() : noBlurDepth(vec2ui(0), TextureFormat::DEPTH_COM
 	float blurSize = 1;
 	float blurSizeDivisor = std::pow(2,blurSize);
 
-	blurMaskColor0.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	blurMaskColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
 	blurMaskColor0.setFilter(GL_LINEAR, GL_LINEAR);
 	blurMaskColor0.setWrap(GL_CLAMP_TO_EDGE);
 	blurMask = new RenderTarget(1.0f);
 	blurMask->setTexture(RenderTargetBase::COLOR0, &blurMaskColor0);
 
-	horitzontalBlurredColor0.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	horitzontalBlurredColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
 	horitzontalBlurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
 	horitzontalBlurredColor0.setWrap(GL_CLAMP_TO_EDGE);
 	horitzontalBlurred = new RenderTarget(1.0f/blurSizeDivisor);
 	horitzontalBlurred->setTexture(RenderTargetBase::COLOR0, &horitzontalBlurredColor0);
 
-	blurredColor0.loadEmpty(vec2ui(0), TextureFormat::RGBA16F);
+	blurredColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
 	blurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
 	blurredColor0.setWrap(GL_CLAMP_TO_EDGE);
 	blurred = new RenderTarget(1.0f/blurSizeDivisor);
@@ -57,7 +57,7 @@ void BlurContainer::draw() const {
 	Programs.get("blurMaskPass")->uniform("MVP")->set(mat4f(1.0f));
 	Programs.get("blurMaskPass")->uniform("color0")->set(noBlur->getTexture(RenderTargetBase::COLOR0));
 	Programs.get("blurMaskPass")->uniform("invResolution")->set(vec2f(1.0f/blurMask->getSize().x, 1.0f/blurMask->getSize().y));
-	quad->draw(Programs.get("blurMaskPass"));
+	quad->draw(*Programs.get("blurMaskPass"));
 
 	//BLUR
 	RenderTargetBase::bind(horitzontalBlurred);
@@ -66,7 +66,7 @@ void BlurContainer::draw() const {
 		Programs.get("blurPassHoritzontal")->uniform("MVP")->set(mat4f(1.0f));
 		Programs.get("blurPassHoritzontal")->uniform("RTScene")->set(blurMask->getTexture(RenderTargetBase::COLOR0));
 		Programs.get("blurPassHoritzontal")->uniform("invResolution")->set(vec2f(1.0f/horitzontalBlurred->getSize().x, 1.0f/horitzontalBlurred->getSize().y));
-		quad->draw(Programs.get("blurPassHoritzontal"));
+		quad->draw(*Programs.get("blurPassHoritzontal"));
 	}
 
 	RenderTargetBase::bind(blurred);
@@ -75,7 +75,7 @@ void BlurContainer::draw() const {
 		Programs.get("blurPassVertical")->uniform("MVP")->set(mat4f(1.0f));
 		Programs.get("blurPassVertical")->uniform("RTBlurH")->set(horitzontalBlurred->getTexture(RenderTargetBase::COLOR0));
 		Programs.get("blurPassVertical")->uniform("invResolution")->set(vec2f(1.0f/blurred->getSize().x, 1.0f/blurred->getSize().y));
-		quad->draw(Programs.get("blurPassVertical"));
+		quad->draw(*Programs.get("blurPassVertical"));
 	}
 
 	//BLUR + SCENE
@@ -85,7 +85,7 @@ void BlurContainer::draw() const {
 	Programs.get("textureToScreen")->uniform("tex1")->set(noBlur->getTexture(RenderTargetBase::COLOR0));
 	Programs.get("textureToScreen")->uniform("tex2")->set(blurred->getTexture(RenderTargetBase::COLOR0));
 	Programs.get("textureToScreen")->uniform("invResolution")->set(vec2f(1.0f/(Window::getInstance()->getSize().x), 1.0f/(Window::getInstance()->getSize().y)));
-	quad->draw(Programs.get("textureToScreen"));
+	quad->draw(*Programs.get("textureToScreen"));
 
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 

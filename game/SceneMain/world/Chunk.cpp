@@ -79,11 +79,11 @@ void Chunk::update(float deltaTime) {
 void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		terrainModel->drawBatched(Programs.get("deferredChunk"));
+		terrainModel->drawBatched(*Programs.get("deferredChunk"));
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		terrainModel->drawBatched(Programs.get("depthShader"));
+		terrainModel->drawBatched(*Programs.get("depthShader"));
 	}
 }
 

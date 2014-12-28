@@ -104,7 +104,7 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 		const ImDrawCmd* pcmd_end = cmd_list->commands.end();
 		for (const ImDrawCmd* pcmd = cmd_list->commands.begin(); pcmd != pcmd_end; pcmd++) {
 			GL_ASSERT(glScissor((int)pcmd->clip_rect.x, (int)(height - pcmd->clip_rect.w), (int)(pcmd->clip_rect.z - pcmd->clip_rect.x), (int)(pcmd->clip_rect.w - pcmd->clip_rect.y)));
-			model->draw(Programs.get("debugDraw"), vtx_offset, pcmd->vtx_count);
+			model->draw(*Programs.get("debugDraw"), vtx_offset, pcmd->vtx_count);
 			vtx_offset += pcmd->vtx_count;
 		}
 	}
