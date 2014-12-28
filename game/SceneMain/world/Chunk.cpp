@@ -79,11 +79,11 @@ void Chunk::update(float deltaTime) {
 void Chunk::draw() const {
 	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
-		terrainModel->drawBatched(*Programs.get("deferredChunk"));
+		terrainModel->drawBatched(Programs.get("deferredChunk"));
 		drawedByPlayer = true;
 	}
 	else if(renderer->getMode() == DeferredContainer::ShadowMap) {
-		terrainModel->drawBatched(*Programs.get("depthShader"));
+		terrainModel->drawBatched(Programs.get("depthShader"));
 	}
 }
 
@@ -196,7 +196,7 @@ void Chunk::initMesh() {
 		Vertex::Attribute("a_light", Vertex::Attribute::UnsignedByte, 1, Vertex::Attribute::ConvertToFloatNormalized)
 	};
 	terrainModel = new MeshBatched(Vertex::Format(elements));
-	boundingBoxModel = Meshes.get("1x1Cube");
+	boundingBoxModel = &Meshes.get("1x1Cube");
 }
 
 void Chunk::rebuildVisibilityGraph() {

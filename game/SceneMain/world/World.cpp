@@ -151,13 +151,13 @@ void World::draw(const Camera* cam) const{
 	if(renderer->getMode() == DeferredContainer::Deferred)  {
 		const Camera* cam2 = cam;
 		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getGlobalCam();
-		Programs.get("deferredChunk")->uniform("V")->set(cam2->getView());
-		Programs.get("deferredChunk")->uniform("VP")->set(cam2->projection*cam2->getView());
-		Programs.get("deferredChunk")->uniform("diffuseTex")->set(Textures2D.get("blocks"));
+		Programs.get("deferredChunk").uniform("V")->set(cam2->getView());
+		Programs.get("deferredChunk").uniform("VP")->set(cam2->projection*cam2->getView());
+		Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
 	}
 	else {
 		Sun* sun = (Sun*)getGame()->getObjectByName("sun");
-		Programs.get("depthShader")->uniform("VP")->set(sun->getVPMatrices());
+		Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
 	}
 	static std::vector<vec3i> transforms(400);
 	int chunkCount = 0;
@@ -186,18 +186,18 @@ void World::draw(const Camera* cam) const{
 		if(batchCount == 400) {
 			batchCount -= 400;
 			if(renderer->getMode() == DeferredContainer::Deferred)
-				Programs.get("deferredChunk")->uniform("transforms")->set(transforms);
+				Programs.get("deferredChunk").uniform("transforms")->set(transforms);
 			else
-				Programs.get("depthShader")->uniform("transforms")->set(transforms);
+				Programs.get("depthShader").uniform("transforms")->set(transforms);
 			MeshBatched::endBatch();
 			MeshBatched::startBatch();
 		}
 	}
 	if(batchCount > 0) {
 		if(renderer->getMode() == DeferredContainer::Deferred)
-			Programs.get("deferredChunk")->uniform("transforms")->set(transforms);
+			Programs.get("deferredChunk").uniform("transforms")->set(transforms);
 		else
-			Programs.get("depthShader")->uniform("transforms")->set(transforms);
+			Programs.get("depthShader").uniform("transforms")->set(transforms);
 	}
 	MeshBatched::endBatch();
 

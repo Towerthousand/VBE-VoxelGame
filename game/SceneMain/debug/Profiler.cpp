@@ -39,7 +39,7 @@ Profiler::Profiler() :
 	};
 
 	Vertex::Format format(elems);
-	model = new Mesh(format, MeshSeparate::STREAM);
+	model = Mesh(format, MeshSeparate::STREAM);
 
 	//setup ui
 	ImGuiIO& io = ImGui::GetIO();
@@ -57,7 +57,6 @@ Profiler::Profiler() :
 }
 
 Profiler::~Profiler() {
-	delete model;
 	ImGui::Shutdown();
 	instance = nullptr;
 }
@@ -90,21 +89,21 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 	const float width = ImGui::GetIO().DisplaySize.x;
 	const float height = ImGui::GetIO().DisplaySize.y;
 	mat4f perspective = glm::ortho(0.0f, width, height, 0.0f, -1.0f, +1.0f);
-	Programs.get("debugDraw")->uniform("MVP")->set(perspective);
+	Programs.get("debugDraw").uniform("MVP")->set(perspective);
 
 	// Set texture for font
-	Programs.get("debugDraw")->uniform("fontTex")->set(&tex);
+	Programs.get("debugDraw").uniform("fontTex")->set(&tex);
 
 	// Render command lists
 	for (int n = 0; n < cmd_lists_count; n++) {
 		const ImDrawList* cmd_list = cmd_lists[n];
-		model->setVertexData((const unsigned char*)cmd_list->vtx_buffer.begin(), cmd_list->vtx_buffer.size());
+		model.setVertexData((const unsigned char*)cmd_list->vtx_buffer.begin(), cmd_list->vtx_buffer.size());
 
 		int vtx_offset = 0;
 		const ImDrawCmd* pcmd_end = cmd_list->commands.end();
 		for (const ImDrawCmd* pcmd = cmd_list->commands.begin(); pcmd != pcmd_end; pcmd++) {
 			GL_ASSERT(glScissor((int)pcmd->clip_rect.x, (int)(height - pcmd->clip_rect.w), (int)(pcmd->clip_rect.z - pcmd->clip_rect.x), (int)(pcmd->clip_rect.w - pcmd->clip_rect.y)));
-			model->draw(*Programs.get("debugDraw"), vtx_offset, pcmd->vtx_count);
+			model.draw(Programs.get("debugDraw"), vtx_offset, pcmd->vtx_count);
 			vtx_offset += pcmd->vtx_count;
 		}
 	}

@@ -63,11 +63,11 @@ void SceneMain::loadResources() {
 	std::vector<unsigned int> indexes = {
 		0, 1, 2, 3, 0, 2
 	};
-	MeshIndexed* quad = new MeshIndexed(Vertex::Format(elems));
-	quad->setVertexData(&data[0], 6);
-	quad->setIndexData(&indexes[0], 6);
-	quad->setPrimitiveType(Mesh::TRIANGLES);
-	Meshes.add("quad", quad);
+	MeshIndexed quad = MeshIndexed(Vertex::Format(elems));
+	quad.setVertexData(&data[0], 6);
+	quad.setIndexData(&indexes[0], 6);
+	quad.setPrimitiveType(Mesh::TRIANGLES);
+	Meshes.add("quad", std::move(quad));
 
 	std::vector<vec3f> cubeVertices = {
 		vec3f(0.0, 0.0, 1.0),
@@ -84,58 +84,57 @@ void SceneMain::loadResources() {
 		0, 1, 2, 3, 7, 1, 5, 4, 7, 6, 2, 4, 0, 1
 	};
 
-	MeshIndexed* cube = new MeshIndexed(Vertex::Format(elems));
-	cube->setPrimitiveType(Mesh::TRIANGLE_STRIP);
-	cube->setVertexData(&cubeVertices[0],cubeVertices.size());
-	cube->setIndexData(&cubeIndices[0],cubeIndices.size());
-	Meshes.add("1x1Cube",cube);
+	MeshIndexed cube = MeshIndexed(Vertex::Format(elems));
+	cube.setPrimitiveType(Mesh::TRIANGLE_STRIP);
+	cube.setVertexData(&cubeVertices[0],cubeVertices.size());
+	cube.setIndexData(&cubeIndices[0],cubeIndices.size());
+	Meshes.add("1x1Cube", std::move(cube));
 
 	//textures
 	char pixels[4] = {char(200), char(20), char(20), char(255)};
-	Texture2D* nullRed = new Texture2D();
-	nullRed->setData(pixels);
-	Textures2D.add("nullRed", nullRed);
+	Texture2D nullRed(vec2ui(1));
+	nullRed.setData(pixels);
+	Textures2D.add("nullRed", std::move(nullRed));
 	char pixels2[4] = {char(20), char(200), char(20), char(255)};
-	Texture2D* nullGreen = new Texture2D();
-	nullRed->setData(pixels2);
-	Textures2D.add("nullGreen", nullGreen);
+	Texture2D nullGreen = Texture2D(vec2ui(1));
+	nullRed.setData(pixels2);
+	Textures2D.add("nullGreen", std::move(nullGreen));
 	char pixels3[4] = {char(20), char(20), char(200), char(255)};
-	Texture2D* nullBlue = new Texture2D();
-	nullRed->setData(pixels3);
-	Textures2D.add("nullBlue", nullBlue);
+	Texture2D nullBlue = Texture2D(vec2ui(1));
+	nullRed.setData(pixels3);
+	Textures2D.add("nullBlue", std::move(nullBlue));
 	char pixels4[4] = {char(70), char(30), char(80), char(255)};
-	Texture2D* nullBlack = new Texture2D();
-	nullRed->setData(pixels4);
-	Textures2D.add("nullBlack", nullBlack);
+	Texture2D nullBlack = Texture2D(vec2ui(1));
+	nullRed.setData(pixels4);
+	Textures2D.add("nullBlack", std::move(nullBlack));
 	char pixels5[4] = {char(255), char(255), char(255), char(255)};
-	Texture2D* nullWhite = new Texture2D();
-	nullRed->setData(pixels5);
-	Textures2D.add("nullWhite", nullWhite);
-	Texture2D* blocks = new Texture2D(Texture2D::load(Storage::openAsset("textures/blocks8.png"), TextureFormat::SRGBA8));
-	Textures2D.add("blocks", blocks);
-	Textures2D.get("blocks")->setFilter(GL_NEAREST,GL_NEAREST);
+	Texture2D nullWhite = Texture2D(vec2ui(1));
+	nullRed.setData(pixels5);
+	Textures2D.add("nullWhite", std::move(nullWhite));
+	Textures2D.add("blocks", Texture2D::load(Storage::openAsset("textures/blocks8.png"), TextureFormat::SRGBA8));
+	Textures2D.get("blocks").setFilter(GL_NEAREST,GL_NEAREST);
 
 	//program
-	ShaderProgram* s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/light.frag"));
-	Programs.add("deferredLight", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/cubeLight.frag"));
-	Programs.add("deferredCubeLight", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/ambientPass.frag"));
-	Programs.add("ambientPass", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassVertical.frag"));
-	Programs.add("blurPassVertical", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassHoritzontal.frag"));
-	Programs.add("blurPassHoritzontal", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/quad.frag"));
-	Programs.add("textureToScreen", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag"));
-	Programs.add("blurMaskPass", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag"));
-	Programs.add("depthShader", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag"));
-	Programs.add("deferredChunk", s);
-	s = new ShaderProgram(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag"));
-	Programs.add("debugDraw", s);
+	ShaderProgram s(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/light.frag"));
+	Programs.add("deferredLight", std::move(s));
+	ShaderProgram s2(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/cubeLight.frag"));
+	Programs.add("deferredCubeLight", std::move(s2));
+	ShaderProgram s3(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/ambientPass.frag"));
+	Programs.add("ambientPass", std::move(s3));
+	ShaderProgram s4(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassVertical.frag"));
+	Programs.add("blurPassVertical", std::move(s4));
+	ShaderProgram s5(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurPassHoritzontal.frag"));
+	Programs.add("blurPassHoritzontal", std::move(s5));
+	ShaderProgram s6(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/quad.frag"));
+	Programs.add("textureToScreen", std::move(s6));
+	ShaderProgram s7(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag"));
+	Programs.add("blurMaskPass", std::move(s7));
+	ShaderProgram s8(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag"));
+	Programs.add("depthShader", std::move(s8));
+	ShaderProgram s9(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag"));
+	Programs.add("deferredChunk", std::move(s9));
+	ShaderProgram s10(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag"));
+	Programs.add("debugDraw", std::move(s10));
 }
 
 void SceneMain::update(float deltaTime) {

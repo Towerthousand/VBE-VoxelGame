@@ -92,7 +92,7 @@ class Profiler : public GameObject {
 		void update(float deltaTime);
 		void draw() const;
 
-		Mesh* model;
+		mutable Mesh model;
 		Texture2D tex;
 		mutable std::string clip;
 };

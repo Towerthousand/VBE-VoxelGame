@@ -12,7 +12,7 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 	int z0 = int(floor(pos.z));
 	calcLight(x0, y0, z0);
 
-	quad = Meshes.get("quad");
+	quad = &Meshes.get("quad");
 	tex = Texture3D(vec3ui(LIGHTSIZE*2), TextureFormat::RED);
 }
 
@@ -129,20 +129,20 @@ void DeferredCubeLight::draw() const {
 				  0      , 0      , 0      , 1);
 		t = glm::scale(rot, vec3f(LIGHTSIZE));
 		t = glm::translate(t, vec3f(0, 0, 1));
-		Programs.get("deferredCubeLight")->uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
+		Programs.get("deferredCubeLight").uniform("MVP")->set(cam->projection*cam->getView()*fullTransform*t);
 	}
 	else
-		Programs.get("deferredCubeLight")->uniform("MVP")->set(t);
+		Programs.get("deferredCubeLight").uniform("MVP")->set(t);
 
-	Programs.get("deferredCubeLight")->uniform("invResolution")->set(vec2f(1.0f/Window::getInstance()->getSize().x, 1.0f/Window::getInstance()->getSize().y));
-	Programs.get("deferredCubeLight")->uniform("color0")->set(renderer->getColor0());
-	Programs.get("deferredCubeLight")->uniform("color1")->set(renderer->getColor1());
-	Programs.get("deferredCubeLight")->uniform("depth")->set(renderer->getDepth());
-	Programs.get("deferredCubeLight")->uniform("lightPos")->set(posViewSpace);
-	Programs.get("deferredCubeLight")->uniform("invProj")->set(glm::inverse(cam->projection));
-	Programs.get("deferredCubeLight")->uniform("invView")->set(glm::inverse(cam->getView()));
-	Programs.get("deferredCubeLight")->uniform("lightColor")->set(color);
-	Programs.get("deferredCubeLight")->uniform("lightRadius")->set(float(LIGHTSIZE));
-	Programs.get("deferredCubeLight")->uniform("tex")->set(&tex);
-	quad->draw(*Programs.get("deferredCubeLight"));
+	Programs.get("deferredCubeLight").uniform("invResolution")->set(vec2f(1.0f/Window::getInstance()->getSize().x, 1.0f/Window::getInstance()->getSize().y));
+	Programs.get("deferredCubeLight").uniform("color0")->set(renderer->getColor0());
+	Programs.get("deferredCubeLight").uniform("color1")->set(renderer->getColor1());
+	Programs.get("deferredCubeLight").uniform("depth")->set(renderer->getDepth());
+	Programs.get("deferredCubeLight").uniform("lightPos")->set(posViewSpace);
+	Programs.get("deferredCubeLight").uniform("invProj")->set(glm::inverse(cam->projection));
+	Programs.get("deferredCubeLight").uniform("invView")->set(glm::inverse(cam->getView()));
+	Programs.get("deferredCubeLight").uniform("lightColor")->set(color);
+	Programs.get("deferredCubeLight").uniform("lightRadius")->set(float(LIGHTSIZE));
+	Programs.get("deferredCubeLight").uniform("tex")->set(&tex);
+	quad->draw(Programs.get("deferredCubeLight"));
 }

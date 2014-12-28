@@ -85,7 +85,7 @@ class Chunk {
 		std::bitset<30> visibilityGraph;
 		AABB boundingBox;
 		MeshBatched* terrainModel;
-		MeshBase* boundingBoxModel;
+		MeshIndexed* boundingBoxModel;
 		World* world;
 		DeferredContainer* renderer;
 

@@ -7,7 +7,7 @@
 #include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
-DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred), SDepth(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F) {
+DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
 	setName("deferred");
 	//init g buffer texture
 	GBDepth = Texture2D(vec2ui(1), TextureFormat::DEPTH_COMPONENT32F);
@@ -21,11 +21,12 @@ DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred), SDep
 	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
 	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 
+	SDepth = Texture2DArray(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
 	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
 	SDepth.setComparison(GL_GREATER);
 	sunTarget = new RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
 	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
-	quad = Meshes.get("quad");
+	quad = &Meshes.get("quad");
 }
 
 DeferredContainer::~DeferredContainer() {
@@ -91,20 +92,20 @@ void DeferredContainer::draw() const {
 	std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
 	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
 		depthMVP[i] = biasMatrix*(sun->getVPMatrices()[i]*fullTransform);
-	Programs.get("ambientPass")->uniform("MVP")->set(mat4f(1.0f));
-	Programs.get("ambientPass")->uniform("camMV")->set(cam->getView()*fullTransform);
-	Programs.get("ambientPass")->uniform("color0")->set(getColor0());
-	Programs.get("ambientPass")->uniform("color1")->set(getColor1());
-	Programs.get("ambientPass")->uniform("invResolution")->set(vec2f(1.0f/screen->getSize().x, 1.0f/screen->getSize().y));
-	Programs.get("ambientPass")->uniform("invCamProj")->set(glm::inverse(cam->projection));
-	Programs.get("ambientPass")->uniform("invCamView")->set(glm::inverse(cam->getView()));
-	Programs.get("ambientPass")->uniform("lightDir")->set(sun->getCam(0)->getForward());
-	Programs.get("ambientPass")->uniform("worldsize")->set(WORLDSIZE);
-	Programs.get("ambientPass")->uniform("depthMVP")->set(depthMVP);
-	Programs.get("ambientPass")->uniform("depthPlanes")->set(sun->getDepthPlanes());
-	Programs.get("ambientPass")->uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
-	Programs.get("ambientPass")->uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
-	quad->draw(*Programs.get("ambientPass"));
+	Programs.get("ambientPass").uniform("MVP")->set(mat4f(1.0f));
+	Programs.get("ambientPass").uniform("camMV")->set(cam->getView()*fullTransform);
+	Programs.get("ambientPass").uniform("color0")->set(getColor0());
+	Programs.get("ambientPass").uniform("color1")->set(getColor1());
+	Programs.get("ambientPass").uniform("invResolution")->set(vec2f(1.0f/screen->getSize().x, 1.0f/screen->getSize().y));
+	Programs.get("ambientPass").uniform("invCamProj")->set(glm::inverse(cam->projection));
+	Programs.get("ambientPass").uniform("invCamView")->set(glm::inverse(cam->getView()));
+	Programs.get("ambientPass").uniform("lightDir")->set(sun->getCam(0)->getForward());
+	Programs.get("ambientPass").uniform("worldsize")->set(WORLDSIZE);
+	Programs.get("ambientPass").uniform("depthMVP")->set(depthMVP);
+	Programs.get("ambientPass").uniform("depthPlanes")->set(sun->getDepthPlanes());
+	Programs.get("ambientPass").uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
+	Programs.get("ambientPass").uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
+	quad->draw(Programs.get("ambientPass"));
 	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Clock::getSeconds()-ambinentShadowPass;
 
 	//Forward pass
