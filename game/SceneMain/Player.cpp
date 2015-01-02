@@ -43,33 +43,45 @@ void Player::update(float deltaTime) {
 }
 
 void Player::processKeys() {
+	Gamepad gamepad = Gamepad::getGamepad(0);
 	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
-	const float speed = 10.0f;
+	const float speedKeys = 10.0f;
+	vec2f speedPad = vec2f(gamepad.axis(Gamepad::AxisLeftX), gamepad.axis(Gamepad::AxisLeftY));
 	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
 	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
 	if(Keyboard::pressed(Keyboard::W)) {
-		vel.x += dir.x*speed;
-		vel.z += dir.y*speed;
+		vel.x += dir.x*speedKeys;
+		vel.z += dir.y*speedKeys;
 	}
 	if(Keyboard::pressed(Keyboard::S)) {
-		vel.x += -dir.x*speed;
-		vel.z += -dir.y*speed;
+		vel.x += -dir.x*speedKeys;
+		vel.z += -dir.y*speedKeys;
 	}
 	if(Keyboard::pressed(Keyboard::A)) {
-		vel.x += dir.y*speed;
-		vel.z += -dir.x*speed;
+		vel.x += dir.y*speedKeys;
+		vel.z += -dir.x*speedKeys;
 	}
 	if(Keyboard::pressed(Keyboard::D)) {
-		vel.x += -dir.y*speed;
-		vel.z += dir.x*speed;
+		vel.x += -dir.y*speedKeys;
+		vel.z += dir.x*speedKeys;
 	}
-	if(Keyboard::pressed(Keyboard::Space))
+	if(glm::length(speedPad) > 0.3f) {
+		vel.x += -dir.x*speedPad.y*speedKeys;
+		vel.z += -dir.y*speedPad.y*speedKeys;
+		vel.x += -dir.y*speedPad.x*speedKeys;
+		vel.z += dir.x*speedPad.x*speedKeys;
+	}
+	if(Keyboard::pressed(Keyboard::Space) || gamepad.pressed(Gamepad::ButtonA))
 		//if (onFloor && !isJumping)
 		vel.y = 15;
 
 	//look around
 	vec2f displacement = vec2f(Mouse::movement())*0.1f;
+	vec2f padDisplacement = vec2f(gamepad.axis(Gamepad::AxisRightX), gamepad.axis(Gamepad::AxisRightY));
+	if(glm::length(padDisplacement) > 0.3f) //death zone
+		displacement += padDisplacement * 5.0f;
+
 	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
 	//limit x rotation
 	if(std::abs(xRot+displacement.y) < 90.0f) {

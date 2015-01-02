@@ -3848,9 +3848,9 @@ bool InputFloat(const char* label, float *v, float step, float step_fast, int de
     const ImGuiAabb frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, text_size.y) + style.FramePadding*2.0f);
 
     ImGui::PushID(label);
-    const float button_sz = window->FontSize();
+    const float Buttonsz = window->FontSize();
     if (step > 0.0f)
-        ImGui::PushItemWidth(ImMax(1.0f, window->DC.ItemWidth.back() - (button_sz+g.Style.FramePadding.x*2.0f+g.Style.ItemInnerSpacing.x)*2));
+        ImGui::PushItemWidth(ImMax(1.0f, window->DC.ItemWidth.back() - (Buttonsz+g.Style.FramePadding.x*2.0f+g.Style.ItemInnerSpacing.x)*2));
 
     char buf[64];
     if (decimal_precision < 0)
@@ -3870,13 +3870,13 @@ bool InputFloat(const char* label, float *v, float step, float step_fast, int de
     {
         ImGui::PopItemWidth();
         ImGui::SameLine(0, 0);
-        if (ImGui::Button("-", ImVec2(button_sz,button_sz), true))
+        if (ImGui::Button("-", ImVec2(Buttonsz,Buttonsz), true))
         {
             *v -= g.IO.KeyCtrl && step_fast > 0.0f ? step_fast : step;
             value_changed = true;
         }
         ImGui::SameLine(0, (int)g.Style.ItemInnerSpacing.x);
-        if (ImGui::Button("+", ImVec2(button_sz,button_sz), true))
+        if (ImGui::Button("+", ImVec2(Buttonsz,Buttonsz), true))
         {
             *v += g.IO.KeyCtrl && step_fast > 0.0f ? step_fast : step;
             value_changed = true;
@@ -4490,8 +4490,8 @@ bool ColorEdit4(const char* label, float col[4], bool alpha)
     if (window->DC.ColorEditMode == ImGuiColorEditMode_UserSelect)
     {
         ImGui::SameLine(0, (int)style.ItemInnerSpacing.x);
-        const char* button_titles[3] = { "RGB", "HSV", "HEX" };
-        if (ImGui::Button(button_titles[edit_mode]))
+        const char* Buttontitles[3] = { "RGB", "HSV", "HEX" };
+        if (ImGui::Button(Buttontitles[edit_mode]))
         {
             // Don't set 'edit_mode' right away!
             g.ColorEditModeStorage.SetInt(id, (edit_mode + 1) % 3);
