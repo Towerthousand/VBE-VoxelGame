@@ -11,8 +11,6 @@ include(../common.pri)
 
 INCLUDEPATH += .
 
-#DEFINES += __DLOG
-
 SOURCES += main.cpp \
 	commons.cpp \
 	SceneMain/SceneMain.cpp \
