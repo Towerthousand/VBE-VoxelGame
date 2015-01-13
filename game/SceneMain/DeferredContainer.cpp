@@ -7,25 +7,9 @@
 #include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
-DeferredContainer::DeferredContainer() : gBuffer(NULL), drawMode(Deferred) {
+DeferredContainer::DeferredContainer() : gBuffer(nullptr), sunTarget(nullptr), drawMode(Deferred) {
 	setName("deferred");
-	//init g buffer texture
-	GBDepth = Texture2D(vec2ui(1), TextureFormat::DEPTH_COMPONENT32F);
-	GBDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	GBColor0 = Texture2D(vec2ui(1), TextureFormat::RGBA16F);
-	GBColor0.setFilter(GL_NEAREST, GL_NEAREST);
-	GBColor1 = Texture2D(vec2ui(1), TextureFormat::RGBA16F);
-	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
-	gBuffer = new RenderTarget(1.0f);
-	gBuffer->setTexture(RenderTargetBase::DEPTH, &GBDepth); //Z-BUFFER
-	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
-	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
-
-	SDepth = Texture2DArray(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
-	SDepth.setFilter(GL_NEAREST, GL_NEAREST);
-	SDepth.setComparison(GL_GREATER);
-	sunTarget = new RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
-	sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
+	makeTarget();
 	quad = &Meshes.get("quad");
 }
 
@@ -35,6 +19,7 @@ DeferredContainer::~DeferredContainer() {
 }
 
 void DeferredContainer::update(float deltaTime) {
+	makeTarget();
 	ContainerObject::update(deltaTime);
 }
 
@@ -131,5 +116,27 @@ Texture2D *DeferredContainer::getColor1() const {
 
 Texture2D* DeferredContainer::getDepth() const {
 	return gBuffer->getTexture(RenderTargetBase::DEPTH);
+}
+
+void DeferredContainer::makeTarget() {
+	if(gBuffer != nullptr && Window::getInstance()->getSize() == gBuffer->getSize()) return;
+	vec2ui size = Window::getInstance()->getSize();
+	GBDepth = Texture2D(size, TextureFormat::DEPTH_COMPONENT32F);
+	GBDepth.setFilter(GL_NEAREST, GL_NEAREST);
+	GBColor0 = Texture2D(size, TextureFormat::RGBA16F);
+	GBColor0.setFilter(GL_NEAREST, GL_NEAREST);
+	GBColor1 = Texture2D(size, TextureFormat::RGBA16F);
+	GBColor1.setFilter(GL_NEAREST, GL_NEAREST);
+	gBuffer = new RenderTarget(size.x, size.y);
+	gBuffer->setTexture(RenderTargetBase::DEPTH, &GBDepth); //Z-BUFFER
+	gBuffer->setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
+	gBuffer->setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
+	if(sunTarget == nullptr) {
+		SDepth = Texture2DArray(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
+		SDepth.setFilter(GL_NEAREST, GL_NEAREST);
+		SDepth.setComparison(GL_GREATER);
+		sunTarget = new RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
+		sunTarget->setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
+	}
 }
 

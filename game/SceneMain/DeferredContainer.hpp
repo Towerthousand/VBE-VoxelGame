@@ -23,6 +23,8 @@ class DeferredContainer : public ContainerObject {
 		Texture2D* getDepth() const;
 
 	private:
+		void makeTarget();
+
 		RenderTarget* gBuffer;
 
 		//the textures for the gBuffer

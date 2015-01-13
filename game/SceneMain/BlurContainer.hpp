@@ -7,8 +7,10 @@ class BlurContainer : public ContainerObject {
 		BlurContainer();
 		~BlurContainer();
 
-		virtual void draw() const;
 	private:
+		void draw() const;
+		void update(float deltaTime);
+		void makeTarget();
 
 		RenderTarget* noBlur;
 		RenderBuffer noBlurDepth;

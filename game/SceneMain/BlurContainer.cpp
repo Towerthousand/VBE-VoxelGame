@@ -2,35 +2,7 @@
 #include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
-BlurContainer::BlurContainer() : noBlurDepth(vec2ui(0), TextureFormat::DEPTH_COMPONENT32) {
-	noBlurColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
-	noBlurColor0.setFilter(GL_NEAREST, GL_NEAREST);
-	noBlurColor0.setWrap(GL_CLAMP_TO_EDGE);
-	noBlur = new RenderTarget(1.0f);
-	noBlur->setBuffer(RenderTargetBase::DEPTH, &noBlurDepth);
-	noBlur->setTexture(RenderTargetBase::COLOR0, &noBlurColor0);
-
-	float blurSize = 1;
-	float blurSizeDivisor = std::pow(2,blurSize);
-
-	blurMaskColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
-	blurMaskColor0.setFilter(GL_LINEAR, GL_LINEAR);
-	blurMaskColor0.setWrap(GL_CLAMP_TO_EDGE);
-	blurMask = new RenderTarget(1.0f);
-	blurMask->setTexture(RenderTargetBase::COLOR0, &blurMaskColor0);
-
-	horitzontalBlurredColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
-	horitzontalBlurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
-	horitzontalBlurredColor0.setWrap(GL_CLAMP_TO_EDGE);
-	horitzontalBlurred = new RenderTarget(1.0f/blurSizeDivisor);
-	horitzontalBlurred->setTexture(RenderTargetBase::COLOR0, &horitzontalBlurredColor0);
-
-	blurredColor0 = Texture2D(vec2ui(0), TextureFormat::RGBA16F);
-	blurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
-	blurredColor0.setWrap(GL_CLAMP_TO_EDGE);
-	blurred = new RenderTarget(1.0f/blurSizeDivisor);
-	blurred->setTexture(RenderTargetBase::COLOR0, &blurredColor0);
-
+BlurContainer::BlurContainer() : noBlur(nullptr), blurMask(nullptr), blurred(nullptr), quad(nullptr) {
 	quad = &Meshes.get("quad");
 }
 
@@ -41,6 +13,44 @@ BlurContainer::~BlurContainer() {
 	delete blurred;
 }
 
+void BlurContainer::update(float deltaTime) {
+	makeTarget();
+	ContainerObject::update(deltaTime);
+}
+
+void BlurContainer::makeTarget() {
+	if(noBlur != nullptr && Window::getInstance()->getSize() == noBlur->getSize()) return;
+	vec2ui size = Window::getInstance()->getSize();
+
+	noBlurDepth= RenderBuffer(size, TextureFormat::DEPTH_COMPONENT32);
+	noBlurColor0 = Texture2D(size, TextureFormat::RGBA16F);
+	noBlurColor0.setFilter(GL_NEAREST, GL_NEAREST);
+	noBlurColor0.setWrap(GL_CLAMP_TO_EDGE);
+	noBlur = new RenderTarget(size.x, size.y);
+	noBlur->setBuffer(RenderTargetBase::DEPTH, &noBlurDepth);
+	noBlur->setTexture(RenderTargetBase::COLOR0, &noBlurColor0);
+
+	float blurSize = 1;
+	float blurSizeDivisor = std::pow(2,blurSize);
+
+	blurMaskColor0 = Texture2D(size, TextureFormat::RGBA16F);
+	blurMaskColor0.setFilter(GL_LINEAR, GL_LINEAR);
+	blurMaskColor0.setWrap(GL_CLAMP_TO_EDGE);
+	blurMask = new RenderTarget(size.x, size.y);
+	blurMask->setTexture(RenderTargetBase::COLOR0, &blurMaskColor0);
+
+	horitzontalBlurredColor0 = Texture2D(vec2ui(vec2f(size)/blurSizeDivisor), TextureFormat::RGBA16F);
+	horitzontalBlurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
+	horitzontalBlurredColor0.setWrap(GL_CLAMP_TO_EDGE);
+	horitzontalBlurred = new RenderTarget(size.x/blurSizeDivisor, size.y/blurSizeDivisor);
+	horitzontalBlurred->setTexture(RenderTargetBase::COLOR0, &horitzontalBlurredColor0);
+
+	blurredColor0 = Texture2D(vec2ui(vec2f(size)/blurSizeDivisor), TextureFormat::RGBA16F);
+	blurredColor0.setFilter(GL_LINEAR, GL_LINEAR);
+	blurredColor0.setWrap(GL_CLAMP_TO_EDGE);
+	blurred = new RenderTarget(size.x/blurSizeDivisor, size.y/blurSizeDivisor);
+	blurred->setTexture(RenderTargetBase::COLOR0, &blurredColor0);
+}
 
 void BlurContainer::draw() const {
 	RenderTargetBase::bind(noBlur);
