@@ -73,8 +73,8 @@ const char* Profiler::getClipHandle() {
 	return instance->getClip();
 }
 
-void Profiler::setClipHandle(const char* text, const char* text_end) {
-	instance->setClipHandle(text, text_end);
+void Profiler::setClipHandle(const char* text) {
+	instance->setClipHandle(text);
 }
 
 void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
@@ -119,7 +119,7 @@ const char* Profiler::getClip() const {
 	return clip.c_str();
 }
 
-void Profiler::setClip(const char* text, const char* text_end) const {
+void Profiler::setClip(const char* text) const {
 //	if (!text_end)
 //		text_end = text + strlen(text);
 
@@ -170,7 +170,7 @@ void Profiler::update(float deltaTime) {
 	//UI
 	if(showProfiler) {
 		std::string tag;
-		ImGui::SetNewWindowDefaultPos(ImVec2(50, 50));
+		ImGui::SetNextWindowPos(ImVec2(50, 50));
 		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,700), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
 		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
@@ -179,10 +179,10 @@ void Profiler::update(float deltaTime) {
 		if(ImGui::CollapsingHeader("General frame times", nullptr, true, true)) {
 			tag = std::string("Frame Time (curr: ") + Utils::toString(timeAvgVars[FrameTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("50ms\n\n\n\n0 ms", timeAvgVars[FrameTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 50.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
 			tag = std::string("Update Time (curr: ") + Utils::toString(timeAvgVars[UpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[UpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) {
+			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
 				ImGui::Text("Update Time Breakdown");
@@ -192,7 +192,7 @@ void Profiler::update(float deltaTime) {
 			}
 			tag = std::string("Draw Time (curr: ") + Utils::toString(timeAvgVars[DrawTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) {
+			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
 				ImGui::Text("Draw Time Breakdown");
@@ -214,12 +214,12 @@ void Profiler::update(float deltaTime) {
 			}
 			tag = std::string("Swap Time (curr: ") + Utils::toString(timeAvgVars[SwapTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[SwapTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
 		}
 		if(ImGui::CollapsingHeader("World Draw Time", nullptr, true, true)) {
 			tag = std::string("Player Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) {
+			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
 				ImGui::Text("Player Cam World Draw Time Breakdown");
@@ -233,7 +233,7 @@ void Profiler::update(float deltaTime) {
 			}
 			tag = std::string("Shadow Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[ShadowWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
 			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsHovered()) {
+			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("");
 				ImGui::BeginTooltip();
 				ImGui::Text("Shadow Cam World Draw Time Breakdown");
@@ -254,7 +254,7 @@ void Profiler::update(float deltaTime) {
 		ImGui::Text("Shadow Chunks: %i", intVars[SunChunksDrawn]);
 		ImGui::End();
 
-		ImGui::SetNewWindowDefaultPos(ImVec2(1500, 50));
+		ImGui::SetNextWindowPos(ImVec2(1500, 50));
 		ImGui::Begin("Controls", nullptr, ImVec2(350, 270), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 		ImGui::Text("Controls for this demo:");
 		ImGui::Separator();

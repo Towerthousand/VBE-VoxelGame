@@ -53,7 +53,7 @@ class Profiler : public GameObject {
 		//Public callbacks
 		static void renderHandle(ImDrawList** const cmd_lists, int cmd_lists_count);
 		static const char*getClipHandle();
-		static void setClipHandle(const char* text, const char* text_end);
+		static void setClipHandle(const char* text);
 
 	private:
 		class Watcher : public GameObject {
@@ -88,7 +88,7 @@ class Profiler : public GameObject {
 
 		void render(ImDrawList** const cmd_lists, int cmd_lists_count) const;
 		const char* getClip() const;
-		void setClip(const char* text, const char* text_end) const;
+		void setClip(const char* text) const;
 		void update(float deltaTime);
 		void draw() const;
 

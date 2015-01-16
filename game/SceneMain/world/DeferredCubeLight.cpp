@@ -6,6 +6,7 @@
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	world = (World*)getGame()->getObjectByName("world");
+	tex = Texture3D(vec3ui(LIGHTSIZE*2), TextureFormat::RED);
 
 	int x0 = int(floor(pos.x));
 	int y0 = int(floor(pos.y));
@@ -13,7 +14,6 @@ DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos
 	calcLight(x0, y0, z0);
 
 	quad = &Meshes.get("quad");
-	tex = Texture3D(vec3ui(LIGHTSIZE*2), TextureFormat::RED);
 }
 
 DeferredCubeLight::~DeferredCubeLight() {
@@ -143,6 +143,6 @@ void DeferredCubeLight::draw() const {
 	Programs.get("deferredCubeLight").uniform("invView")->set(glm::inverse(cam->getView()));
 	Programs.get("deferredCubeLight").uniform("lightColor")->set(color);
 	Programs.get("deferredCubeLight").uniform("lightRadius")->set(float(LIGHTSIZE));
-	Programs.get("deferredCubeLight").uniform("tex")->set(&tex);
+	Programs.get("deferredCubeLight").uniform("tex")->set(tex);
 	quad->draw(Programs.get("deferredCubeLight"));
 }

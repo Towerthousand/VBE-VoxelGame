@@ -79,7 +79,7 @@ void Player::processKeys() {
 	vec2f displacement = vec2f(Mouse::movement())*0.1f;
 	vec2f padDisplacement = vec2f(Gamepad::axis(0, Gamepad::AxisRightX), Gamepad::axis(0, Gamepad::AxisRightY));
 	if(glm::length(padDisplacement) > 0.3f) //death zone
-		displacement += padDisplacement * 5.0f;
+		displacement += padDisplacement * 2.0f;
 
 	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
 	//limit x rotation
