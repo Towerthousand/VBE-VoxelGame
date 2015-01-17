@@ -57,7 +57,7 @@ void BlurContainer::draw() const {
 
 	ContainerObject::draw();
 
-	float blurTime = Clock::getSeconds();
+	Profiler::pushMark("Blur Pass", "Time spent rendering the post-process blur");
 
 	GL_ASSERT(glBlendFunc(GL_ONE,GL_ONE));
 
@@ -99,5 +99,5 @@ void BlurContainer::draw() const {
 
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-	Profiler::timeVars[Profiler::BlurPassTime] = Clock::getSeconds()-blurTime;
+	Profiler::popMark(); //blur
 }

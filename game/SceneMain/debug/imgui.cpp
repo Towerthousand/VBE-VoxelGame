@@ -659,7 +659,6 @@ static void ImConvertColorHSVtoRGB(float h, float s, float v, float& out_r, floa
 static bool ImLoadFileToMemory(const char* filename, const char* file_open_mode, void** out_file_data, size_t* out_file_size, size_t padding_bytes)
 {
 	IM_ASSERT(filename && file_open_mode && out_file_data && out_file_size);
-	IM_ASSERT(padding_bytes >= 0);
 	*out_file_data = NULL;
 	*out_file_size = 0;
 

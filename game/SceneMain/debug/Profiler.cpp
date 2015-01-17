@@ -3,33 +3,19 @@
 #include <cstring>
 #include "SceneMain/Manager.hpp"
 
-int Profiler::intVars[Profiler::INT_VAR_COUNT];
-float Profiler::timeVars[Profiler::TIME_VAR_COUNT];
-vec3f Profiler::vec3fVars[Profiler::VEC3F_VAR_COUNT];
 Profiler* Profiler::instance = nullptr;
 
-Profiler::Profiler() :
-	timeAvgOffset(-1),
-	updateTimeStart(0.0f), updateTimeEnd(0.0f),
-	drawTimeStart(0.0f), drawTimeEnd(0.0f),
-	swapTimeStart(0.0f), swapTimeEnd(0.0f),
-	frameCount(0), timePassed(0.0f),
-	FPS(0), showProfiler(false), sampleRate(1.0f) {
+Profiler::Profiler() {
 	//setup singleton
 	VBE_ASSERT(instance == nullptr, "Created two debug drawers");
 	instance = this;
-
-	//reset debug vars
-	memset(&intVars, 0, sizeof(intVars));
-	memset(&timeVars, 0, sizeof(timeVars));
-	memset(&vec3fVars, 0, sizeof(vec3fVars));
 
 	//font texture
 	tex = Texture2D::load(Storage::openAsset("debugFont.png"));
 	tex.setFilter(GL_NEAREST, GL_NEAREST);
 
-	setUpdatePriority(100);
-	setDrawPriority(100);
+	setUpdatePriority(1000);
+	setDrawPriority(1000);
 
 	//setup UI model
 	std::vector<Vertex::Attribute> elems = {
@@ -54,6 +40,10 @@ Profiler::Profiler() :
 	//add watcher
 	Watcher* w = new Watcher();
 	w->addTo(this);
+
+	//set root node
+	currentNode = &tree;
+	pushMark("invalid", "invalid");
 }
 
 Profiler::~Profiler() {
@@ -61,7 +51,37 @@ Profiler::~Profiler() {
 	instance = nullptr;
 }
 
-bool Profiler::shown() {
+//static
+void Profiler::pushMark(const std::string& name, const std::string& definition) {
+	VBE_ASSERT(instance != nullptr, "Null debug drawer");
+	VBE_ASSERT(instance->currentNode != nullptr, "Popped main node");
+	for(Node& child : instance->currentNode->children) {
+		if(child.name == name) {
+			child.start();
+			instance->currentNode = &child;
+			return;
+		}
+	}
+	instance->currentNode->children.push_back(Node(name,definition, instance->currentNode));
+	instance->currentNode = &instance->currentNode->children.back();
+}
+
+//static
+void Profiler::popMark() {
+	VBE_ASSERT(instance != nullptr, "Null debug drawer");
+	VBE_ASSERT(instance->currentNode != nullptr, "Too many popped nodes");
+	instance->currentNode->stop();
+	instance->currentNode = instance->currentNode->parent;
+}
+
+//static
+void Profiler::setShown(bool shown) {
+	VBE_ASSERT(instance != nullptr, "Null debug drawer");
+	instance->showProfiler = shown;
+}
+
+//static
+bool Profiler::isShown() {
 	return (instance != nullptr && instance->showProfiler);
 }
 
@@ -113,40 +133,77 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 }
 
 const char* Profiler::getClip() const {
-//	char* c = SDL_GetClipboardText();
-	clip = std::string("clipboard not implemented");
-//	SDL_free(c);
-	return clip.c_str();
+	//TODO
+	return "";
 }
 
 void Profiler::setClip(const char* text) const {
-//	if (!text_end)
-//		text_end = text + strlen(text);
-
-//	if (*text_end == 0) {
-//		// Already got a zero-terminator at 'text_end', we don't need to add one
-//		SDL_SetClipboardText(text);
-//	}
-//	else {
-//		// Add a zero-terminator because sdl function doesn't take a size
-//		char* buf = (char*)malloc(text_end - text + 1);
-//		memcpy(buf, text, text_end-text);
-//		buf[text_end-text] = '\0';
-//		SDL_SetClipboardText(buf);
-//		free(buf);
-//	}
+	(void) text; //TODO
 }
 
 void Profiler::update(float deltaTime) {
-	if(Keyboard::justPressed(Keyboard::F1)) showProfiler = !showProfiler;
-	updateTimeEnd = Clock::getSeconds();
-	timeVars[DrawTime] = drawTimeEnd-drawTimeStart;
-	timeVars[UpdateTime] = updateTimeEnd-updateTimeStart;
-	timeVars[FrameTime] = updateTimeEnd-drawTimeStart;
-	timeVars[SwapTime] = swapTimeEnd-swapTimeStart;
-	timeVars[ShadowWorldTime] = timeVars[ShadowChunkBFSTime]+timeVars[ShadowChunkRebuildTime]+timeVars[ShadowChunkDrawTime];
-	timeVars[PlayerWorldTime] = timeVars[PlayerChunkBFSTime]+timeVars[PlayerChunkRebuildTime]+timeVars[PlayerChunkDrawTime];
-	//INPUT
+	//end last frame
+	popMark();//Update
+	popMark();//Whole frame
+	processNodeAverage(tree);
+	if(timePassed >= sampleRate) {
+		//update history
+		timeAvgOffset = (timeAvgOffset + 1) % 100;
+		for(auto it = hist.begin(); it != hist.end(); ++it) {
+			it->second.past[timeAvgOffset] = (it->second.current/frameCount)*1000;
+			it->second.current = 0.0f;
+		}
+		//update FPS
+		timePassed -= sampleRate;
+		FPS = float(frameCount)/sampleRate;
+		frameCount = 0;
+	}
+	//do profiler
+	if(Keyboard::justPressed(Keyboard::F1)) {
+		showProfiler = !showProfiler;
+		Mouse::setRelativeMode(!showProfiler);
+	}
+	setImguiIO(deltaTime);
+	ImGui::NewFrame();
+	if(showProfiler) {
+		wsize = Window::getInstance()->getSize();
+		ImGui::GetStyle().TreeNodeSpacing = 10;
+		ImGui::GetStyle().WindowRounding = 6;
+		ImGui::GetStyle().FrameRounding = 6;
+		helpWindow();
+		timeWindow();
+		logWindow();
+		//ImGui::ShowTestWindow();
+	}
+	//prepare for next frame
+	frameCount++;
+	timePassed += deltaTime;
+	resetTree();
+	pushMark("Draw", "Time spent issuing GL commands and drawing stuff on the screen");
+}
+
+void Profiler::draw() const {
+	ImGui::Render();
+	popMark(); //draw
+	pushMark("Swap", "Time spent waiting for the GPU while commands/waits are executed.");
+}
+
+void Profiler::processNodeAverage(const Profiler::Node& n) {
+	if(hist.find(n.name) == hist.end()) {
+		hist.insert(std::pair<std::string, Historial>(n.name, Historial(hist.size())));
+		memset(hist.at(n.name).past, 0, sizeof(float)*PROFILER_HIST_SIZE);
+	}
+	hist.at(n.name).current += n.getTime();
+	for(const Node& child : n.children)
+		processNodeAverage(child);
+}
+
+void Profiler::resetTree() {
+	tree = Node("Whole Frame", "Total frame time. Lower bound of 16.66 ms if V-Sync is on.", nullptr);
+	currentNode = &tree;
+}
+
+void Profiler::setImguiIO(float deltaTime) const {
 	ImGuiIO& io = ImGui::GetIO();
 	io.DeltaTime = deltaTime == 0.0f ? 0.00001f : deltaTime;
 	io.MouseWheel = Mouse::wheelMovement().y != 0 ? (Mouse::wheelMovement().y > 0 ? 1 : -1) : 0;
@@ -154,152 +211,82 @@ void Profiler::update(float deltaTime) {
 	io.KeyShift = Keyboard::pressed(Keyboard::LShift);
 	io.MouseDown[0] = Mouse::pressed(Mouse::Left);
 	io.MousePos = vec2f(Mouse::position());
-	ImGui::NewFrame();
-	//UPDATE INTERNAL DEBUG VARS
-	for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAccumVars[i] += timeVars[i];
-	timePassed += deltaTime;
-	if(timePassed >= sampleRate) {
-		timeAvgOffset = (timeAvgOffset + 1) % 100;
-		timePassed -= sampleRate;
-		FPS = float(frameCount)/sampleRate;
-		for(int i = 0; i < TIME_VAR_COUNT; ++i)	timeAvgVars[i][timeAvgOffset] = (timeAccumVars[i]/float(frameCount))*1000.0f;
-		memset(&timeAccumVars, 0, sizeof(timeAccumVars));
-		frameCount = 0;
-	}
-	frameCount++;
-	//UI
-	if(showProfiler) {
-		std::string tag;
-		ImGui::SetNextWindowPos(ImVec2(50, 50));
-		ImGui::Begin("VoxelGame Profiler", nullptr, ImVec2(450,700), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
-		ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
-		ImGui::Text("FPS: %i", FPS);
-		ImGui::Separator();
-		if(ImGui::CollapsingHeader("General frame times", nullptr, true, true)) {
-			tag = std::string("Frame Time (curr: ") + Utils::toString(timeAvgVars[FrameTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("50ms\n\n\n\n0 ms", timeAvgVars[FrameTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 50.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Overall frame time for the update-draw loop");
-			tag = std::string("Update Time (curr: ") + Utils::toString(timeAvgVars[UpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[UpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("");
-				ImGui::BeginTooltip();
-				ImGui::Text("Update Time Breakdown");
-				tag = std::string("World Update Time (curr: ") + Utils::toString(timeAvgVars[WorldUpdateTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[WorldUpdateTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				ImGui::EndTooltip();
-			}
-			tag = std::string("Draw Time (curr: ") + Utils::toString(timeAvgVars[DrawTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("");
-				ImGui::BeginTooltip();
-				ImGui::Text("Draw Time Breakdown");
-				tag = std::string("Deferred Pass Time (curr: ") + Utils::toString(timeAvgVars[DeferredPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[DeferredPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Shadow Build Pass Time (curr: ") + Utils::toString(timeAvgVars[ShadowBuildPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowBuildPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Light Pass Time (curr: ") + Utils::toString(timeAvgVars[LightPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[LightPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Ambient+Visibility Pass Time (curr: ") + Utils::toString(timeAvgVars[AmbinentShadowPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[AmbinentShadowPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Forward Pass Time (curr: ") + Utils::toString(timeAvgVars[ForwardPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ForwardPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Blur Pass Time (curr: ") + Utils::toString(timeAvgVars[BlurPassTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[BlurPassTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("UI Pass Time (curr: ") + Utils::toString(timeAvgVars[UIDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[UIDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				ImGui::EndTooltip();
-			}
-			tag = std::string("Swap Time (curr: ") + Utils::toString(timeAvgVars[SwapTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[SwapTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) ImGui::SetTooltip("Swap time is accountable for left-over time in V-Sync'd loop\nand for CPU-GPU sync (finishing all the draw commands during the frame).\nIf it rises during low FPS, the application is GPU Bottlenecked.");
-		}
-		if(ImGui::CollapsingHeader("World Draw Time", nullptr, true, true)) {
-			tag = std::string("Player Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("");
-				ImGui::BeginTooltip();
-				ImGui::Text("Player Cam World Draw Time Breakdown");
-				tag = std::string("Player Rebuild Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkRebuildTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkRebuildTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Player BFS Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkBFSTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkBFSTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Player Draw Time (curr: ") + Utils::toString(timeAvgVars[PlayerChunkDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[PlayerChunkDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				ImGui::EndTooltip();
-			}
-			tag = std::string("Shadow Cam World Draw Time (curr: ") + Utils::toString(timeAvgVars[ShadowWorldTime][timeAvgOffset], 4, 2, true) + " ms)";
-			ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowWorldTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("");
-				ImGui::BeginTooltip();
-				ImGui::Text("Shadow Cam World Draw Time Breakdown");
-				tag = std::string("Shadow Rebuild Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkRebuildTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkRebuildTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Shadow BFS Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkBFSTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkBFSTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				tag = std::string("Shadow Draw Time (curr: ") + Utils::toString(timeAvgVars[ShadowChunkDrawTime][timeAvgOffset], 4, 2, true) + " ms)";
-				ImGui::PlotLines("25ms\n\n\n\n0 ms", timeAvgVars[ShadowChunkDrawTime], 100, timeAvgOffset, tag.c_str(), 0.00f, 25.0f, vec2f(350,60));
-				ImGui::EndTooltip();
-			}
-		}
-		ImGui::Separator();
-		ImGui::Text("Player Position: [%f, %f, %f]", vec3fVars[PlayerPos].x, vec3fVars[PlayerPos].y, vec3fVars[PlayerPos].z);
-		ImGui::Text("Player Chunk Coord: [%i, %i, %i]", int(std::floor(vec3fVars[PlayerPos].x)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].y)) >> CHUNKSIZE_POW2, int(std::floor(vec3fVars[PlayerPos].z)) >> CHUNKSIZE_POW2);
-		ImGui::Text("Columns added last frame: %i", intVars[ColumnsAdded]);
-		ImGui::Text("Player Chunks: %i", intVars[PlayerChunksDrawn]);
-		ImGui::Text("Shadow Chunks: %i", intVars[SunChunksDrawn]);
-		ImGui::End();
-
-		ImGui::SetNextWindowPos(ImVec2(1500, 50));
-		ImGui::Begin("Controls", nullptr, ImVec2(350, 270), -1.0f, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-		ImGui::Text("Controls for this demo:");
-		ImGui::Separator();
-		ImGui::Columns(2, nullptr, true);
-		ImGui::Text("Move"); ImGui::NextColumn();
-		ImGui::Text("W,A,S,D"); ImGui::NextColumn();
-		ImGui::Text("Look Around"); ImGui::NextColumn();
-		ImGui::Text("Mouse"); ImGui::NextColumn();
-		ImGui::Text("Jump"); ImGui::NextColumn();
-		ImGui::Text("Space"); ImGui::NextColumn();
-		ImGui::Text("Place a light"); ImGui::NextColumn();
-		ImGui::Text("L"); ImGui::NextColumn();
-		ImGui::Text("Toggle interface"); ImGui::NextColumn();
-		ImGui::Text("F1"); ImGui::NextColumn();
-		ImGui::Text("Toggle sun camera"); ImGui::NextColumn();
-		ImGui::Text("Q"); ImGui::NextColumn();
-		ImGui::Text("Decrease sun angle"); ImGui::NextColumn();
-		ImGui::Text("Z"); ImGui::NextColumn();
-		ImGui::Text("Increase sun angle"); ImGui::NextColumn();
-		ImGui::Text("X"); ImGui::NextColumn();
-		ImGui::Columns(1);
-		ImGui::Separator();
-		ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");
-		ImGui::End();
-	}
-	if(Keyboard::justPressed(Keyboard::F1)) Mouse::setRelativeMode(!showProfiler);
-	//ImGui::ShowTestWindow();
-	//RESET VARS FOR NEXT FRAME
-	memset(&timeVars, 0, sizeof(timeVars));
-	memset(&intVars, 0, sizeof(intVars));
-	drawTimeStart = Clock::getSeconds();
+	io.IniFilename = nullptr;
+	io.DisplaySize = ImVec2(vec2f(Window::getInstance()->getSize()));
+	io.UserData = nullptr;
+	io.FontGlobalScale = 1.0f;
 }
 
-void Profiler::draw() const {
-	float uiDrawTime = Clock::getSeconds();
-	ImGui::Render();
-	drawTimeEnd = Clock::getSeconds();
-	swapTimeStart = drawTimeEnd;
-	timeVars[UIDrawTime] = drawTimeEnd-uiDrawTime;
+void Profiler::helpWindow() const {
+	ImGui::Begin("Controls", nullptr, ImVec2(0.18f*wsize.x, 0.21f*wsize.y), windowAlpha, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::SetWindowPos(ImVec2(0.78f*wsize.x, 0.05f*wsize.y), ImGuiSetCondition_FirstUseEver);
+	ImGui::Columns(2, nullptr, true);
+	ImGui::SetColumnOffset(0,0);
+	ImGui::SetColumnOffset(1,0.7f*0.18f*wsize.x);
+	ImGui::Text("Move"); ImGui::NextColumn();
+	ImGui::Text("W,A,S,D"); ImGui::NextColumn();
+	ImGui::Text("Look Around"); ImGui::NextColumn();
+	ImGui::Text("Mouse"); ImGui::NextColumn();
+	ImGui::Text("Jump"); ImGui::NextColumn();
+	ImGui::Text("Space"); ImGui::NextColumn();
+	ImGui::Text("Place a light"); ImGui::NextColumn();
+	ImGui::Text("L"); ImGui::NextColumn();
+	ImGui::Text("Toggle interface"); ImGui::NextColumn();
+	ImGui::Text("F1"); ImGui::NextColumn();
+	ImGui::Text("Toggle sun camera"); ImGui::NextColumn();
+	ImGui::Text("Q"); ImGui::NextColumn();
+	ImGui::Text("Decrease sun angle"); ImGui::NextColumn();
+	ImGui::Text("Z"); ImGui::NextColumn();
+	ImGui::Text("Increase sun angle"); ImGui::NextColumn();
+	ImGui::Text("X"); ImGui::NextColumn();
+	ImGui::Columns(1);
+	ImGui::Separator();
+	ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");
+	ImGui::End();
 }
 
+void Profiler::timeWindow() const {
+	ImGui::Begin("Frame Times", nullptr, ImVec2(0.23f*wsize.x,0.55f*wsize.y), windowAlpha);
+	ImGui::SetWindowPos(ImVec2(0.025f*wsize.x, 0.05f*wsize.y), ImGuiSetCondition_FirstUseEver);
+	ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.65f);
+	ImGui::Text("With V-Sync enabled, frame time will\nnot go below 16ms");
+	ImGui::Text("FPS: %i", FPS);
+	ImGui::Separator();
+	uiProcessNode(tree);
+	ImGui::End();
+}
+
+void Profiler::logWindow() const {
+	std::string log = Log::getContents();
+	ImGui::Begin("Log", nullptr, ImVec2(0.34f*wsize.x, 0.31f*wsize.y), windowAlpha);
+	ImGui::SetWindowPos(ImVec2(0.025f*wsize.x, 0.61f*wsize.y), ImGuiSetCondition_FirstUseEver);
+	ImGui::BeginChild("Log");
+	ImGui::TextUnformatted(&(*log.begin()), &(*log.end()));
+	ImGui::EndChild();
+	ImGui::End();
+}
+
+void Profiler::uiProcessNode(const Profiler::Node& n) const {
+	const Historial& nHist = hist.at(n.name);
+	std::string currTime = Utils::toString(nHist.past[timeAvgOffset],4,2,true);
+	std::string tag = std::string(n.name + " Time (curr: ") + currTime + " ms)";
+	if (ImGui::TreeNode((void*)nHist.id, tag.c_str())) {
+		ImGui::PlotLines("25ms\n\n\n\n0 ms", nHist.past, 100, timeAvgOffset, currTime.c_str(), 0.00f, 25.0f, vec2f(350,60));
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("");
+			ImGui::BeginTooltip();
+			ImGui::Text(n.desc.c_str());
+			ImGui::EndTooltip();
+		}
+		for(const Node& child : n.children)
+			uiProcessNode(child);
+		ImGui::TreePop();
+	}
+}
 
 Profiler::Watcher::Watcher() {
-	setUpdatePriority(-100);
-	setDrawPriority(-100);
+	setUpdatePriority(-1000);
+	setDrawPriority(-1000);
 }
 
 Profiler::Watcher::~Watcher() {
@@ -307,8 +294,8 @@ Profiler::Watcher::~Watcher() {
 
 void Profiler::Watcher::update(float deltaTime) {
 	(void) deltaTime;
-	instance->swapTimeEnd = Clock::getSeconds();
-	instance->updateTimeStart = instance->swapTimeEnd;
+	popMark(); //swap
+	pushMark("Update", "Time spent updating game logic");
 }
 
 void Profiler::Watcher::draw() const {

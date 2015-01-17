@@ -22,13 +22,12 @@ World::~World() {
 }
 
 void World::update(float deltaTime) {
-	float worldUpdateTime = Clock::getSeconds();
+	Profiler::pushMark("World Update", "Time taken to update all blocks and insert new chunks");
 	generator.discardTasks();
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
 		if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr) delete newCol;
 		else  {
-			Profiler::intVars[Profiler::ColumnsAdded]++;
 			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
 			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
 			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
@@ -61,18 +60,22 @@ void World::update(float deltaTime) {
 		}
 	std::sort(tasks.begin(),tasks.end());
 	for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
-	Profiler::timeVars[Profiler::WorldUpdateTime] = Clock::getSeconds() - worldUpdateTime;
+	Profiler::popMark();
 }
 
 void World::draw() const {
 	switch(renderer->getMode()) {
 		case DeferredContainer::Deferred:
+			Profiler::pushMark("Player Cam World Draw", "Time spent drawing chunks from the player camera");
 			draw((Camera*)getGame()->getObjectByName("playerCam"));
+			Profiler::popMark(); //world draw
 			break;
 		case DeferredContainer::ShadowMap: {
+			Profiler::pushMark("Sun Cam World Draw", "Time spent drawing chunks from the sun camera");
 			Sun* sun = (Sun*)getGame()->getObjectByName("sun");
 			sun->updateCameras();
 			draw(sun->getGlobalCam());
+			Profiler::popMark(); //world draw
 			break;
 		}
 		default: break;
@@ -94,8 +97,6 @@ void World::draw(const Camera* cam) const{
 		vec3i(0,-1,0), vec3i(0,1,0),
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
-	float chunkRebuildTime = 0.0f;
-	float chunkBFSTime = Clock::getSeconds();
 	std::list<vec3i> chunksToDraw; //push all the chunks that must be drawn here
 	vec3i initialChunkPos(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
 	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
@@ -112,6 +113,8 @@ void World::draw(const Camera* cam) const{
 	if(renderer->getMode() == DeferredContainer::ShadowMap) ommitedPlanes.set(Frustum::NEAR);
 	static bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
 	memset(visited, 0, sizeof(visited));
+	if(renderer->getMode() == DeferredContainer::Deferred) Profiler::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
+	else Profiler::pushMark("Shadow BFS", "CPU BFS for the shadow pass");
 	//bfs
 	while(!q.empty()) {
 		Job currentJob = q.front();
@@ -121,9 +124,10 @@ void World::draw(const Camera* cam) const{
 		visited[currentJob.pos.x & WORLDSIZE_MASK][currentJob.pos.y & WORLDSIZE_MASK][currentJob.pos.z & WORLDSIZE_MASK] = true;
 		Chunk* currentChunk = getChunkCC(currentJob.pos); //used later inside neighbor loop
 		if(currentChunk != nullptr) {
-			float chunkRebuildTime0 = Clock::getSeconds();
+			if(renderer->getMode() == DeferredContainer::Deferred) Profiler::pushMark("Deferred rebuild", "Time spent rebuilding chunk geometry");
+			else Profiler::pushMark("Shadow rebuild", "Time spent rebuilding chunk geometry");
 			currentChunk->rebuildMesh();
-			chunkRebuildTime += Clock::getSeconds() - chunkRebuildTime0;
+			Profiler::popMark();
 			chunksToDraw.push_back(currentJob.pos);
 		}
 		int distance = currentJob.distance+1; //neighbor chunks's bfs distance
@@ -145,8 +149,10 @@ void World::draw(const Camera* cam) const{
 			q.push(neighborJob);
 		}
 	}
-	float chunkDrawTime = Clock::getSeconds();
-	chunkBFSTime = chunkDrawTime-chunkBFSTime-chunkRebuildTime;
+	Profiler::popMark(); //BFS time
+	if(renderer->getMode() == DeferredContainer::Deferred) Profiler::pushMark("Deferred Batching", "Time spent actually sending chunk geometry to the GPU");
+	else Profiler::pushMark("Shadow Batching", "Time spent actually sending chunk geometry to the GPU");
+	//setup shaders for batching
 	Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
 	if(renderer->getMode() == DeferredContainer::Deferred)  {
 		const Camera* cam2 = cam;
@@ -159,14 +165,16 @@ void World::draw(const Camera* cam) const{
 		Sun* sun = (Sun*)getGame()->getObjectByName("sun");
 		Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
 	}
+	//batched drawing
 	static std::vector<vec3i> transforms(400);
-	int chunkCount = 0;
 	int batchCount = 0;
 	MeshBatched::startBatch();
 	for(const vec3i& pos : chunksToDraw) {
 		Chunk* c = getChunkCC(pos);
 		if(c != nullptr) {
+			//reset faces for next bfs
 			c->facesVisited.reset();
+			//even more culling for the shadowmap: outside of the player frustum and not between sun and frustum
 			if(renderer->getMode() == DeferredContainer::ShadowMap) {
 				const Frustum& f = ((Camera*)getGame()->getObjectByName("playerCam"))->getFrustum();
 				colliderSphere.center = c->getAbsolutePos()+colliderOffset;
@@ -178,11 +186,12 @@ void World::draw(const Camera* cam) const{
 				}
 				if(pass) continue;
 			}
+			//batch it
 			c->draw();
 			transforms[batchCount] = c->getAbsolutePos();
-			++chunkCount;
 			++batchCount;
 		}
+		//submit batch
 		if(batchCount == 400) {
 			batchCount -= 400;
 			if(renderer->getMode() == DeferredContainer::Deferred)
@@ -193,6 +202,7 @@ void World::draw(const Camera* cam) const{
 			MeshBatched::startBatch();
 		}
 	}
+	//clear up any pending chunks (last batch)
 	if(batchCount > 0) {
 		if(renderer->getMode() == DeferredContainer::Deferred)
 			Programs.get("deferredChunk").uniform("transforms")->set(transforms);
@@ -200,19 +210,5 @@ void World::draw(const Camera* cam) const{
 			Programs.get("depthShader").uniform("transforms")->set(transforms);
 	}
 	MeshBatched::endBatch();
-
-	switch(renderer->getMode()) {
-		case DeferredContainer::Deferred:
-			Profiler::timeVars[Profiler::PlayerChunkDrawTime] = Clock::getSeconds() - chunkDrawTime;
-			Profiler::timeVars[Profiler::PlayerChunkRebuildTime] = chunkRebuildTime;
-			Profiler::timeVars[Profiler::PlayerChunkBFSTime] = chunkBFSTime;
-			Profiler::intVars[Profiler::PlayerChunksDrawn] = chunkCount; break;
-		case DeferredContainer::ShadowMap:
-			Profiler::timeVars[Profiler::ShadowChunkDrawTime] = Clock::getSeconds() - chunkDrawTime;
-			Profiler::timeVars[Profiler::ShadowChunkRebuildTime] = chunkRebuildTime;
-			Profiler::timeVars[Profiler::ShadowChunkBFSTime] = chunkBFSTime;
-			Profiler::intVars[Profiler::SunChunksDrawn] = chunkCount;
-			break;
-		default: break;
-	}
+	Profiler::popMark(); //batching
 }

@@ -31,39 +31,39 @@ void DeferredContainer::draw() const {
 	GL_ASSERT(glDisable(GL_BLEND));
 
 	//Deferred pass
-	float deferredTime = Clock::getSeconds();
+	Profiler::pushMark("Deferred Pass", "Time spent rendering geometry to the g-buffer");
 	drawMode = Deferred;
 	RenderTargetBase::bind(gBuffer);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::DeferredPassTime] = Clock::getSeconds()-deferredTime;
+	Profiler::popMark(); //deferred
 
 	//Shadowmap pass
+	Profiler::pushMark("Shadowmap Pass", "Time spent rendering geometry to the layered shadowmap");
 	glEnable(GL_DEPTH_CLAMP);
-	float shadowTime = Clock::getSeconds();
 	drawMode = ShadowMap;
 	RenderTargetBase::bind(sunTarget);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
 	ContainerObject::draw();
 	glDisable(GL_DEPTH_CLAMP);
-	Profiler::timeVars[Profiler::ShadowBuildPassTime] = Clock::getSeconds()-shadowTime;
+	Profiler::popMark(); //shadow
 
+	Profiler::pushMark("Light Pass", "Time spent rendering deferred lights");
 	//bind output texture (screen)
 	RenderTargetBase::bind(screen);
 	GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
 	//Light pass
-	float lightTime = Clock::getSeconds();
 	GL_ASSERT(glEnable(GL_BLEND));
 	GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
 	GL_ASSERT(glDepthMask(GL_TRUE));
 	GL_ASSERT(glDepthFunc(GL_ALWAYS));
 	drawMode = Light;
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::LightPassTime] = Clock::getSeconds()-lightTime;
+	Profiler::popMark(); //lights
 
 	//Ambient+Visibility pass
-	float ambinentShadowPass = Clock::getSeconds();
+	Profiler::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
 	const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
 	if(Keyboard::pressed(Keyboard::Q)) cam = sun->getGlobalCam(); //sun cam mode
@@ -91,15 +91,15 @@ void DeferredContainer::draw() const {
 	Programs.get("ambientPass").uniform("depth")->set(gBuffer->getTexture(RenderTargetBase::DEPTH));
 	Programs.get("ambientPass").uniform("sunDepth")->set(sunTarget->getTexture(RenderTargetBase::DEPTH));
 	quad->draw(Programs.get("ambientPass"));
-	Profiler::timeVars[Profiler::AmbinentShadowPassTime] = Clock::getSeconds()-ambinentShadowPass;
+	Profiler::popMark(); //ambient+shadowmap
 
 	//Forward pass
-	float forwardPass = Clock::getSeconds();
+	Profiler::pushMark("Forward Pass", "Time spent rendering forward-render stuff");
 	GL_ASSERT(glDepthFunc(GL_LEQUAL));
 	GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
 	drawMode = Forward;
 	ContainerObject::draw();
-	Profiler::timeVars[Profiler::ForwardPassTime] = Clock::getSeconds()-forwardPass;
+	Profiler::popMark();
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {

@@ -97,7 +97,7 @@ void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
 	calcQuadrant(cx, cy, cz,  1, -1,  1);
 	calcQuadrant(cx, cy, cz,  1,  1, -1);
 	calcQuadrant(cx, cy, cz,  1,  1,  1);
-
+	Log::message() << "wat" << Log::Flush;
 	tex.setData(data, TextureFormat::RED, TextureFormat::UNSIGNED_BYTE);
 	tex.setFilter(GL_LINEAR,GL_LINEAR);
 	tex.setWrap(GL_CLAMP_TO_BORDER);

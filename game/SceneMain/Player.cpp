@@ -19,10 +19,10 @@ Player::~Player() {
 
 void Player::update(float deltaTime) {
 	//take input
-	if(!Profiler::shown()) processKeys();
+	if(!Profiler::isShown()) processKeys();
 
 	//move and update camera position
-	if(!Profiler::shown()) movePos(deltaTime); //this handles collisions
+	if(!Profiler::isShown()) movePos(deltaTime); //this handles collisions
 
 	//feedback to be used by the scene
 	onFloor = hitbox->collidesWithWorld(vec3f(0,-0.1,0));
@@ -38,8 +38,6 @@ void Player::update(float deltaTime) {
 
 	//trace view
 	traceView();
-
-	Profiler::vec3fVars[Profiler::PlayerPos] = pos;
 }
 
 void Player::processKeys() {
@@ -111,6 +109,7 @@ void Player::processKeys() {
 		std::vector<DeferredCubeLight*> lights;
 		getGame()->getAllObjectsOfType(lights);
 		for(unsigned int i = 0; i < lights.size(); i++) {
+			Log::message() << ":o" << Log::Flush;
 			DeferredCubeLight* l = lights[i];
 			l->calcLight(recalcBlock.x, recalcBlock.y, recalcBlock.z);
 		}
