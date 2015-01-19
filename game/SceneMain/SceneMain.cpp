@@ -6,6 +6,7 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "Manager.hpp"
+#include "Debugger.hpp"
 
 SceneMain::SceneMain() {
 	this->setName("SCENE");
@@ -40,7 +41,7 @@ SceneMain::SceneMain() {
 	player->getCam()->projection = glm::perspective(60.0f, float(Window::getInstance()->getSize().x)/float(Window::getInstance()->getSize().y), 0.01f, WORLDSIZE*CHUNKSIZE*0.5f);
 	player->addTo(this);
 
-	Profiler* debug = new Profiler();
+	Debugger* debug = new Debugger();
 	debug->addTo(this);
 }
 

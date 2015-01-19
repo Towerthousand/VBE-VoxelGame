@@ -5,9 +5,9 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-include(../VBE/VBE.pri)
 include(../VBE-Scenegraph/VBE-Scenegraph.pri)
 include(../VBE-Profiler/VBE-Profiler.pri)
+include(../VBE/VBE.pri)
 include(../common.pri)
 
 INCLUDEPATH += .
@@ -38,7 +38,8 @@ SOURCES += main.cpp \
 	SceneMain/Hitbox.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
         SceneMain/world/Sun.cpp \
-    SceneMain/Manager.cpp
+    SceneMain/Manager.cpp \
+    SceneMain/Debugger.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -70,7 +71,8 @@ HEADERS += \
 	SceneMain/world/DeferredCubeLight.hpp \
 	SceneMain/world/generator/TaskPool.hpp \
         SceneMain/world/Sun.hpp \
-    SceneMain/Manager.hpp
+    SceneMain/Manager.hpp \
+    SceneMain/Debugger.hpp
 
 OTHER_FILES += \
         assets/shaders/quad.vert \

@@ -24,7 +24,7 @@ class Profiler : public GameObject {
 
 	protected:
 		virtual void render(ImDrawList** const cmd_lists, int cmd_lists_count) const;
-		virtual void renderCustomInterface();
+		virtual void renderCustomInterface() const;
 
 	private:
 		struct Node {
@@ -77,7 +77,6 @@ class Profiler : public GameObject {
 		void processNodeAverage(const Node& n);
 		void resetTree();
 		void setImguiIO(float deltaTime) const;
-		void helpWindow() const;
 		void timeWindow() const;
 		void logWindow() const;
 		void uiProcessNode(const Node& n) const;
@@ -95,10 +94,10 @@ class Profiler : public GameObject {
 		bool showLog = true;
 		float sampleRate = 0.5f;
 		float windowAlpha = 0.9f;
+		vec2ui wsize = vec2ui(0,0);
 		Node tree;
 		Node* currentNode = nullptr;
 		std::map<std::string, Historial> hist;
-		vec2ui wsize = vec2ui(0,0);
 		mutable Mesh model;
 		Texture2D tex;
 		ShaderProgram program;

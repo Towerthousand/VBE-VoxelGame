@@ -195,7 +195,7 @@ void Profiler::render(ImDrawList** const cmd_lists, int cmd_lists_count) const {
 	GL_ASSERT(glEnable(GL_CULL_FACE));
 }
 
-void Profiler::renderCustomInterface() {
+void Profiler::renderCustomInterface() const {
 }
 
 const char* Profiler::getClip() const {
@@ -281,34 +281,6 @@ void Profiler::setImguiIO(float deltaTime) const {
 	io.DisplaySize = ImVec2(vec2f(Window::getInstance()->getSize()));
 	io.UserData = nullptr;
 	io.FontGlobalScale = 1.0f;
-}
-
-void Profiler::helpWindow() const {
-	ImGui::Begin("Controls", nullptr, ImVec2(0.18f*wsize.x, 0.21f*wsize.y), windowAlpha, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-	ImGui::SetWindowPos(ImVec2(0.78f*wsize.x, 0.05f*wsize.y), ImGuiSetCondition_FirstUseEver);
-	ImGui::Columns(2, nullptr, true);
-	ImGui::SetColumnOffset(0,0);
-	ImGui::SetColumnOffset(1,0.7f*0.18f*wsize.x);
-	ImGui::Text("Move"); ImGui::NextColumn();
-	ImGui::Text("W,A,S,D"); ImGui::NextColumn();
-	ImGui::Text("Look Around"); ImGui::NextColumn();
-	ImGui::Text("Mouse"); ImGui::NextColumn();
-	ImGui::Text("Jump"); ImGui::NextColumn();
-	ImGui::Text("Space"); ImGui::NextColumn();
-	ImGui::Text("Place a light"); ImGui::NextColumn();
-	ImGui::Text("L"); ImGui::NextColumn();
-	ImGui::Text("Toggle interface"); ImGui::NextColumn();
-	ImGui::Text("F1"); ImGui::NextColumn();
-	ImGui::Text("Toggle sun camera"); ImGui::NextColumn();
-	ImGui::Text("Q"); ImGui::NextColumn();
-	ImGui::Text("Decrease sun angle"); ImGui::NextColumn();
-	ImGui::Text("Z"); ImGui::NextColumn();
-	ImGui::Text("Increase sun angle"); ImGui::NextColumn();
-	ImGui::Text("X"); ImGui::NextColumn();
-	ImGui::Columns(1);
-	ImGui::Separator();
-	ImGui::Text("While showing the interface,\nthe mouse will be visible.\nHover the profiler graphs for\nmore info");
-	ImGui::End();
 }
 
 void Profiler::timeWindow() const {
