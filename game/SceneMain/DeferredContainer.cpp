@@ -4,7 +4,6 @@
 #include "world/Chunk.hpp"
 #include "world/Column.hpp"
 #include "world/Sun.hpp"
-#include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
 DeferredContainer::DeferredContainer() : gBuffer(nullptr), sunTarget(nullptr), drawMode(Deferred) {

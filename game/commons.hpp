@@ -2,6 +2,7 @@
 #define COMMONS_HPP
 #include <VBE/VBE.hpp>
 #include <VBE-Scenegraph/VBE-Scenegraph.hpp>
+#include <VBE-Profiler/VBE-Profiler.hpp>
 #include <VBE/dependencies/glm/gtc/random.hpp>
 #include <VBE/dependencies/glm/gtc/noise.hpp>
 #include <queue>
@@ -11,7 +12,6 @@
 #include <algorithm>
 #include <bitset>
 #include <unordered_set>
-#include <iomanip>
 
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels
@@ -33,8 +33,6 @@ namespace Utils {
 	  temp << arg;
 	  return temp.str();
 	}
-
-	std::string toString(float f, int width, int precision, bool left);
 }
 
 #endif // COMMONS_HPP

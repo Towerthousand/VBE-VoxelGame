@@ -3,7 +3,6 @@
 #include "Chunk.hpp"
 #include "../DeferredContainer.hpp"
 #include "Sun.hpp"
-#include "SceneMain/debug/Profiler.hpp"
 #include "../Manager.hpp"
 #include <cstring>
 

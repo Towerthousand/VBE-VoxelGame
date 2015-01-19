@@ -7,6 +7,7 @@ TEMPLATE = app
 
 include(../VBE/VBE.pri)
 include(../VBE-Scenegraph/VBE-Scenegraph.pri)
+include(../VBE-Profiler/VBE-Profiler.pri)
 include(../common.pri)
 
 INCLUDEPATH += .
@@ -36,9 +37,7 @@ SOURCES += main.cpp \
 	SceneMain/Player.cpp \
 	SceneMain/Hitbox.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
-	SceneMain/world/Sun.cpp \
-    SceneMain/debug/imgui.cpp \
-    SceneMain/debug/Profiler.cpp \
+        SceneMain/world/Sun.cpp \
     SceneMain/Manager.cpp
 
 HEADERS += \
@@ -70,11 +69,7 @@ HEADERS += \
 	SceneMain/Hitbox.hpp \
 	SceneMain/world/DeferredCubeLight.hpp \
 	SceneMain/world/generator/TaskPool.hpp \
-	SceneMain/world/Sun.hpp \
-    SceneMain/debug/imconfig.hpp \
-    SceneMain/debug/imgui.hpp \
-    SceneMain/debug/stb_textedit.hpp \
-    SceneMain/debug/Profiler.hpp \
+        SceneMain/world/Sun.hpp \
     SceneMain/Manager.hpp
 
 OTHER_FILES += \
@@ -90,7 +85,5 @@ OTHER_FILES += \
         assets/shaders/chunkDeferred.vert \
         assets/shaders/chunkDeferred.frag \
         assets/shaders/cubeLight.frag \
-    assets/shaders/debugDraw.frag \
-    assets/shaders/debugDraw.vert \
     assets/shaders/depth.geom
 

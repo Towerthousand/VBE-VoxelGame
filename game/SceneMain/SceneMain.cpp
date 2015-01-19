@@ -5,7 +5,6 @@
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
-#include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
 SceneMain::SceneMain() {
@@ -124,7 +123,6 @@ void SceneMain::loadResources() {
 	Programs.add("blurMaskPass", ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag")));
 	Programs.add("depthShader", ShaderProgram(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag")));
 	Programs.add("deferredChunk", ShaderProgram(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag")));
-	Programs.add("debugDraw", ShaderProgram(Storage::openAsset("shaders/debugDraw.vert"), Storage::openAsset("shaders/debugDraw.frag")));
 }
 
 void SceneMain::update(float deltaTime) {

@@ -2,7 +2,6 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
-#include "debug/Profiler.hpp"
 
 Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), xRot(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
 	setName("player");

@@ -1,5 +1,4 @@
 #include "BlurContainer.hpp"
-#include "debug/Profiler.hpp"
 #include "Manager.hpp"
 
 BlurContainer::BlurContainer() : noBlur(nullptr), blurMask(nullptr), blurred(nullptr), quad(nullptr) {
