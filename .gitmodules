@@ -4,3 +4,6 @@
 [submodule "VBE-Scenegraph"]
 	path = VBE-Scenegraph
 	url = https://github.com/Towerthousand/VBE-Scenegraph.git
+[submodule "VBE-Profiler"]
+	path = VBE-Profiler
+	url = https://github.com/Towerthousand/VBE-Profiler.git
