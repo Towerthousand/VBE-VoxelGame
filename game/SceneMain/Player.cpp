@@ -108,7 +108,6 @@ void Player::processKeys() {
 		std::vector<DeferredCubeLight*> lights;
 		getGame()->getAllObjectsOfType(lights);
 		for(unsigned int i = 0; i < lights.size(); i++) {
-			Log::message() << ":o" << Log::Flush;
 			DeferredCubeLight* l = lights[i];
 			l->calcLight(recalcBlock.x, recalcBlock.y, recalcBlock.z);
 		}
