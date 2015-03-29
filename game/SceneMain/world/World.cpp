@@ -109,7 +109,7 @@ void World::draw(const Camera* cam) const{
 	Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
 	vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
 	std::bitset<6> ommitedPlanes;
-	if(renderer->getMode() == DeferredContainer::ShadowMap) ommitedPlanes.set(Frustum::NEAR);
+	if(renderer->getMode() == DeferredContainer::ShadowMap) ommitedPlanes.set(Frustum::NEAR_PLANE);
 	static bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
 	memset(visited, 0, sizeof(visited));
 	if(renderer->getMode() == DeferredContainer::Deferred) Profiler::pushMark("Deferred BFS", "CPU BFS for the deferred pass");

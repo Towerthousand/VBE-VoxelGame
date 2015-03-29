@@ -12,17 +12,17 @@ class BlurContainer : public ContainerObject {
 		void update(float deltaTime);
 		void makeTarget();
 
-		RenderTarget* noBlur;
+		RenderTarget noBlur;
 		RenderBuffer noBlurDepth;
 		Texture2D noBlurColor0;
 
-		RenderTarget* blurMask;
+		RenderTarget blurMask;
 		Texture2D blurMaskColor0;
 
-		RenderTarget* horitzontalBlurred;
+		RenderTarget horitzontalBlurred;
 		Texture2D horitzontalBlurredColor0;
 
-		RenderTarget* blurred;
+		RenderTarget blurred;
 		Texture2D blurredColor0;
 
 		mutable MeshBase* quad;

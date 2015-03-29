@@ -25,14 +25,14 @@ class DeferredContainer : public ContainerObject {
 	private:
 		void makeTarget();
 
-		RenderTarget* gBuffer;
+		RenderTarget gBuffer;
 
 		//the textures for the gBuffer
 		Texture2D GBDepth;
 		Texture2D GBColor0;
 		Texture2D GBColor1;
 
-		RenderTargetLayered* sunTarget;
+		RenderTargetLayered sunTarget;
 
 		//the texture for the sun target
 		Texture2DArray SDepth;
