@@ -23,8 +23,10 @@ class Column {
 			return (y < 0 || y >= (int)chunks.size()) ? nullptr : chunks[y];
 		}
 
-		void rebuildMeshes();
+		void rebuildAllMeshes();
 		void setCube(unsigned int x, unsigned int y, unsigned int z, unsigned int cube);
+		void rebuildMesh(int y);
+		void rebuildMeshCC(int y);
 	private:
 		int XPOS; //in chunks
 		int ZPOS; //in chunks

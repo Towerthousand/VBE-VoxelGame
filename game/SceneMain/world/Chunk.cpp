@@ -77,7 +77,6 @@ void Chunk::update(float deltaTime) {
 }
 
 void Chunk::draw() const {
-	if(!hasVertices) return;
 	if(renderer->getMode() == DeferredContainer::Deferred) {
 		terrainModel->drawBatched(Programs.get("deferredChunk"));
 		drawedByPlayer = true;
@@ -87,15 +86,14 @@ void Chunk::draw() const {
 	}
 }
 
-#define MAX_RAD 9
-#define LIGHTSUM_SIZE (CHUNKSIZE+MAX_RAD+MAX_RAD)
+#define LIGHTSUM_SIZE (CHUNKSIZE+AO_MAX_RAD+AO_MAX_RAD)
 static int lightSum[LIGHTSUM_SIZE][LIGHTSUM_SIZE][LIGHTSUM_SIZE];
 
 void Chunk::calcLightSum() {
 	for(int x = 0; x < LIGHTSUM_SIZE; x++)
 		for(int y = 0; y < LIGHTSUM_SIZE; y++)
 			for(int z = 0; z < LIGHTSUM_SIZE; z++)
-				lightSum[x][y][z] = (getCube(x-MAX_RAD, y-MAX_RAD, z-MAX_RAD) == 0) ? 1 : 0;
+				lightSum[x][y][z] = (getCube(x-AO_MAX_RAD, y-AO_MAX_RAD, z-AO_MAX_RAD) == 0) ? 1 : 0;
 
 	for(int x = 1; x < LIGHTSUM_SIZE; x++)
 		for(int y = 0; y < LIGHTSUM_SIZE; y++)
@@ -121,12 +119,12 @@ int Chunk::sumRect(int x1, int y1, int z1, int x2, int y2, int z2) {
 	y1--;
 	z1--;
 
-	x1 += MAX_RAD;
-	y1 += MAX_RAD;
-	z1 += MAX_RAD;
-	x2 += MAX_RAD;
-	y2 += MAX_RAD;
-	z2 += MAX_RAD;
+	x1 += AO_MAX_RAD;
+	y1 += AO_MAX_RAD;
+	z1 += AO_MAX_RAD;
+	x2 += AO_MAX_RAD;
+	y2 += AO_MAX_RAD;
+	z2 += AO_MAX_RAD;
 
 	return    lightSum[x2][y2][z2]
 			- lightSum[x2][y2][z1] - lightSum[x2][y1][z2] - lightSum[x1][y2][z2]

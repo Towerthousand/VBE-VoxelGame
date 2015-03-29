@@ -5,7 +5,6 @@
 #include "Column.hpp"
 
 class Camera;
-class Chunk;
 class DeferredContainer;
 class World : public GameObject {
 	public:
@@ -42,12 +41,13 @@ class World : public GameObject {
 			return c == nullptr ? nullptr : c->getChunkCC(y);
 		}
 		inline Chunk* getChunkCC(vec3i pos) const {return getChunkCC(pos.x,pos.y,pos.z);}
-		inline void setCube(int x, int y, int z, unsigned int cube) {
-			Column* c = getColumn(x,y,z);
-			if(c == nullptr) return;
-			c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
-		}
+		void setCube(int x, int y, int z, unsigned int cube);
 		inline void setCube(vec3i pos, unsigned int cube) {setCube(pos.x, pos.y, pos.z, cube);}
+		inline void rebuildMesh(int x, int y, int z) {
+			Column* c = getColumn(x,y,z);
+			if(c) c->rebuildMesh(y);
+		}
+		inline void rebuildMesh(vec3i pos) {rebuildMesh(pos.x, pos.y, pos.z);}
 	private:
 		void update(float deltaTime);
 		void draw() const;

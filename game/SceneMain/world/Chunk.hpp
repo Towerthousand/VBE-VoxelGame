@@ -3,6 +3,8 @@
 #include "commons.hpp"
 #include "World.hpp"
 
+#define AO_MAX_RAD 9
+
 class DeferredContainer;
 class Chunk {
 	public:
@@ -95,6 +97,8 @@ class Chunk {
 
 		friend class ColumnGenerator;
 		friend class Column;
+		//TODO: REMOVE THIS
+		friend class Player;
 };
 
 #endif // CHUNK_HPP

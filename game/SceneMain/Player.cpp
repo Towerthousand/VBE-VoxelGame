@@ -1,5 +1,6 @@
 #include "Player.hpp"
 #include "world/World.hpp"
+#include "world/Chunk.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
 
@@ -89,12 +90,16 @@ void Player::processKeys() {
 	vec3i recalcBlock;
 
 	//take block
-	if(Mouse::justPressed(Mouse::Left))
+	if(Mouse::justPressed(Mouse::Left)) {
 		if(targetsBlock) {
-			w->setCube(targetedBlock.x,targetedBlock.y,targetedBlock.z,0);
+			for(int i = -10; i <= 10; ++i)
+				for(int j = -10; j <= 10; ++j)
+					for(int k = -10; k <= 10; ++k)
+						w->setCube(targetedBlock.x+i, targetedBlock.y+j, targetedBlock.z+k, 0);
 			recalcBlock = targetedBlock;
 			recalc = true;
 		}
+	}
 
 	//put block
 	if(Mouse::justPressed(Mouse::Right))

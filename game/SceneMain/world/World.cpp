@@ -20,6 +20,15 @@ World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
 World::~World() {
 }
 
+void World::setCube(int x, int y, int z, unsigned int cube) {
+	Column* c = getColumn(x,y,z);
+	if(c) c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
+	for(int a = -AO_MAX_RAD; a < AO_MAX_RAD+1; a += AO_MAX_RAD)
+		for(int b = -AO_MAX_RAD; b < AO_MAX_RAD+1; b += AO_MAX_RAD)
+			for(int c = -AO_MAX_RAD; c < AO_MAX_RAD+1; c += AO_MAX_RAD)
+				rebuildMesh(x+a,y+b,z+c);
+}
+
 void World::update(float deltaTime) {
 	Profiler::pushMark("World Update", "Time taken to update all blocks and insert new chunks");
 	generator.discardTasks();
@@ -28,10 +37,10 @@ void World::update(float deltaTime) {
 		if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr) delete newCol;
 		else  {
 			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
-			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE))->rebuildMeshes();
+			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildAllMeshes();
+			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildAllMeshes();
+			if(getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE))->rebuildAllMeshes();
+			if(getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE))->rebuildAllMeshes();
 		}
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
@@ -186,9 +195,11 @@ void World::draw(const Camera* cam) const{
 				if(pass) continue;
 			}
 			//batch it
-			c->draw();
-			transforms[batchCount] = c->getAbsolutePos();
-			++batchCount;
+			if(c->hasMesh()) {
+				c->draw();
+				transforms[batchCount] = c->getAbsolutePos();
+				++batchCount;
+			}
 		}
 		//submit batch
 		if(batchCount == 400) {
