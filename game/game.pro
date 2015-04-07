@@ -39,7 +39,8 @@ SOURCES += main.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
         SceneMain/world/Sun.cpp \
     SceneMain/Manager.cpp \
-    SceneMain/Debugger.cpp
+    SceneMain/Debugger.cpp \
+    SceneMain/world/generator/Function3DHelix.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -72,7 +73,8 @@ HEADERS += \
 	SceneMain/world/generator/TaskPool.hpp \
         SceneMain/world/Sun.hpp \
     SceneMain/Manager.hpp \
-    SceneMain/Debugger.hpp
+    SceneMain/Debugger.hpp \
+    SceneMain/world/generator/Function3DHelix.hpp
 
 OTHER_FILES += \
         assets/shaders/quad.vert \

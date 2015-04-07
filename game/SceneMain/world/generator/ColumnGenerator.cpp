@@ -11,6 +11,7 @@
 #include "Function2DSimplex.hpp"
 #include "FunctionTerrainHeightmap.hpp"
 #include "FunctionTerrainJoin.hpp"
+#include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
 #define GENERATIONHEIGHT 16
@@ -33,7 +34,11 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	Function2DConst* const1 = new Function2DConst(70);
 	Function3DSub* sub1 = new Function3DSub(coord1,const1);
 	Function3DSub* sub2 = new Function3DSub(add4,sub1);
-	FunctionTerrrainVolume* vol1 = new FunctionTerrrainVolume(sub2,2);
+	Function3DHelix* hel1 = new Function3DHelix(5,10,5,0,5);
+	Function3DHelix* hel2 = new Function3DHelix(5,10,5,15,5);
+	Function3DAdd* add5 = new Function3DAdd(sub2, hel1);
+	Function3DAdd* add6 = new Function3DAdd(add5, hel2);
+	FunctionTerrrainVolume* vol1 = new FunctionTerrrainVolume(add6, 2);
 	Function2DSimplex* simplex21 = new Function2DSimplex(&generator,50,90,95);
 	Function2DSimplex* simplex22 = new Function2DSimplex(&generator,100,0,130);
 	FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);

@@ -8,14 +8,15 @@ class Entity : public GameObject {
 		Entity();
 		virtual ~Entity();
 
+		vec3f getPosition() const { return pos;}
+
+	protected:
 		virtual void draw() const;
 		virtual void update(float deltaTime);
+		virtual void movePos(float deltaTime);
 
 		vec3f vel;
 		vec3f acc;
-	protected:
-		virtual void movePos(float deltaTime);
-
 		Hitbox* hitbox;
 		vec3f scale;
 		vec3f pos;

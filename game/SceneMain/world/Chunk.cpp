@@ -94,7 +94,6 @@ void Chunk::calcLightSum() {
 		for(int y = 0; y < LIGHTSUM_SIZE; y++)
 			for(int z = 0; z < LIGHTSUM_SIZE; z++)
 				lightSum[x][y][z] = (getCube(x-AO_MAX_RAD, y-AO_MAX_RAD, z-AO_MAX_RAD) == 0) ? 1 : 0;
-
 	for(int x = 1; x < LIGHTSUM_SIZE; x++)
 		for(int y = 0; y < LIGHTSUM_SIZE; y++)
 			for(int z = 0; z < LIGHTSUM_SIZE; z++)
@@ -159,9 +158,7 @@ void Chunk::rebuildMesh() {
 	if(terrainModel == nullptr) initMesh();
 	std::vector<Chunk::Vert> renderData;
 	boundingBox = AABB();
-
 	calcLightSum();
-
 	for(int z = 0; z < CHUNKSIZE; ++z)
 		for(int y = 0; y < CHUNKSIZE; ++y)
 			for(int x = 0; x < CHUNKSIZE; ++x)
@@ -235,7 +232,6 @@ void Chunk::rebuildVisibilityGraph() {
 				visibilityGraph.set(getVisibilityIndex(i,j));
 				visibilityGraph.set(getVisibilityIndex(j,i));
 			}
-
 		if(visibilityGraph.all()) return;
 	}
 }
