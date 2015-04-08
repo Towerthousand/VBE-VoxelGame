@@ -111,7 +111,7 @@ void Player::processKeys() {
 
 	if(recalc) {
 		std::vector<DeferredCubeLight*> lights;
-		getGame()->getAllObjectsOfType(lights);
+		w->getAllObjectsOfType(lights);
 		for(unsigned int i = 0; i < lights.size(); i++) {
 			DeferredCubeLight* l = lights[i];
 			l->calcLight(l->getPosition().x, l->getPosition().y, l->getPosition().z);
@@ -120,10 +120,9 @@ void Player::processKeys() {
 
 	if(Keyboard::justPressed(Keyboard::L)) {
 		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-		DeferredContainer* renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);
 		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
-		l->addTo(renderer);
+		l->addTo(w);
 	}
 }
 
