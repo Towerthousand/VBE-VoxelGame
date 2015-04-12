@@ -68,9 +68,8 @@ void Sun::updateCameras() {
 		cameras[i]->projection = glm::ortho(aabbs[i].getMin().x, aabbs[i].getMax().x, aabbs[i].getMin().y, aabbs[i].getMax().y, aabbs[i].getMin().z, aabbs[i].getMax().z);
 		cameras[i]->recalculateFrustum();
 	}
-	for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
+	for(int i = 0; i < NUM_SUN_CASCADES; ++i)
 		VP[i] = cameras[i]->projection*cameras[i]->getView();
-	}
 }
 
 AABB Sun::extendFrustums() {

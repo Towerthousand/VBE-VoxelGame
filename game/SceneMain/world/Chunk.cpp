@@ -157,6 +157,7 @@ void Chunk::rebuildMesh() {
 	needsMeshRebuild = false;
 	if(terrainModel == nullptr) initMesh();
 	std::vector<Chunk::Vert> renderData;
+	renderData.reserve(terrainModel->getVertexCount());
 	boundingBox = AABB();
 	calcLightSum();
 	for(int z = 0; z < CHUNKSIZE; ++z)

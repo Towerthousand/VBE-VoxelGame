@@ -16,10 +16,9 @@
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = int(pow(2,CHUNKSIZE_POW2)); //in voxels
 constexpr int CHUNKSIZE_MASK = CHUNKSIZE-1;
-constexpr int WORLDSIZE = 32; //in chunks
+constexpr int WORLDSIZE = 512/CHUNKSIZE;
+constexpr int GENERATIONHEIGHT = 256/CHUNKSIZE;
 constexpr int WORLDSIZE_MASK = WORLDSIZE-1;
-constexpr int MINLIGHT = 3;
-constexpr int MAXLIGHT = 16;
 constexpr int TEXSIZE = 8;
 
 namespace Utils {

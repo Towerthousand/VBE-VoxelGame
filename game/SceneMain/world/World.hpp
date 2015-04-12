@@ -42,16 +42,26 @@ class World : public GameObject {
 		}
 		inline Chunk* getChunkCC(vec3i pos) const {return getChunkCC(pos.x,pos.y,pos.z);}
 		void setCube(int x, int y, int z, unsigned int cube);
+		void setCubeRange(int x, int y, int z, unsigned int sx, unsigned int sy, unsigned int sz, unsigned int cube);
 		inline void setCube(vec3i pos, unsigned int cube) {setCube(pos.x, pos.y, pos.z, cube);}
-		inline void rebuildMesh(int x, int y, int z) {
+		inline void setCubeRange(vec3i pos, vec3i size, unsigned int cube) {
+			setCubeRange(pos.x, pos.y, pos.z, size.x, size.y, size.z, cube);
+		}
+
+		inline void recalc(int x, int y, int z) {
 			Column* c = getColumn(x,y,z);
 			if(c) c->rebuildMesh(y);
 		}
-		inline void rebuildMesh(vec3i pos) {rebuildMesh(pos.x, pos.y, pos.z);}
+		inline void recalc(vec3i pos) {recalc(pos.x, pos.y, pos.z);}
 	private:
 		void update(float deltaTime);
 		void draw() const;
 		void draw(const Camera* cam) const;
+
+		inline void setCubeData(int x, int y, int z, unsigned int cube) {
+			Column* c = getColumn(x,y,z);
+			if(c) c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
+		}
 
 		friend class Sun;
 		unsigned int highestChunkY;

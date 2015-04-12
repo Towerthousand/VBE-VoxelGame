@@ -1,6 +1,5 @@
 #include "Player.hpp"
 #include "world/World.hpp"
-#include "world/Chunk.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
 
@@ -85,45 +84,19 @@ void Player::processKeys() {
 		cam->rotateLocal(displacement.y, vec3f(1,0,0));
 		xRot += displacement.y;
 	}
-	//TODO Sacar la logica de recalcular luces aqui, tendria que hacerse en setCube
-	bool recalc = false;
-	vec3i recalcBlock;
 
 	//take block
-	if(Mouse::justPressed(Mouse::Left)) {
-		if(targetsBlock) {
-			for(int i = -10; i <= 10; ++i)
-				for(int j = -10; j <= 10; ++j)
-					for(int k = -10; k <= 10; ++k)
-						w->setCube(targetedBlock.x+i, targetedBlock.y+j, targetedBlock.z+k, 0);
-			recalcBlock = targetedBlock;
-			recalc = true;
-		}
-	}
+	if(Mouse::justPressed(Mouse::Left) && targetsBlock)
+		w->setCubeRange(targetedBlock-vec3i(5), vec3i(11), 0);
 
 	//put block
 	if(Mouse::justPressed(Mouse::Right))
 		if(targetsBlock) {
-			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,1);
-			recalcBlock = targetedBlockEnter;
-			recalc = true;
+			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,4);
+			vec3f pos = vec3f(targetedBlockEnter)+vec3f(0.5f);
+			DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
+			l->addTo(w);
 		}
-
-	if(recalc) {
-		std::vector<DeferredCubeLight*> lights;
-		w->getAllObjectsOfType(lights);
-		for(unsigned int i = 0; i < lights.size(); i++) {
-			DeferredCubeLight* l = lights[i];
-			l->calcLight(l->getPosition().x, l->getPosition().y, l->getPosition().z);
-		}
-	}
-
-	if(Keyboard::justPressed(Keyboard::L)) {
-		Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-		vec3f pos = glm::floor(cam->getWorldPos())+vec3f(0.5f);
-		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
-		l->addTo(w);
-	}
 }
 
 void Player::traceView() {

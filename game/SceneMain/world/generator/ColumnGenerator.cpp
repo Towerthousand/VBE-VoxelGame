@@ -14,7 +14,6 @@
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
-#define GENERATIONHEIGHT 16
 #define NWORKERS 2
 
 ColumnGenerator::ColumnGenerator(int seed) :

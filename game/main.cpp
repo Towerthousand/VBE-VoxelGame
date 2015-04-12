@@ -1,7 +1,7 @@
 #include "SceneMain/SceneMain.hpp"
 
 int main() {
-	//Log::setFlags(Log::Timestamp);
+	Log::setFlags(Log::Timestamp);
 	ContextSettings s;
 	s.versionMajor = 4;
     s.versionMinor = 3;

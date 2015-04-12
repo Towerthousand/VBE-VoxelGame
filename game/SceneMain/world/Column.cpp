@@ -25,7 +25,6 @@ void Column::setCube(unsigned int x, unsigned int y, unsigned int z, unsigned in
 	if(chunks[chunk] == nullptr)
 		chunks[chunk] = new Chunk(XPOS, chunk, ZPOS);
 	chunks[chunk]->cubes[x][y&CHUNKSIZE_MASK][z] = cube;
-	chunks[chunk]->needsMeshRebuild = true;
 }
 
 void Column::rebuildAllMeshes() {

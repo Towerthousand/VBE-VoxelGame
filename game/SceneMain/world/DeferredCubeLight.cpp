@@ -77,6 +77,7 @@ void DeferredCubeLight::calcQuadrant(int cx, int cy, int cz, int dx, int dy, int
 }
 
 void DeferredCubeLight::calcLight(int cx, int cy, int cz) {
+	if(glm::length(vec3f(cx,cy,cz) - this->pos) > LIGHTSIZE+1) return;
 
 	light[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE] = 1;
 	data[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE] = (unsigned char)(light[LIGHTSIZE][LIGHTSIZE][LIGHTSIZE]*255);

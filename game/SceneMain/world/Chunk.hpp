@@ -97,8 +97,6 @@ class Chunk {
 
 		friend class ColumnGenerator;
 		friend class Column;
-		//TODO: REMOVE THIS
-		friend class Player;
 };
 
 #endif // CHUNK_HPP

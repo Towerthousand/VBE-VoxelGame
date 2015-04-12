@@ -12,7 +12,7 @@ class DeferredCubeLight : public GameObject {
 		~DeferredCubeLight();
 
 		void calcLight(int cx = 0, int cy = 0, int cz = 0);
-		vec3f getPosition() const {return pos;}
+		const vec3f& getPosition() const {return pos;}
 	private:
 		void update(float deltaTime);
 		void draw() const;

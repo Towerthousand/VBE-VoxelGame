@@ -13,10 +13,13 @@ Function3DHelix::~Function3DHelix() {
 }
 
 float Function3DHelix::helix(float x, float y, float z) {
-	float cx = glm::mod(x,width*tiling) - width - glm::cos((y+offset)/period) * width;
-	float cz = glm::mod(z,width*tiling) - width - glm::sin((y+offset)/period) * width;
-	if(cx > 0 && cz > 0 && cx < range && cz < range)
-		return 10000;
+	float mc = x; //direction of the helix
+	float ma = glm::mod(y-25*glm::sin(mc/60.0f),width*tiling); //perp vector 2
+	float mb = glm::mod(z,width*tiling); //perp vector 2
+	float cx = ma - width - glm::cos((mc+offset)/period) * width;
+	float cz = mb - width - glm::sin((mc+offset)/period) * width;
+	if(cx > 0 && cz > 0 && cx < range && cz < range) return 80;
+	if(abs(ma-width+2) < 1 && abs(mb-width-3) < 3) return 30;
 	return 0;
 }
 

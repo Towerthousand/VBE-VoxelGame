@@ -5,6 +5,7 @@
 #include "Sun.hpp"
 #include "../Manager.hpp"
 #include <cstring>
+#include "DeferredCubeLight.hpp"
 
 World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -21,12 +22,38 @@ World::~World() {
 }
 
 void World::setCube(int x, int y, int z, unsigned int cube) {
-	Column* c = getColumn(x,y,z);
-	if(c) c->setCube(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK, cube);
+	setCubeData(x, y, z, cube);
 	for(int a = -AO_MAX_RAD; a < AO_MAX_RAD+1; a += AO_MAX_RAD)
 		for(int b = -AO_MAX_RAD; b < AO_MAX_RAD+1; b += AO_MAX_RAD)
 			for(int c = -AO_MAX_RAD; c < AO_MAX_RAD+1; c += AO_MAX_RAD)
-				rebuildMesh(x+a,y+b,z+c);
+				recalc(x+a,y+b,z+c);
+	std::vector<DeferredCubeLight*> lights;
+	getAllObjectsOfType(lights);
+	for(DeferredCubeLight* l : lights)
+		l->calcLight(x,y,z);
+}
+
+void World::setCubeRange(int x, int y, int z, unsigned int sx, unsigned int sy, unsigned int sz, unsigned int cube) {
+	int x2 = x+sx;
+	int y2 = y+sy;
+	int z2 = z+sz;
+	for(int i = x; i < x2; ++i)
+		for(int j = y; j < y2; ++j)
+			for(int k = z; k < z2; ++k)
+				setCubeData(i,j,k, cube);
+	std::vector<DeferredCubeLight*> lights;
+	getAllObjectsOfType(lights);
+	for(DeferredCubeLight* l : lights) {
+		vec3f p = glm::floor(l->getPosition());
+		int x3 = (p.x >= x) ? ((p.x <= x2) ? p.x : x2) : x;
+		int y3 = (p.y >= y) ? ((p.y <= y2) ? p.y : y2) : y;
+		int z3 = (p.z >= z) ? ((p.z <= z2) ? p.z : z2) : z;
+		l->calcLight(x3,y3,z3);
+	}
+	for(int i = ((x-AO_MAX_RAD) & (~CHUNKSIZE_MASK)); i < ((x2+AO_MAX_RAD+CHUNKSIZE) & (~CHUNKSIZE_MASK)); i += CHUNKSIZE)
+		for(int j = ((y-AO_MAX_RAD) & (~CHUNKSIZE_MASK)); j < ((y2+AO_MAX_RAD+CHUNKSIZE) & (~CHUNKSIZE_MASK)); j += CHUNKSIZE)
+			for(int k = ((z-AO_MAX_RAD) & (~CHUNKSIZE_MASK)); k < ((z2+AO_MAX_RAD+CHUNKSIZE) & (~CHUNKSIZE_MASK)); k += CHUNKSIZE)
+				recalc(i,j,k);
 }
 
 void World::update(float deltaTime) {
@@ -44,7 +71,7 @@ void World::update(float deltaTime) {
 		}
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)/CHUNKSIZE);
+	vec2f playerChunkPos = vec2f(glm::floor(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)) >> CHUNKSIZE_POW2);
 	std::vector<std::pair<float,std::pair<int,int> > > tasks;
 	highestChunkY = 0;
 	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
@@ -106,7 +133,7 @@ void World::draw(const Camera* cam) const{
 		vec3i(0,0,-1), vec3i(0,0,1)
 	};
 	std::list<vec3i> chunksToDraw; //push all the chunks that must be drawn here
-	vec3i initialChunkPos(glm::floor(cam->getWorldPos())/float(CHUNKSIZE));
+	vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
 	std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
 	for(int i = 0; i < 6; ++i) {
 		Chunk* aux;
@@ -145,7 +172,7 @@ void World::draw(const Camera* cam) const{
 			//manhattan culling
 			if(distance > Utils::manhattanDistance(initialChunkPos, neighborJob.pos)) continue;
 			//out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-			if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || (getColumnCC(neighborJob.pos) == nullptr && distance > WORLDSIZE/2)) continue;
+			if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || (getColumnCC(neighborJob.pos) == nullptr && renderer->getMode() == DeferredContainer::Deferred)) continue;
 			//visibility culling
 			if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
 			//fustrum culling
