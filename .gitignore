@@ -1,7 +1,8 @@
 *.o
-*.user
+*.pro.user*
 Makefile
 *~
 *.autosave
 VBE-VoxelGame
 log.txt
+
