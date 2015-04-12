@@ -130,7 +130,7 @@ void DeferredContainer::makeTarget() {
 	gBuffer.setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
 	if(sunTarget.getSize() == vec2ui(0)) { //invalid (this is the first makeTarget() )
 		SDepth = Texture2DArray(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
-		SDepth.setFilter(GL_NEAREST, GL_NEAREST);
+		SDepth.setFilter(GL_LINEAR, GL_LINEAR);
 		SDepth.setComparison(GL_GREATER);
 		sunTarget = RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
 		sunTarget.setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
