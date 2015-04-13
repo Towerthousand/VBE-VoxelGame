@@ -4,13 +4,12 @@
 
 class Function3DAdd : public Function3D {
 	public:
-		Function3DAdd(Function3D* A, Function3D* B);
+		Function3DAdd(const std::vector<Function3D*>& operands);
 		~Function3DAdd();
 		float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
 
 	private:
-		Function3D* funcA;
-		Function3D* funcB;
+		std::vector<Function3D*> operands;
 };
 
 #endif // FUNCTION3DADD_HPP

@@ -4,7 +4,7 @@
 
 class Function3DHelix : public Function3D {
 	public:
-		Function3DHelix(float period, float width, float range, float offset, float yoffset, float tiling, float sin);
+		Function3DHelix(float period, float width, float range, float offset, float yoffset, float zoffset, float tiling, float sin, float sin2);
 		~Function3DHelix();
 		float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
 
@@ -16,8 +16,10 @@ class Function3DHelix : public Function3D {
 		float range = 5;
 		float offset = 0;
 		float yoffset = 0;
+		float zoffset = 0;
 		float tiling = 5;
 		float sin = 0;
+		float sin2 = 60;
 };
 
 #endif // FUNCTION3DHELIX_HPP
