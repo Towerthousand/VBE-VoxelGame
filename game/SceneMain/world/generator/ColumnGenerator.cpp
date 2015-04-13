@@ -33,10 +33,10 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	Function2DConst* const1 = new Function2DConst(70);
 	Function3DSub* sub1 = new Function3DSub(coord1,const1);
 	Function3DSub* sub2 = new Function3DSub(add4,sub1);
-	Function3DHelix* hel1 = new Function3DHelix(5,10,5,0,10);
-	Function3DHelix* hel2 = new Function3DHelix(5,10,5,15,10);
-	Function3DHelix* hel3 = new Function3DHelix(5,10,5,7.5,10);
-	Function3DHelix* hel4 = new Function3DHelix(5,10,5,22.5,10);
+	Function3DHelix* hel1 = new Function3DHelix(20,20,5,0,-20,10,25);
+	Function3DHelix* hel3 = new Function3DHelix(20,20,5,15,-20,10,25);
+	Function3DHelix* hel2 = new Function3DHelix(20,20,5,30,-20,10,25);
+	Function3DHelix* hel4 = new Function3DHelix(20,20,5,45,-20,10,25);
 	Function3DAdd* add5 = new Function3DAdd(sub2, hel1);
 	Function3DAdd* add6 = new Function3DAdd(add5, hel2);
 	Function3DAdd* add7 = new Function3DAdd(add6, hel3);

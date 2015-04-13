@@ -1,11 +1,13 @@
 #include "Function3DHelix.hpp"
 
-Function3DHelix::Function3DHelix(float period, float width, float range, float offset, float tiling) :
+Function3DHelix::Function3DHelix(float period, float width, float range, float offset, float yoffset, float tiling, float sin) :
 	period(period),
 	width(width),
 	range(range),
 	offset(offset),
-	tiling(tiling)
+	yoffset(yoffset),
+	tiling(tiling),
+	sin(sin)
 	{
 }
 
@@ -14,12 +16,12 @@ Function3DHelix::~Function3DHelix() {
 
 float Function3DHelix::helix(float x, float y, float z) {
 	float mc = x; //direction of the helix
-	float ma = glm::mod(y-25*glm::sin(mc/60.0f),width*tiling); //perp vector 2
+	float ma = glm::mod(y-yoffset+sin*glm::sin(mc/60.0f),width*tiling); //perp vector 2
 	float mb = glm::mod(z,width*tiling); //perp vector 2
 	float cx = ma - width - glm::cos((mc+offset)/period) * width;
 	float cz = mb - width - glm::sin((mc+offset)/period) * width;
-	if(cx > 0 && cz > 0 && cx < range && cz < range) return 80;
-	if(abs(ma-width+2) < 1 && abs(mb-width-3) < 3) return 30;
+	if(cx > 0 && cz > 0 && cx < range && cz < range) return 1000;
+	if(abs(ma-width+2) < 1 && abs(mb-width-3) < 3) return 1000;
 	return 0;
 }
 
