@@ -64,17 +64,17 @@ void main(void) {
         }
     }
     vec3 fragmentWorldPos = vec4(invCamView*vec4(fragmentViewPos,1.0)).xyz; //world space
-    vec4 shadowCoord = vec4(depthMVP[shadowIndex]*vec4(fragmentWorldPos,1.0)); //texture space (for shadow tex)
+    vec4 shadowCoord = vec4(depthMVP[shadowIndex]*vec4(fragmentWorldPos,1.0)); //texture space (for shadow tex), not clip space
 
     vec3 normalVector = normalize(decodeNormal(valColor1.xy));  //view space
-    vec3 lightVector = normalize(vec4(camMV*vec4(lightDir,0.0)).xyz);
+    vec3 lightVector = normalize(vec4(camMV*vec4(lightDir,0.0)).xyz); //view space
 
     float cosTheta = max(-dot(lightVector, normalVector), 0.0f);
 
     // Compute visibility. Sample the shadow map 16 times
     float visibility = 1.0;
     float bias = 0.0025f;
-    float shadowZ = (shadowCoord.z-bias)/shadowCoord.w;
+    float shadowZ = shadowCoord.z-bias;
     float sampleNum = 16.0f;
 
     if(shadowIndex != -1 && fragmentWorldZ < depthPlanes[3]) {

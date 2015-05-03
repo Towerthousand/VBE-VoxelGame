@@ -32,7 +32,7 @@ ColumnGenerator::ColumnGenerator(int seed) :
 	Function3DSub* sub2 = new Function3DSub(add1,sub1);
 	Function3DHelix* hel1 = new Function3DHelix(20,20,5,0,-20,0,5,25,40);
 	Function3DHelix* hel3 = new Function3DHelix(5,10,5,0,-10,10,10,25,40);
-	Function3DHelix* hel2 = new Function3DHelix(5,10,5,15,-10,10,10TT,25,40);
+	Function3DHelix* hel2 = new Function3DHelix(5,10,5,15,-10,10,10,25,40);
 	Function3DHelix* hel4 = new Function3DHelix(20,20,5,45,-20,0,5,25,40);
 	Function3DAdd* add2 = new Function3DAdd({sub2, hel1, hel2, hel3, hel4});
 	FunctionTerrrainVolume* vol1 = new FunctionTerrrainVolume(add2, 2);

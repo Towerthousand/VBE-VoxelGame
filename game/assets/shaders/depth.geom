@@ -25,21 +25,16 @@ void main(void) {
     positionsTransformed[0] = positions[0]/positions[0].w;
     positionsTransformed[1] = positions[0]/positions[1].w;
     positionsTransformed[2] = positions[0]/positions[2].w;
-    float clip = 0.0;
-    clip += insideBox(positionsTransformed[0].xy);
-    clip += insideBox(positionsTransformed[1].xy);
-    clip += insideBox(positionsTransformed[2].xy);
-    if(clip == 0.0) return;
+
+    if(!(insideBox(positionsTransformed[0].xy) > 0.0 || insideBox(positionsTransformed[1].xy) > 0.0 || insideBox(positionsTransformed[2].xy) > 0.0)) return;
 
     //actually emit geometry
-    gl_Position = positions[0];
     gl_Layer = gl_InvocationID;
+    gl_Position = positions[0];
     EmitVertex();
     gl_Position = positions[1];
-    gl_Layer = gl_InvocationID;
     EmitVertex();
     gl_Position = positions[2];
-    gl_Layer = gl_InvocationID;
     EmitVertex();
     EndPrimitive();
 }

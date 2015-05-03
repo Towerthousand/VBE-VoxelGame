@@ -90,13 +90,26 @@ void Player::processKeys() {
 		w->setCubeRange(targetedBlock-vec3i(5), vec3i(11), 0);
 
 	//put block
-	if(Mouse::justPressed(Mouse::Right))
-		if(targetsBlock) {
-			w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,4);
-			vec3f pos = vec3f(targetedBlockEnter)+vec3f(0.5f);
-			DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
-			l->addTo(w);
-		}
+	if(Mouse::justPressed(Mouse::Right) && targetsBlock) {
+		w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,4);
+		vec3f pos = vec3f(targetedBlockEnter)+vec3f(0.5f);
+		DeferredCubeLight* l = new DeferredCubeLight(pos, glm::abs(glm::sphericalRand(1.0f)));
+		l->addTo(w);
+	}
+
+	if(Keyboard::justPressed(Keyboard::R) && targetsBlock) {
+		w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,4);
+		vec3f pos = vec3f(targetedBlockEnter)+vec3f(0.5f);
+		DeferredCubeLight* l = new DeferredCubeLight(pos, vec3f(1,0,0));
+		l->addTo(w);
+	}
+
+	if(Keyboard::justPressed(Keyboard::B) && targetsBlock) {
+		w->setCube(targetedBlockEnter.x,targetedBlockEnter.y,targetedBlockEnter.z,4);
+		vec3f pos = vec3f(targetedBlockEnter)+vec3f(0.5f);
+		DeferredCubeLight* l = new DeferredCubeLight(pos, vec3f(0,0,1));
+		l->addTo(w);
+	}
 }
 
 void Player::traceView() {
