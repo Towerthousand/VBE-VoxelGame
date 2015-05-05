@@ -8,7 +8,9 @@ TEMPLATE = app
 include(../VBE-Scenegraph/VBE-Scenegraph.pri)
 include(../VBE-Profiler/VBE-Profiler.pri)
 include(../VBE/VBE.pri)
-include(../common.pri)
+
+LIBS += -lGLEW -lGL -lSDL2
+QMAKE_CXXFLAGS += -std=c++0x -fno-exceptions
 
 INCLUDEPATH += .
 
@@ -90,4 +92,3 @@ OTHER_FILES += \
         assets/shaders/chunkDeferred.frag \
         assets/shaders/cubeLight.frag \
     assets/shaders/depth.geom
-
