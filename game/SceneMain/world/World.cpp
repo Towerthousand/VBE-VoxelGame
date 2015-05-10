@@ -65,13 +65,7 @@ void World::fixedUpdate(float deltaTime) {
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
 		if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr) delete newCol;
-		else  {
-			columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
-			if(getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(CHUNKSIZE,0,0))->rebuildAllMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(CHUNKSIZE,0,0))->rebuildAllMeshes();
-			if(getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()+vec3i(0,0,CHUNKSIZE))->rebuildAllMeshes();
-			if(getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE)) != nullptr) getColumn(newCol->getAbolutePos()-vec3i(0,0,CHUNKSIZE))->rebuildAllMeshes();
-		}
+		else columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	vec2f playerChunkPos = vec2f(glm::floor(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)) >> CHUNKSIZE_POW2);

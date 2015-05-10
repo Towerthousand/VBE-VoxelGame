@@ -40,6 +40,7 @@ class Chunk {
 		}
 		bool visibilityTest(Chunk::Face exit) const;
 		inline bool isEmpty() const { return (boundingBox.getDimensions() == vec3f(0)); }
+		bool isSurrounded() const;
 		inline bool hasMesh() const { return hasVertices; }
 		inline bool wasDrawedByPlayer() const { return drawedByPlayer; }
 

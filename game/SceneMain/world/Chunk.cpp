@@ -152,8 +152,17 @@ unsigned char Chunk::calcLight(int x, int y, int z, int dx, int dy, int dz) {
 	return light*255;
 }
 
+bool Chunk::isSurrounded() const {
+	vec3i p = getAbsolutePos();
+	for(int x = -1; x <= 1; ++x)
+		for(int y = -1; y <= 1; ++y)
+			if(world->outOfBounds(p + vec3i(CHUNKSIZE*x, 0, CHUNKSIZE*y))) return false;
+	return true;
+}
+
 void Chunk::rebuildMesh() {
 	if(!needsMeshRebuild) return;
+	if(!isSurrounded()) return;
 	needsMeshRebuild = false;
 	if(terrainModel == nullptr) initMesh();
 	std::vector<Chunk::Vert> renderData;
