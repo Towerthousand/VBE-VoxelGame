@@ -14,7 +14,6 @@ class Function3DSimplex : public Function3D {
 		std::vector<int> perm;
 		static const int grad3[12][3];
 		std::mt19937* generator;
-		//////////////////////////////////////////////////////////
 
 		float scale;
 		float min;

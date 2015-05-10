@@ -8,14 +8,12 @@ class Function2DSimplex : public Function2D {
 		~Function2DSimplex();
 		float2Data getFloat2Data(int x, int z, int sx, int sz); //world coords
 	private:
-		//THESE ARE NOT CURRENTLY USED. USING GLM::SIMPLEX INSTEAD
 		float valSimplex2D( const float x, const float y); //world coords, return is in [min,max]
 		int fastfloor(const float x);
 		float dot(const int* g, const float x, const float y);
 		std::vector<int> perm;
 		static const int grad3[12][3];
 		std::mt19937* generator;
-		//////////////////////////////////////////////////////////
 
 		float scale;
 		float min;
