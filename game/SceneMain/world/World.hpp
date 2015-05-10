@@ -55,6 +55,7 @@ class World : public GameObject {
 		inline void recalc(vec3i pos) {recalc(pos.x, pos.y, pos.z);}
 	private:
 		void update(float deltaTime);
+		void fixedUpdate(float deltaTime);
 		void draw() const;
 		void draw(const Camera* cam) const;
 

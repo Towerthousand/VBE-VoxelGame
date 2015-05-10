@@ -57,7 +57,10 @@ void World::setCubeRange(int x, int y, int z, unsigned int sx, unsigned int sy, 
 }
 
 void World::update(float deltaTime) {
-	Profiler::pushMark("World Update", "Time taken to update all blocks and insert new chunks");
+}
+
+void World::fixedUpdate(float deltaTime) {
+	Profiler::pushMark("World Fixed Update", "Time taken to update all blocks and insert new chunks");
 	generator.discardTasks();
 	Column* newCol = nullptr;
 	while((newCol = generator.pullDone()) != nullptr) {
