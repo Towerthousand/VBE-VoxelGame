@@ -6,7 +6,7 @@
 #include "world/Sun.hpp"
 #include "Manager.hpp"
 
-DeferredContainer::DeferredContainer() : drawMode(Deferred) {
+DeferredContainer::DeferredContainer() {
 	setName("deferred");
 	makeTarget();
 	quad = &Meshes.get("quad");
@@ -63,7 +63,7 @@ void DeferredContainer::draw() const {
 	Profiler::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
 	const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
 	Sun* sun = (Sun*)getGame()->getObjectByName("sun");
-	if(Keyboard::pressed(Keyboard::Q)) cam = sun->getGlobalCam(); //sun cam mode
+	if(Keyboard::pressed(Keyboard::Q)) cam = sun->getCam(0); //sun cam mode
 	glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
 						  0.5, 0.0, 0.0, 0.0,
 						  0.0, 0.5, 0.0, 0.0,

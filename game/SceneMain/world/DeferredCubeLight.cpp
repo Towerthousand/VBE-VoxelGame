@@ -3,7 +3,7 @@
 #include "../DeferredContainer.hpp"
 #include "../Manager.hpp"
 
-DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color), renderer(nullptr), world(nullptr) {
+DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	world = (World*)getGame()->getObjectByName("world");
 	tex = Texture3D(vec3ui(LIGHTSIZE*2), TextureFormat::RED);

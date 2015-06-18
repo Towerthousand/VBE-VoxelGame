@@ -21,12 +21,12 @@ class DeferredCubeLight : public GameObject {
 		void calcQuadrant(int cx, int cy, int cz, int dx, int dy, int dz);
 		float light[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2];
 		unsigned char data[LIGHTSIZE*2][LIGHTSIZE*2][LIGHTSIZE*2];
-		vec3f pos;
-		vec3f color;
-		MeshBase* quad;
+		vec3f pos = vec3f(0.0f);
+		vec3f color = vec3f(1.0f);
+		MeshBase* quad = nullptr;
 		Texture3D tex;
-		DeferredContainer* renderer;
-		World* world;
+		DeferredContainer* renderer = nullptr;
+		World* world = nullptr;
 
 };
 

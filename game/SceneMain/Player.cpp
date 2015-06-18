@@ -3,7 +3,7 @@
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
 
-Player::Player() : cam(nullptr), selectedID(0), targetedBlock(0.0f), targetedBlockEnter(0.0f), xRot(0.0f), onFloor(true), isJumping(false), targetsBlock(false) {
+Player::Player() {
 	setName("player");
 	cam = new Camera("playerCam", vec3f(0,1.5,0));
 	cam->addTo(this);
@@ -20,23 +20,31 @@ void Player::update(float deltaTime) {
 	//take input
 	if(!Profiler::isShown()) processKeys();
 
+	//transform coordinates for camera and other children
+	float p = getGame()->getTimeSinceFixed()/getGame()->getFixedUpdateTime();
+	transform = glm::translate(mat4f(1.0), lastPos*(1-p) + pos*p);
+
+	//trace view
+	traceView();
+}
+
+void Player::fixedUpdate(float deltaTime) {
+	transform = glm::translate(mat4f(1.0), pos);
+	this->propragateTransforms();
+
+	lastPos = pos;
+
 	//move and update camera position
 	if(!Profiler::isShown()) movePos(deltaTime); //this handles collisions
-
-	//feedback to be used by the scene
-	onFloor = hitbox->collidesWithWorld(vec3f(0,-0.1,0));
-	isJumping = (vel.y > 0);
 
 	//Limit movement
 	vel.x = 0; // Player only accelerates vertically, so speed.x doesn't carry
 	vel.y = std::fmax(-70,vel.y);
 	vel.z = 0; // Player only accelerates vertically, so speed.z doesn't carry
 
-	//transform coordinates for camera and other children
-	transform = glm::translate(mat4f(1.0),pos);
-
-	//trace view
-	traceView();
+	//feedback to be used by the scene
+	onFloor = hitbox->collidesWithWorld(vec3f(0,-0.1,0));
+	isJumping = (vel.y > 0);
 }
 
 void Player::processKeys() {

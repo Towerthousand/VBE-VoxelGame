@@ -44,7 +44,7 @@ class Chunk {
 		inline bool hasMesh() const { return hasVertices; }
 		inline bool wasDrawedByPlayer() const { return drawedByPlayer; }
 
-		std::bitset<6> facesVisited;
+		std::bitset<6> facesVisited = std::bitset<6>(0);
 
 	private:
         void calcLightSum();
@@ -79,18 +79,18 @@ class Chunk {
 		void pushCubeToArray(short x, short y, short z, std::vector<Vert>& renderData);
 
 		unsigned int cubes[CHUNKSIZE][CHUNKSIZE][CHUNKSIZE];
-		const int XPOS; //in chunks
-		const unsigned int YPOS; //in chunks
-		const int ZPOS; //in chunks
-		mutable bool drawedByPlayer; //has been seen by a player this frame?
-		bool needsMeshRebuild; //does it need rebuilding?
-		bool hasVertices; //is there any face touching air?
-		std::bitset<30> visibilityGraph;
-		AABB boundingBox;
-		MeshBatched* terrainModel;
-		MeshIndexed* boundingBoxModel;
-		World* world;
-		DeferredContainer* renderer;
+		const int XPOS = 0; //in chunks
+		const unsigned int YPOS = 0; //in chunks
+		const int ZPOS = 0; //in chunks
+		mutable bool drawedByPlayer = false; //has been seen by a player this frame?
+		bool needsMeshRebuild = true; //does it need rebuilding?
+		bool hasVertices = false; //is there any face touching air?
+		std::bitset<30> visibilityGraph = std::bitset<30>(0);
+		AABB boundingBox = AABB(vec3f(0), vec3f(0));
+		MeshBatched* terrainModel = nullptr;
+		MeshIndexed* boundingBoxModel = nullptr;
+		World* world = nullptr;
+		DeferredContainer* renderer = nullptr;
 
 		static const int textureIndexes[9][6];
 		static std::vector<vec3c> visibilityNodes;

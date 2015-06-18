@@ -17,8 +17,8 @@ class Hitbox : public GameObject {
 
 		vec3f getWorldPos() const;
 
-		vec3f radius;
-		hitboxType type;
+		vec3f radius = vec3f(0.0f);
+		hitboxType type = BOX;
 	private:
 		bool pointCollidesWithWorld(const vec3f& point) const;
 };

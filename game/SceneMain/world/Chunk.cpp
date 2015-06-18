@@ -30,14 +30,7 @@ vec3c Chunk::d[6] = {
 
 
 Chunk::Chunk(int x, unsigned int y, int z) :
-	facesVisited(0),
-	XPOS(x), YPOS(y), ZPOS(z),
-	drawedByPlayer(false),
-	needsMeshRebuild(true), hasVertices(false),
-	visibilityGraph(0),
-	boundingBox(vec3f(0),vec3f(0)),
-	terrainModel(nullptr), boundingBoxModel(nullptr),
-	world(nullptr), renderer(nullptr) {
+	XPOS(x), YPOS(y), ZPOS(z) {
 	if(Game::i() != nullptr) {
 		world = (World*)Game::i()->getObjectByName("world");
 		renderer = (DeferredContainer*)Game::i()->getObjectByName("deferred");

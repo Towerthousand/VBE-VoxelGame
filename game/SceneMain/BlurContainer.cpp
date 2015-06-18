@@ -1,7 +1,7 @@
 #include "BlurContainer.hpp"
 #include "Manager.hpp"
 
-BlurContainer::BlurContainer() : quad(nullptr) {
+BlurContainer::BlurContainer() {
 	quad = &Meshes.get("quad");
 }
 

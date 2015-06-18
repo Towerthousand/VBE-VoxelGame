@@ -16,8 +16,7 @@
 
 #define NWORKERS 2
 
-ColumnGenerator::ColumnGenerator(int seed) :
-	entry(nullptr), pool(nullptr) {
+ColumnGenerator::ColumnGenerator(int seed) {
 	pool = new TaskPool(NWORKERS);
 	generator.seed(seed);
 	Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);

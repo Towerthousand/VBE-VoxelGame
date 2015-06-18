@@ -37,8 +37,8 @@ class DeferredContainer : public ContainerObject {
 		//the texture for the sun target
 		Texture2DArray SDepth;
 
-        mutable DrawMode drawMode;
-		mutable MeshBase* quad;
+		mutable DrawMode drawMode = Deferred;
+		mutable MeshBase* quad = nullptr;
 };
 
 #endif // DEFERREDCONTAINER_HPP

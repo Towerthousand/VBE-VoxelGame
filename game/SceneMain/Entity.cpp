@@ -1,6 +1,6 @@
 #include "Entity.hpp"
 
-Entity::Entity() : vel(0.0f), acc(0.0f), hitbox(new Hitbox(Hitbox::POINT)), scale(1.0f), pos(0.0f) {
+Entity::Entity() : hitbox(new Hitbox(Hitbox::POINT)) {
 	hitbox->addTo(this);
 }
 

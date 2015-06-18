@@ -4,7 +4,7 @@
 #include "Chunk.hpp"
 #include "../Player.hpp"
 
-Sun::Sun() : angle(45.0f) {
+Sun::Sun() {
 	setName("sun");
 	minZ = std::vector<float>(NUM_SUN_CASCADES, 0.0f);
 	maxZ = std::vector<float>(NUM_SUN_CASCADES, 0.0f);

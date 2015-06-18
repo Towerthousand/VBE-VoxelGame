@@ -7,7 +7,7 @@
 #include <cstring>
 #include "DeferredCubeLight.hpp"
 
-World::World() : highestChunkY(0), generator(rand()), renderer(nullptr) {
+World::World() : generator(rand()) {
 	renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
 	setName("world");
 	for(int x = 0; x < WORLDSIZE; ++x)
@@ -188,7 +188,7 @@ void World::draw(const Camera* cam) const{
 	Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
 	if(renderer->getMode() == DeferredContainer::Deferred)  {
 		const Camera* cam2 = cam;
-		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getGlobalCam();
+		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getCam(0);
 		Programs.get("deferredChunk").uniform("V")->set(cam2->getView());
 		Programs.get("deferredChunk").uniform("VP")->set(cam2->projection*cam2->getView());
 		Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));

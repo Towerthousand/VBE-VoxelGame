@@ -28,8 +28,8 @@ class Column {
 		void rebuildMesh(int y);
 		void rebuildMeshCC(int y);
 	private:
-		int XPOS; //in chunks
-		int ZPOS; //in chunks
+		int XPOS = 0; //in chunks
+		int ZPOS = 0; //in chunks
 		std::vector<Chunk*> chunks;
 
 		friend class ColumnGenerator;

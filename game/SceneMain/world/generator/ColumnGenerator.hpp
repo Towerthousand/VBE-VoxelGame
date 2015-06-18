@@ -31,13 +31,13 @@ class ColumnGenerator {
 		};
 
 
-		std::mutex              currentMutex;
-		std::set<vec2i, Comp>   current;
-		std::mutex          doneMutex;
+		std::mutex currentMutex;
+		std::set<vec2i, Comp> current;
+		std::mutex doneMutex;
 		std::queue<Column*> done;
 		std::mt19937 generator;
-		FunctionTerrain* entry;
-		TaskPool* pool;
+		FunctionTerrain* entry = nullptr;
+		TaskPool* pool = nullptr;
 };
 
 #endif // WORLDGENERATOR_HPP

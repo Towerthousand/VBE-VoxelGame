@@ -65,10 +65,10 @@ class World : public GameObject {
 		}
 
 		friend class Sun;
-		unsigned int highestChunkY;
+		unsigned int highestChunkY = 0;
 		Column* columns[WORLDSIZE][WORLDSIZE];
 		ColumnGenerator generator;
-		DeferredContainer* renderer;
+		DeferredContainer* renderer = nullptr;
 };
 
 #endif // WORLD_HPP

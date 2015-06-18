@@ -25,7 +25,7 @@ class Sun : public GameObject {
 		void extend(std::vector<unsigned int> index, const AABB& occludedBox);
 		float getDistanceFromOutside(unsigned int index, const AABB& worldAABB);
 
-		float angle; //sun always moves on the x-y plane (z never changes)
+		float angle = 45.0f; //sun always moves on the x-y plane (z never changes)
 		Camera* cameras[NUM_SUN_CASCADES+1];
 		AABB aabbs[NUM_SUN_CASCADES+1];
 		int numOccluders[NUM_SUN_CASCADES+1];

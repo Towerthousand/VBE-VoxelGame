@@ -2,7 +2,7 @@
 #include "DeferredContainer.hpp"
 #include "Manager.hpp"
 
-DeferredLight::DeferredLight() : pos(0.0f), color(1.0f), radius(30.0f), renderer((DeferredContainer*)getGame()->getObjectByName("deferred")) {
+DeferredLight::DeferredLight() : renderer((DeferredContainer*)getGame()->getObjectByName("deferred")) {
 	quad = &Meshes.get("quad");
 }
 

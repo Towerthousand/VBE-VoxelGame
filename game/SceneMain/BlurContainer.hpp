@@ -25,7 +25,7 @@ class BlurContainer : public ContainerObject {
 		RenderTarget blurred;
 		Texture2D blurredColor0;
 
-		mutable MeshBase* quad;
+		mutable MeshBase* quad = nullptr;
 };
 
 #endif // BLURCONTAINER_HPP
