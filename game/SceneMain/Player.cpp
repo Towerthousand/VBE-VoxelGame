@@ -50,7 +50,7 @@ void Player::fixedUpdate(float deltaTime) {
 void Player::processKeys() {
 	World* w = (World*)getGame()->getObjectByName("world");
 	//Move player
-	const float speedKeys = 10.0f;
+	const float speedKeys = 5.0f;
 	vec2f speedPad = vec2f(Gamepad::axis(0, Gamepad::AxisLeftX), Gamepad::axis(0, Gamepad::AxisLeftY));
 	vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
 	dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);

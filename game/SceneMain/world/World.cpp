@@ -188,7 +188,7 @@ void World::draw(const Camera* cam) const{
 	Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
 	if(renderer->getMode() == DeferredContainer::Deferred)  {
 		const Camera* cam2 = cam;
-		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getCam(0);
+		if(Keyboard::pressed(Keyboard::Q)) cam2 = sun->getGlobalCam();
 		Programs.get("deferredChunk").uniform("V")->set(cam2->getView());
 		Programs.get("deferredChunk").uniform("VP")->set(cam2->projection*cam2->getView());
 		Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
