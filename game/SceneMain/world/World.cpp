@@ -57,6 +57,7 @@ void World::setCubeRange(int x, int y, int z, unsigned int sx, unsigned int sy, 
 }
 
 void World::update(float deltaTime) {
+	(void) deltaTime;
 }
 
 void World::fixedUpdate(float deltaTime) {
