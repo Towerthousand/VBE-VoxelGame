@@ -1,0 +1,9 @@
+-std=c++11
+-I game/
+-I VBE/include
+-I VBE-Scenegraph/include
+-I VBE-Profiler/include
+-Wall
+-W
+-fPIE
+-g
