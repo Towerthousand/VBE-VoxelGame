@@ -23,7 +23,7 @@ constexpr int TEXSIZE = 8;
 
 namespace Utils {
 	template<typename T>
-	inline int manhattanDistance(const glm::detail::tvec3<T>& a, const glm::detail::tvec3<T>& b) {
+	inline int manhattanDistance(const glm::tvec3<T>& a, const glm::tvec3<T>& b) {
 		return std::abs(a.x-b.x)+std::abs(a.y-b.y)+std::abs(a.z-b.z);
 	}
 	template<typename T>

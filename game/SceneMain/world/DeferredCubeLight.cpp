@@ -20,8 +20,8 @@ DeferredCubeLight::~DeferredCubeLight() {
 }
 
 void DeferredCubeLight::count(std::pair<float, float>& pr, vec3i p, vec3i c) {
-	float c1 = glm::dot(p, c);
-	float c2 = glm::dot(p, p);
+	float c1 = glm::dot(vec3f(p), vec3f(c));
+	float c2 = glm::dot(vec3f(p), vec3f(p));
 	vec3f b = vec3f(p) * (c1 / c2);
 
 	float d = glm::distance(b, vec3f(c));

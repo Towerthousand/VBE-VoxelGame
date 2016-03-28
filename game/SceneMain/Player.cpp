@@ -83,14 +83,14 @@ void Player::processKeys() {
 		vel.y = 15;
 
 	//look around
-	vec2f displacement = vec2f(Mouse::movement())*0.1f;
+	vec2f displacement = glm::radians(vec2f(Mouse::movement())*0.1f);
 	vec2f padDisplacement = vec2f(Gamepad::axis(0, Gamepad::AxisRightX), Gamepad::axis(0, Gamepad::AxisRightY));
 	if(glm::length(padDisplacement) > 0.3f) //death zone
-		displacement += padDisplacement * 2.0f;
+		displacement += glm::radians(padDisplacement * 2.0f);
 
 	cam->rotateGlobal(displacement.x, vec3f(0,1,0));
 	//limit x rotation
-	if(std::abs(xRot+displacement.y) < 90.0f) {
+	if(glm::degrees(std::abs(xRot+displacement.y)) < 90.0f) {
 		cam->rotateLocal(displacement.y, vec3f(1,0,0));
 		xRot += displacement.y;
 	}
