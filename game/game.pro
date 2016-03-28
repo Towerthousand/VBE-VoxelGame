@@ -39,10 +39,10 @@ SOURCES += main.cpp \
 	SceneMain/Player.cpp \
 	SceneMain/Hitbox.cpp \
 	SceneMain/world/DeferredCubeLight.cpp \
-        SceneMain/world/Sun.cpp \
-    SceneMain/Manager.cpp \
-    SceneMain/Debugger.cpp \
-    SceneMain/world/generator/Function3DHelix.cpp
+	SceneMain/world/Sun.cpp \
+	SceneMain/Manager.cpp \
+	SceneMain/Debugger.cpp \
+	SceneMain/world/generator/Function3DHelix.cpp
 
 HEADERS += \
 	commons.hpp \
@@ -52,7 +52,7 @@ HEADERS += \
 	SceneMain/world/World.hpp \
 	SceneMain/BlurContainer.hpp \
 	SceneMain/world/Column.hpp \
-        SceneMain/world/Chunk.hpp \
+	SceneMain/world/Chunk.hpp \
 	SceneMain/world/generator/Function2D.hpp \
 	SceneMain/world/generator/Function2DConst.hpp \
 	SceneMain/world/generator/Function2DSimplex.hpp \
@@ -73,22 +73,22 @@ HEADERS += \
 	SceneMain/Hitbox.hpp \
 	SceneMain/world/DeferredCubeLight.hpp \
 	SceneMain/world/generator/TaskPool.hpp \
-        SceneMain/world/Sun.hpp \
-    SceneMain/Manager.hpp \
-    SceneMain/Debugger.hpp \
-    SceneMain/world/generator/Function3DHelix.hpp
+	SceneMain/world/Sun.hpp \
+	SceneMain/Manager.hpp \
+	SceneMain/Debugger.hpp \
+	SceneMain/world/generator/Function3DHelix.hpp
 
 OTHER_FILES += \
-        assets/shaders/quad.vert \
-        assets/shaders/light.frag \
-        assets/shaders/ambientPass.frag \
-        assets/shaders/blurPassVertical.frag \
-        assets/shaders/blurPassHoritzontal.frag \
-        assets/shaders/quad.frag \
-        assets/shaders/blurMaskPass.frag \
-        assets/shaders/depth.frag \
-        assets/shaders/depth.vert \
-        assets/shaders/chunkDeferred.vert \
-        assets/shaders/chunkDeferred.frag \
-        assets/shaders/cubeLight.frag \
-    assets/shaders/depth.geom
+	assets/shaders/quad.vert \
+	assets/shaders/light.frag \
+	assets/shaders/ambientPass.frag \
+	assets/shaders/blurPassVertical.frag \
+	assets/shaders/blurPassHoritzontal.frag \
+	assets/shaders/quad.frag \
+	assets/shaders/blurMaskPass.frag \
+	assets/shaders/depth.frag \
+	assets/shaders/depth.vert \
+	assets/shaders/chunkDeferred.vert \
+	assets/shaders/chunkDeferred.frag \
+	assets/shaders/cubeLight.frag \
+	assets/shaders/depth.geom
