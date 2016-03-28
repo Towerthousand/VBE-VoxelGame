@@ -6,6 +6,7 @@
 
 class Camera;
 class DeferredContainer;
+class Sun;
 class World : public GameObject {
 	public:
 		World();
@@ -58,6 +59,7 @@ class World : public GameObject {
 		void fixedUpdate(float deltaTime);
 		void draw() const;
 		void draw(const Camera* cam) const;
+		bool batchChunk(Chunk* c, std::vector<vec3i>& transforms, const int batchCount, const Sun* sun) const;
 
 		inline void setCubeData(int x, int y, int z, unsigned int cube) {
 			Column* c = getColumn(x,y,z);

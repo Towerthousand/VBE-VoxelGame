@@ -69,7 +69,7 @@ void World::fixedUpdate(float deltaTime) {
 		else columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
 	}
 	Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-	vec2f playerChunkPos = vec2f(glm::floor(vec2i(cam->getWorldPos().x,cam->getWorldPos().z)) >> CHUNKSIZE_POW2);
+	vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2);
 	std::vector<std::pair<float,std::pair<int,int> > > tasks;
 	highestChunkY = 0;
 	for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
@@ -194,38 +194,16 @@ void World::draw(const Camera* cam) const{
 		Programs.get("deferredChunk").uniform("VP")->set(cam2->projection*cam2->getView());
 		Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
 	}
-	else {
-		Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+	else
 		Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
-	}
 	//batched drawing
 	static std::vector<vec3i> transforms(400);
 	int batchCount = 0;
 	MeshBatched::startBatch();
 	for(const vec3i& pos : chunksToDraw) {
 		Chunk* c = getChunkCC(pos);
-		if(c != nullptr) {
-			//reset faces for next bfs
-			c->facesVisited.reset();
-			//even more culling for the shadowmap: outside of the player frustum and not between sun and frustum
-			if(renderer->getMode() == DeferredContainer::ShadowMap) {
-				const Frustum& f = ((Camera*)getGame()->getObjectByName("playerCam"))->getFrustum();
-				colliderSphere.center = c->getAbsolutePos()+colliderOffset;
-				bool pass = false;
-				for(int i = 0; i < 6; ++i) {
-					Plane p = f.getPlane((Frustum::PlaneID)i);
-					if(!p.inside(colliderSphere) && glm::dot(p.n, sun->getDirection()) > 0)
-						pass = true;
-				}
-				if(pass) continue;
-			}
-			//batch it
-			if(c->hasMesh()) {
-				c->draw();
-				transforms[batchCount] = c->getAbsolutePos();
-				++batchCount;
-			}
-		}
+		if(c != nullptr && batchChunk(c, transforms, batchCount, sun))
+			++batchCount;
 		//submit batch
 		if(batchCount == 400) {
 			batchCount -= 400;
@@ -246,4 +224,30 @@ void World::draw(const Camera* cam) const{
 	}
 	MeshBatched::endBatch();
 	Profiler::popMark(); //batching
+}
+
+bool World::batchChunk(Chunk* c, std::vector<vec3i>& transforms, const int batchCount, const Sun* sun) const {
+	static Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE>>1)*1.74f);
+	static vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
+	//reset faces for next bfs
+	c->facesVisited.reset();
+	//even more culling for the shadowmap: outside of the player frustum and not between sun and frustum
+	if(renderer->getMode() == DeferredContainer::ShadowMap) {
+		const Frustum& f = ((Camera*)getGame()->getObjectByName("playerCam"))->getFrustum();
+		colliderSphere.center = c->getAbsolutePos()+colliderOffset;
+		bool pass = false;
+		for(int i = 0; i < 6; ++i) {
+			Plane p = f.getPlane((Frustum::PlaneID)i);
+			if(!p.inside(colliderSphere) && glm::dot(p.n, sun->getDirection()) > 0)
+				pass = true;
+		}
+		if(pass) return false;
+	}
+	//batch it
+	if(c->hasMesh()) {
+		c->draw();
+		transforms[batchCount] = c->getAbsolutePos();
+		return true;
+	}
+	return false;
 }
