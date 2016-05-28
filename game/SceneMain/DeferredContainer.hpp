@@ -3,42 +3,42 @@
 #include "commons.hpp"
 
 class DeferredContainer : public ContainerObject {
-	public:
+    public:
 
         enum DrawMode {
-			Deferred = 0,
-			Light,
-			ShadowMap,
-			Forward
-		};
+            Deferred = 0,
+            Light,
+            ShadowMap,
+            Forward
+        };
 
-		DeferredContainer();
-		~DeferredContainer();
+        DeferredContainer();
+        ~DeferredContainer();
 
-		void update(float deltaTime);
-		void draw() const;
+        void update(float deltaTime);
+        void draw() const;
         DrawMode getMode() const;
-		Texture2D* getColor0() const;
-		Texture2D* getColor1() const;
-		Texture2D* getDepth() const;
+        Texture2D* getColor0() const;
+        Texture2D* getColor1() const;
+        Texture2D* getDepth() const;
 
-	private:
-		void makeTarget();
+    private:
+        void makeTarget();
 
-		RenderTarget gBuffer;
+        RenderTarget gBuffer;
 
-		//the textures for the gBuffer
-		Texture2D GBDepth;
-		Texture2D GBColor0;
-		Texture2D GBColor1;
+        //the textures for the gBuffer
+        Texture2D GBDepth;
+        Texture2D GBColor0;
+        Texture2D GBColor1;
 
-		RenderTargetLayered sunTarget;
+        RenderTargetLayered sunTarget;
 
-		//the texture for the sun target
-		Texture2DArray SDepth;
+        //the texture for the sun target
+        Texture2DArray SDepth;
 
-		mutable DrawMode drawMode = Deferred;
-		mutable MeshBase* quad = nullptr;
+        mutable DrawMode drawMode = Deferred;
+        mutable MeshBase* quad = nullptr;
 };
 
 #endif // DEFERREDCONTAINER_HPP

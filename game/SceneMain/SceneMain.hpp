@@ -4,13 +4,13 @@
 
 class Chunk;
 class SceneMain : public GameObject {
-	public:
-		SceneMain();
-		~SceneMain();
-		void update(float deltaTime);
+    public:
+        SceneMain();
+        ~SceneMain();
+        void update(float deltaTime);
 
-	private:
-		void loadResources();
+    private:
+        void loadResources();
 };
 
 #endif // SCENEMAIN_HPP

@@ -3,11 +3,11 @@
 #include "commons.hpp"
 
 class Debugger final : public Profiler {
-	public:
-		Debugger();
-		~Debugger();
-	private:
-		void renderCustomInterface() const override;
+    public:
+        Debugger();
+        ~Debugger();
+    private:
+        void renderCustomInterface() const override;
 };
 
 #endif // DEBUGGER_HPP

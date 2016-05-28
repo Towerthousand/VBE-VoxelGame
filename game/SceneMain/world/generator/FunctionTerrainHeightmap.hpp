@@ -4,13 +4,13 @@
 
 class Function2D;
 class FunctionTerrainHeightmap : public FunctionTerrain {
-	public:
-		FunctionTerrainHeightmap(Function2D* source, unsigned int blockID);
-		virtual ~FunctionTerrainHeightmap();
-		ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
-	private:
-		Function2D* source;
-		unsigned int blockID;
+    public:
+        FunctionTerrainHeightmap(Function2D* source, unsigned int blockID);
+        virtual ~FunctionTerrainHeightmap();
+        ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
+    private:
+        Function2D* source;
+        unsigned int blockID;
 };
 
 #endif // FUNCTIONTERRAINHEIGHTMAP_HPP
