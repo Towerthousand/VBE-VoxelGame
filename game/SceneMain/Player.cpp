@@ -20,7 +20,7 @@ void Player::update(float deltaTime) {
     (void) deltaTime;
 
     //take input
-    if(!Profiler::isShown()) processKeys();
+    if(!Profiler::isShown()) processKeys(deltaTime);
 
     //transform coordinates for camera and other children
     float p = getGame()->getTimeSinceFixed()/getGame()->getFixedUpdateTime();
@@ -49,10 +49,10 @@ void Player::fixedUpdate(float deltaTime) {
     isJumping = (vel.y > 0);
 }
 
-void Player::processKeys() {
+void Player::processKeys(float deltaTime) {
     World* w = (World*)getGame()->getObjectByName("world");
     //Move player
-    const float speedKeys = 5.0f;
+    const float speedKeys = 600.0f*deltaTime;
     vec2f speedPad = vec2f(Gamepad::axis(0, Gamepad::AxisLeftX), Gamepad::axis(0, Gamepad::AxisLeftY));
     vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
     dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);

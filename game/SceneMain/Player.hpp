@@ -13,7 +13,7 @@ class Player : public Entity {
         Camera* getCam() const { return cam; }
 
     private:
-        void processKeys();
+        void processKeys(float deltaTime);
         void traceView();
 
         Camera* cam = nullptr;
