@@ -65,10 +65,10 @@ prim "Running qmake..."
 
 if [ $DEBUG = true ]; then
     prim "DEBUG BUILD"
-    qmake $PROJECT_FILE_RELATIVE_PATH -r -spec linux-g++-64 2>&1 CONFIG+=debug | ccze -A
+    qmake $PROJECT_FILE_RELATIVE_PATH -r -spec linux-g++-64 2>&1 CONFIG+=debug
 else
     prim "RELEASE BUILD"
-    qmake $PROJECT_FILE_RELATIVE_PATH -r -spec linux-g++-64 2>&1 | ccze -A
+    qmake $PROJECT_FILE_RELATIVE_PATH -r -spec linux-g++-64 2>&1
 fi
 
 if [ ! -L "game/assets" ]; then
@@ -76,4 +76,8 @@ if [ ! -L "game/assets" ]; then
     ln -s $PWD/../game/assets game/assets
 fi
 prim "Building project..."
-make -j8 2>&1 | ccze -A
+if hash colormake 2>/dev/null; then
+    colormake  -j8 2>&1
+else
+    make -j8 2>&1
+fi
