@@ -1,5 +1,7 @@
 #include "Debugger.hpp"
 
+int Debugger::numChunksDrawn = 0;
+
 Debugger::Debugger() {
 }
 
@@ -9,6 +11,8 @@ Debugger::~Debugger() {
 void Debugger::renderCustomInterface() const {
     ImGui::Begin("Controls", nullptr, ImVec2(0.18f*Window::getInstance()->getSize().x, 0.21f*Window::getInstance()->getSize().y), 0.9f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
     ImGui::SetWindowPos(ImVec2(0.78f*Window::getInstance()->getSize().x, 0.05f*Window::getInstance()->getSize().y), ImGuiSetCondition_FirstUseEver);
+    ImGui::Text(std::string("ChunksDrawn: " + Utils::toString(numChunksDrawn)).c_str());
+    ImGui::Separator();
     ImGui::Columns(2, nullptr, true);
     ImGui::SetColumnOffset(0,0);
     ImGui::SetColumnOffset(1,0.7f*0.18f*Window::getInstance()->getSize().x);
