@@ -58,7 +58,9 @@ class World : public GameObject {
         void update(float deltaTime);
         void fixedUpdate(float deltaTime);
         void draw() const;
-        void draw(const Camera* cam) const;
+        void drawPlayerCam(const Camera* cam) const;
+        void drawSunCam(const Camera* cam) const;
+        void sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const ShaderProgram& program) const;
         bool batchChunk(Chunk* c, std::vector<vec3i>& transforms, const int batchCount, const Sun* sun) const;
 
         inline void setCubeData(int x, int y, int z, unsigned int cube) {
