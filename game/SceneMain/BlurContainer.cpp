@@ -1,5 +1,6 @@
 #include "BlurContainer.hpp"
 #include "Manager.hpp"
+#include "Debugger.hpp"
 
 BlurContainer::BlurContainer() {
     quad = &Meshes.get("quad");
@@ -52,7 +53,7 @@ void BlurContainer::draw() const {
 
     ContainerObject::draw();
 
-    Profiler::pushMark("Blur Pass", "Time spent rendering the post-process blur");
+    Debugger::pushMark("Blur Pass", "Time spent rendering the post-process blur");
 
     GL_ASSERT(glBlendFunc(GL_ONE,GL_ONE));
 
@@ -94,5 +95,5 @@ void BlurContainer::draw() const {
 
     GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-    Profiler::popMark(); //blur
+    Debugger::popMark(); //blur
 }

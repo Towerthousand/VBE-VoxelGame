@@ -2,6 +2,7 @@
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
 #include "DeferredContainer.hpp"
+#include "Debugger.hpp"
 
 Player::Player() {
     setName("player");
@@ -20,7 +21,7 @@ void Player::update(float deltaTime) {
     (void) deltaTime;
 
     //take input
-    if(!Profiler::isShown()) processKeys(deltaTime);
+    if(!Debugger::isShown()) processKeys(deltaTime);
 
     //transform coordinates for camera and other children
     float p = getGame()->getTimeSinceFixed()/getGame()->getFixedUpdateTime();
@@ -37,7 +38,7 @@ void Player::fixedUpdate(float deltaTime) {
     lastPos = pos;
 
     //move and update camera position
-    if(!Profiler::isShown()) movePos(deltaTime); //this handles collisions
+    if(!Debugger::isShown()) movePos(deltaTime); //this handles collisions
 
     //Limit movement
     vel.x = 0; // Player only accelerates vertically, so speed.x doesn't carry

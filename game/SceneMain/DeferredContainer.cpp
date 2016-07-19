@@ -5,6 +5,7 @@
 #include "world/Column.hpp"
 #include "world/Sun.hpp"
 #include "Manager.hpp"
+#include "Debugger.hpp"
 
 DeferredContainer::DeferredContainer() {
     setName("deferred");
@@ -28,24 +29,24 @@ void DeferredContainer::draw() const {
     GL_ASSERT(glDisable(GL_BLEND));
 
     //Deferred pass
-    Profiler::pushMark("Deferred Pass", "Time spent rendering geometry to the g-buffer");
+    Debugger::pushMark("Deferred Pass", "Time spent rendering geometry to the g-buffer");
     drawMode = Deferred;
     RenderTargetBase::bind(gBuffer);
     GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
     ContainerObject::draw();
-    Profiler::popMark(); //deferred
+    Debugger::popMark(); //deferred
 
     //Shadowmap pass
-    Profiler::pushMark("Shadowmap Pass", "Time spent rendering geometry to the layered shadowmap");
+    Debugger::pushMark("Shadowmap Pass", "Time spent rendering geometry to the layered shadowmap");
     glEnable(GL_DEPTH_CLAMP);
     drawMode = ShadowMap;
     RenderTargetBase::bind(sunTarget);
     GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
     ContainerObject::draw();
     glDisable(GL_DEPTH_CLAMP);
-    Profiler::popMark(); //shadow
+    Debugger::popMark(); //shadow
 
-    Profiler::pushMark("Light Pass", "Time spent rendering deferred lights");
+    Debugger::pushMark("Light Pass", "Time spent rendering deferred lights");
     //bind output texture (screen)
     RenderTargetBase::bind(screen);
     GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
@@ -57,10 +58,10 @@ void DeferredContainer::draw() const {
     GL_ASSERT(glDepthFunc(GL_ALWAYS));
     drawMode = Light;
     ContainerObject::draw();
-    Profiler::popMark(); //lights
+    Debugger::popMark(); //lights
 
     //Ambient+Visibility pass
-    Profiler::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
+    Debugger::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
     const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     Sun* sun = (Sun*)getGame()->getObjectByName("sun");
     if(Keyboard::pressed(Keyboard::Q)) cam = sun->getGlobalCam(); //sun cam mode
@@ -88,15 +89,15 @@ void DeferredContainer::draw() const {
     Programs.get("ambientPass").uniform("depth")->set(gBuffer.getTexture(RenderTargetBase::DEPTH));
     Programs.get("ambientPass").uniform("sunDepth")->set(sunTarget.getTexture(RenderTargetBase::DEPTH));
     quad->draw(Programs.get("ambientPass"));
-    Profiler::popMark(); //ambient+shadowmap
+    Debugger::popMark(); //ambient+shadowmap
 
     //Forward pass
-    Profiler::pushMark("Forward Pass", "Time spent rendering forward-render stuff");
+    Debugger::pushMark("Forward Pass", "Time spent rendering forward-render stuff");
     GL_ASSERT(glDepthFunc(GL_LEQUAL));
     GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
     drawMode = Forward;
     ContainerObject::draw();
-    Profiler::popMark();
+    Debugger::popMark();
 }
 
 DeferredContainer::DrawMode DeferredContainer::getMode() const {
