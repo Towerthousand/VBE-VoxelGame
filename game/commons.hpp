@@ -5,6 +5,8 @@
 #include <VBE-Profiler/VBE-Profiler.hpp>
 #include <VBE/dependencies/glm/gtc/random.hpp>
 #include <VBE/dependencies/glm/gtc/noise.hpp>
+#include <VBE/dependencies/glm/gtc/epsilon.hpp>
+#include <VBE/dependencies/glm/gtx/norm.hpp>
 #include <queue>
 #include <thread>
 #include <mutex>
