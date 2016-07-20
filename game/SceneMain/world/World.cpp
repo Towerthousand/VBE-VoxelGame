@@ -116,21 +116,10 @@ void World::draw() const {
     }
 }
 
-static Chunk::Face faces[6] = {
-    Chunk::MINX, Chunk::MAXX,
-    Chunk::MINY, Chunk::MAXY,
-    Chunk::MINZ, Chunk::MAXZ
-};
-
 static vec3i offsets[6] = {
     vec3i(-1,0,0), vec3i(1,0,0),
     vec3i(0,-1,0), vec3i(0,1,0),
     vec3i(0,0,-1), vec3i(0,0,1)
-};
-
-struct Job {
-        vec3i pos;
-        int distance;
 };
 
 bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
@@ -139,11 +128,11 @@ void World::drawPlayerCam(const Camera* cam) const{
     VBE_ASSERT(renderer->getMode() == DeferredContainer::Deferred, "Wat");
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
-    std::queue<Job> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
+    std::queue<vec3i> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
     for(int i = 0; i < 6; ++i) {
         Chunk* aux;
         //push chunk with current face
-        q.push({initialChunkPos, 0});
+        q.push(initialChunkPos);
         aux = getChunkCC(initialChunkPos); //used later inside neighbor loop
         if(aux != nullptr) aux->facesVisited.set(i);
     }
@@ -153,35 +142,34 @@ void World::drawPlayerCam(const Camera* cam) const{
     Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
     //bfs
     while(!q.empty()) {
-        Job currentJob = q.front();
+        vec3i current = q.front();
         q.pop();
         //Process current chunk
-        if(visited[currentJob.pos.x & WORLDSIZE_MASK][currentJob.pos.y & WORLDSIZE_MASK][currentJob.pos.z & WORLDSIZE_MASK]) continue;
-        visited[currentJob.pos.x & WORLDSIZE_MASK][currentJob.pos.y & WORLDSIZE_MASK][currentJob.pos.z & WORLDSIZE_MASK] = true;
-        Chunk* currentChunk = getChunkCC(currentJob.pos); //used later inside neighbor loop
+        if(visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK]) continue;
+        visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK] = true;
+        Chunk* currentChunk = getChunkCC(current); //used later inside neighbor loop
         if(currentChunk != nullptr) {
             Debugger::pushMark("Deferred rebuild", "Time spent rebuilding chunk geometry");
             currentChunk->rebuildMesh();
             Debugger::popMark();
             chunksToDraw.push_back(currentChunk);
         }
-        int distance = currentJob.distance+1; //neighbor chunks's bfs distance
         //foreach face
         for(int i = 0; i < 6; ++i) {
-            Job neighborJob = {currentJob.pos + offsets[i], distance};
+            vec3i neighbor = current + offsets[i];
             //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-            if((neighborJob.pos.y >= (int)highestChunkY && faces[i] == Chunk::MAXY) || (getColumnCC(neighborJob.pos) == nullptr && renderer->getMode() == DeferredContainer::Deferred)) continue;
+            if((neighbor.y >= (int)highestChunkY && (Chunk::Face)i == Chunk::MAXY) || (getColumnCC(neighbor) == nullptr && renderer->getMode() == DeferredContainer::Deferred)) continue;
             //manhattan culling
-            if(distance > Utils::manhattanDistance(initialChunkPos, neighborJob.pos)) continue;
+            if(Utils::manhattanDistance(initialChunkPos, neighbor) > Utils::manhattanDistance(initialChunkPos, neighbor)) continue;
             //visibility culling
-            if(currentChunk != nullptr && !currentChunk->visibilityTest(faces[i])) continue;
+            if(currentChunk != nullptr && !currentChunk->visibilityTest((Chunk::Face)i)) continue;
             //fustrum culling
-            colliderSphere.center = neighborJob.pos*CHUNKSIZE+colliderOffset;
+            colliderSphere.center = neighbor*CHUNKSIZE+colliderOffset;
             if(!Collision::intersects(cam->getFrustum(), colliderSphere)) continue;
             //push it
-            Chunk* neighborChunk = getChunkCC(neighborJob.pos);
-            if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace(faces[i]));
-            q.push(neighborJob);
+            Chunk* neighborChunk = getChunkCC(neighbor);
+            if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace((Chunk::Face)i));
+            q.push(neighbor);
         }
     }
     Debugger::popMark(); //BFS time
