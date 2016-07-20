@@ -64,7 +64,6 @@ void DeferredContainer::draw() const {
     Debugger::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
     const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     Sun* sun = (Sun*)getGame()->getObjectByName("sun");
-    if(Keyboard::pressed(Keyboard::Q)) cam = sun->getGlobalCam(); //sun cam mode
     glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
                           0.5, 0.0, 0.0, 0.0,
                           0.0, 0.5, 0.0, 0.0,
