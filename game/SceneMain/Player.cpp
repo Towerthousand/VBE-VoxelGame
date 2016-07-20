@@ -7,6 +7,10 @@
 Player::Player() {
     setName("player");
     cam = new Camera("playerCam", vec3f(0,1.5,0));
+    float fovy = glm::radians(60.0f);
+    float ratio = float(Window::getInstance()->getSize().x)/float(Window::getInstance()->getSize().y);
+    cam->projection = glm::perspective(fovy, ratio, 0.01f, WORLDSIZE*CHUNKSIZE*0.5f);
+    fov = vec2f(2.0f*glm::atan(glm::tan(fovy*0.5f)*ratio), fovy);
     cam->addTo(this);
     acc = vec3f(0,-10,0);
     pos = vec3f(0,256,0);

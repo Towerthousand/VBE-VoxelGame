@@ -11,6 +11,7 @@ class Player : public Entity {
         void update(float deltaTime);
         void fixedUpdate(float deltaTime);
         Camera* getCam() const { return cam; }
+        vec2f getCamFov() const { return fov;}
 
     private:
         void processKeys(float deltaTime);
@@ -25,6 +26,7 @@ class Player : public Entity {
         bool isJumping = false;
         bool targetsBlock = false;
         vec3f lastPos = vec3f(0.0f);
+        vec2f fov;
 };
 
 #endif // PLAYER_HPP

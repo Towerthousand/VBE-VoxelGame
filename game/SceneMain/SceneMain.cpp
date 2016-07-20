@@ -38,7 +38,6 @@ SceneMain::SceneMain() {
     world->addTo(renderer);
 
     Player* player = new Player();
-    player->getCam()->projection = glm::perspective(glm::radians(60.0f), float(Window::getInstance()->getSize().x)/float(Window::getInstance()->getSize().y), 0.01f, WORLDSIZE*CHUNKSIZE*0.5f);
     player->addTo(this);
 
     Debugger* debug = new Debugger();
