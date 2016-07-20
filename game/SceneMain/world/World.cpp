@@ -125,19 +125,21 @@ static vec3i offsets[6] = {
 bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
 
 void World::drawPlayerCam(const Camera* cam) const{
-    VBE_ASSERT(renderer->getMode() == DeferredContainer::Deferred, "Wat");
+    VBE_ASSERT_SIMPLE(renderer->getMode() == DeferredContainer::Deferred);
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
     std::queue<vec3i> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
-    for(int i = 0; i < 6; ++i) {
-        Chunk* aux;
-        //push chunk with current face
-        q.push(initialChunkPos);
-        aux = getChunkCC(initialChunkPos); //used later inside neighbor loop
-        if(aux != nullptr) aux->facesVisited.set(i);
-    }
+    //mark all faces of init node as visible
+    Chunk* initialChunk = getChunkCC(initialChunkPos); //used later inside neighbor loop
+    if(initialChunk != nullptr)
+        for(int i = 0; i < 6; ++i)
+            initialChunk->facesVisited.set(i);
+    //push chunk
+    q.push(initialChunkPos);
+    //collider
     Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
     vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
+    //memset stuff to 0
     memset(visited, 0, sizeof(visited));
     Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
     //bfs
@@ -158,7 +160,7 @@ void World::drawPlayerCam(const Camera* cam) const{
         for(int i = 0; i < 6; ++i) {
             vec3i neighbor = current + offsets[i];
             //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-            if((neighbor.y >= (int)highestChunkY && (Chunk::Face)i == Chunk::MAXY) || (getColumnCC(neighbor) == nullptr && renderer->getMode() == DeferredContainer::Deferred)) continue;
+            if((neighbor.y >= (int)highestChunkY && (Chunk::Face)i == Chunk::MAXY) || getColumnCC(neighbor) == nullptr) continue;
             //manhattan culling
             if(Utils::manhattanDistance(initialChunkPos, neighbor) > Utils::manhattanDistance(initialChunkPos, neighbor)) continue;
             //visibility culling
