@@ -8,6 +8,7 @@ class Debugger final : public Profiler {
         ~Debugger();
 
         static int numChunksDrawn;
+        static int numChunksSkipped;
     private:
         void renderCustomInterface() const override;
 };
