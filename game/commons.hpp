@@ -22,6 +22,7 @@ constexpr int WORLDSIZE = 512/CHUNKSIZE;
 constexpr int GENERATIONHEIGHT = 256/CHUNKSIZE;
 constexpr int WORLDSIZE_MASK = WORLDSIZE-1;
 constexpr int TEXSIZE = 8;
+extern bool USE_CPU_VISIBILITY;
 
 namespace Utils {
     template<typename T>

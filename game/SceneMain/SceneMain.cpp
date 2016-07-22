@@ -128,4 +128,5 @@ void SceneMain::loadResources() {
 void SceneMain::update(float deltaTime) {
     (void) deltaTime;
     if(Keyboard::pressed(Keyboard::Escape) || Window::getInstance()->isClosing()) getGame()->isRunning = false;
+    if(Keyboard::justPressed(Keyboard::K)) USE_CPU_VISIBILITY = !USE_CPU_VISIBILITY;
 }
