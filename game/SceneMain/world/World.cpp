@@ -552,6 +552,15 @@ namespace {
         return {min, max-min};
     }
 
+    bool insideCoords(const vec3i &min, const vec3i&max, const vec3i& coords) {
+        return (coords.x >= min.x &&
+                coords.y >= min.y &&
+                coords.z >= min.z &&
+                coords.x <= max.x &&
+                coords.y <= max.y &&
+                coords.z <= max.z);
+    };
+
     Cone cones[WORLDSIZE][WORLDSIZE][WORLDSIZE];
     bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
     Square squares[WORLDSIZE][WORLDSIZE][WORLDSIZE];
@@ -563,6 +572,11 @@ void World::drawPlayerCam(const Camera* cam) const{
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
     std::queue<vec3i> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
+    //bounds for out-of bound-checking
+    AABB bounds = AABB(minLoadedCoords, maxLoadedCoords);
+    bounds.extend(initialChunkPos);
+    vec3i minBounds = bounds.getMin();
+    vec3i maxBounds = bounds.getMax();
     //memset stuff to 0
     memset(visited, 0, sizeof(visited));
     memset(cones, 0, sizeof(cones));
@@ -574,11 +588,10 @@ void World::drawPlayerCam(const Camera* cam) const{
     if(initialChunk != nullptr) for(int i = 0; i < 6; ++i) initialChunk->facesVisited.set(i);
     //push initial node
     q.push(initialChunkPos);
-    if(USE_CPU_VISIBILITY) {
+    if(USE_CPU_VISIBILITY)
         cones[initialChunkPos.x & WORLDSIZE_MASK][initialChunkPos.y & WORLDSIZE_MASK][initialChunkPos.z & WORLDSIZE_MASK].full = true;
-    }
     //bfs
-    Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
+    Debugger::pushMark("BFS", "CPU BFS to determine which chunks to draw");
     while(!q.empty()) {
         vec3i current = q.front();
         q.pop();
@@ -603,7 +616,7 @@ void World::drawPlayerCam(const Camera* cam) const{
         for(int i = 0; i < 6; ++i) {
             vec3i neighbor = current + offsets[i];
             //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-            if((neighbor.y >= (int)maxLoadedCoords.y && (Chunk::Face)i == Chunk::MAXY) || getColumnCC(neighbor) == nullptr) continue;
+            if(!insideCoords(minBounds, maxBounds, neighbor)) continue;
             //manhattan culling
             if(Utils::manhattanDistance(initialChunkPos, neighbor) > Utils::manhattanDistance(initialChunkPos, neighbor)) continue;
             //visibility culling
@@ -626,7 +639,7 @@ void World::drawPlayerCam(const Camera* cam) const{
         }
     }
     Debugger::popMark(); //BFS time
-    Debugger::pushMark("Deferred Batching", "Time spent actually sending chunk geometry to the GPU");
+    Debugger::pushMark("Batching", "Time spent actually sending chunk geometry to the GPU");
     //setup shaders for batching
     VBE_ASSERT_SIMPLE(Programs.exists("deferredChunk"));
     Programs.get("deferredChunk").uniform("V")->set(cam->getView());
@@ -657,6 +670,8 @@ void World::drawSunCam(const Camera* cam) const{
     vec3f sunDir = cam->getForward();
     mat3f viewMatrix = getViewMatrixForDirection(sunDir);
     //push initial nodes
+    Debugger::pushMark("BFS", "CPU BFS to determine which chunks to draw");
+    Debugger::pushMark("Initial BFS Nodes", "Time spent finding and pushing BFS entry nodes");
     std::bitset<6> faces = 0;
     if(sunDir.x != 0.0f) faces.set(sunDir.x < 0.0f? Chunk::MAXX : Chunk::MINX);
     if(sunDir.y != 0.0f) faces.set(sunDir.y < 0.0f? Chunk::MAXY : Chunk::MINY);
@@ -693,8 +708,9 @@ void World::drawSunCam(const Camera* cam) const{
                     q.push(std::make_pair(len, coords));
                 }
     }
+    Debugger::popMark(); //Initial BFS Nodes
     //bfs
-    Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
+    Debugger::pushMark("BFS Main Loop", "");
     while(!q.empty()) {
         std::pair<float, vec3i> currentP = q.top();
         vec3i current = currentP.second;
@@ -720,7 +736,7 @@ void World::drawSunCam(const Camera* cam) const{
         for(int i = 0; i < 6; ++i) {
             vec3i neighbor = current + offsets[i];
             //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-            if(neighbor.y >= (int)maxLoadedCoords.y && (Chunk::Face)i == Chunk::MAXY) continue;
+            if(!insideCoords(minLoadedCoords, maxLoadedCoords, neighbor)) continue;
             //visited culling
             if(visited[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK]) continue;
             //visibility culling
@@ -736,15 +752,16 @@ void World::drawSunCam(const Camera* cam) const{
                 Debugger::pushMark("Square Calculation", "Time spent recalculating visibility squares");
                 Square& ns = squares[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK];
                 ns = squareUnion(ns, squareIntersection(getSquare(current, (Chunk::Face)i, viewMatrix), currentSquare));
-                Debugger::popMark();
+                Debugger::popMark(); //Square Calculation
             }
             //push it
             float len = glm::dot(vec3f(neighbor), sunDir);
             q.push(std::make_pair(len, neighbor));
         }
     }
+    Debugger::popMark(); //BFS main loop
     Debugger::popMark(); //BFS time
-    Debugger::pushMark("Deferred Batching", "Time spent actually sending chunk geometry to the GPU");
+    Debugger::pushMark("Batching", "Time spent actually sending chunk geometry to the GPU");
     //setup shaders for batching
     VBE_ASSERT_SIMPLE(Programs.exists("depthShader"));
     Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
