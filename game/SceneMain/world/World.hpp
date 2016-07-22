@@ -69,7 +69,8 @@ class World : public GameObject {
         }
 
         friend class Sun;
-        unsigned int highestChunkY = 0;
+        vec3i maxLoadedCoords, minLoadedCoords;
+        bool chunksExist = false;
         Column* columns[WORLDSIZE][WORLDSIZE];
         ColumnGenerator generator;
         DeferredContainer* renderer = nullptr;

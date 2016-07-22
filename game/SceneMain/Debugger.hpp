@@ -9,6 +9,8 @@ class Debugger final : public Profiler {
 
         static int numChunksDrawn;
         static int numChunksSkipped;
+        static int numChunksDrawnShadow;
+        static int numChunksSkippedShadow;
     private:
         void renderCustomInterface() const override;
 };

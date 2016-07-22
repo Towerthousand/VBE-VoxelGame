@@ -74,7 +74,9 @@ void World::fixedUpdate(float deltaTime) {
     Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2);
     std::vector<std::pair<float,std::pair<int,int> > > tasks;
-    highestChunkY = 0;
+    minLoadedCoords = vec3i(std::numeric_limits<int>::max());
+    maxLoadedCoords = vec3i(std::numeric_limits<int>::lowest());
+    chunksExist = false;
     for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
         for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
             vec2f colPos = playerChunkPos + vec2f(x,z);
@@ -87,11 +89,17 @@ void World::fixedUpdate(float deltaTime) {
                 continue;
             }
             if(actual == nullptr) continue;
-            highestChunkY = std::max(actual->getChunkCount(), highestChunkY);
             for(unsigned int y = 0; y < actual->getChunkCount(); ++y){
                 Chunk* c = actual->getChunkCC(y);
                 if(c == nullptr) continue;
                 c->update(deltaTime);
+                maxLoadedCoords.x = std::max(maxLoadedCoords.x, c->getX());
+                maxLoadedCoords.y = std::max(maxLoadedCoords.y, (int)c->getY());
+                maxLoadedCoords.z = std::max(maxLoadedCoords.z, c->getZ());
+                minLoadedCoords.x = std::min(minLoadedCoords.x, c->getX());
+                minLoadedCoords.y = std::min(minLoadedCoords.y, (int)c->getY());
+                minLoadedCoords.z = std::min(minLoadedCoords.z, c->getZ());
+                chunksExist = true;
             }
         }
     std::sort(tasks.begin(),tasks.end());
@@ -100,6 +108,7 @@ void World::fixedUpdate(float deltaTime) {
 }
 
 void World::draw() const {
+    if(!chunksExist) return;
     switch(renderer->getMode()) {
         case DeferredContainer::Deferred:
             Debugger::pushMark("Player Cam World Draw", "Time spent drawing chunks from the player camera");
@@ -110,7 +119,7 @@ void World::draw() const {
             Debugger::pushMark("Sun Cam World Draw", "Time spent drawing chunks from the sun camera");
             Sun* sun = (Sun*)getGame()->getObjectByName("sun");
             sun->updateCameras();
-            //drawSunCam(sun->getGlobalCam());
+            drawSunCam(sun->getGlobalCam());
             Debugger::popMark(); //world draw
             break;
         }
@@ -398,8 +407,6 @@ namespace {
         return c;
     }
 
-    // If genMode2D is true, this will calculate the new cones using only
-    // two points per face instead of 4, hence simulating a 2D grid case
     Cone getCone(const vec3i& pos, Chunk::Face f,const vec3i& origin) {
         if(pos == origin)
             return {{0.0f, 0.0f, 0.0f}, 0.0f, true};
@@ -437,28 +444,139 @@ namespace {
         return minConeUnroll(p[0], p[1], p[2], p[3]);
     }
 
+    struct Square {
+        vec2f p;
+        vec2f d;
+    };
+
+    //pair(float, vector) comp for pqueue
+    struct fvpaircomp {
+        bool operator() (const std::pair<float, vec3i>& lhs, const std::pair<float, vec3i>& rhs) const {
+            return lhs.first>rhs.first;
+        };
+    };
+
+    Square squareUnion(const Square& s1, const Square& s2) {
+        if(s1.p == vec2f(0.0f) && s1.d == vec2f(0.0f)) return s2;
+        else if(s2.p == vec2f(0.0f) && s2.d == vec2f(0.0f)) return s1;
+        Square s = {
+            {
+                glm::min(s1.p.x, s2.p.x),
+                glm::min(s1.p.y, s2.p.y),
+            },
+            {
+                glm::max(s1.p.x + s1.d.x, s2.p.x + s2.d.x),
+                glm::max(s1.p.y + s1.d.y, s2.p.y + s2.d.y),
+            }
+        };
+        s.d -= s.p;
+        if(glm::epsilonEqual(s.d.x*s.d.y, 0.0f, EPSILON)) return {{0.0f, 0.0f}, {0.0f, 0.0f}};
+        return s;
+    };
+
+    Square squareIntersection(const Square& s1, const Square& s2) {
+        if(s1.d == vec2f(0.0f) ||
+           s2.d == vec2f(0.0f) ||
+           s1.p.x+s1.d.x <= s2.p.x ||
+           s1.p.x >= s2.p.x+s2.d.x ||
+           s1.p.y+s1.d.y <= s2.p.y ||
+           s1.p.y >= s2.p.y+s2.d.y)
+            return {{0.0f, 0.0f}, {0.0f, 0.0f}};
+        Square s = {
+            {
+                glm::max(s1.p.x, s2.p.x),
+                glm::max(s1.p.y, s2.p.y),
+            },
+            {
+                glm::min(s1.p.x + s1.d.x, s2.p.x + s2.d.x),
+                glm::min(s1.p.y + s1.d.y, s2.p.y + s2.d.y),
+            }
+        };
+        s.d -= s.p;
+        if(glm::epsilonEqual(s.d.x*s.d.y, 0.0f, EPSILON)) return {{0.0f, 0.0f}, {0.0f, 0.0f}};
+        VBE_ASSERT(s.d.x >= 0.0f && s.d.y >= 0.0f, "Sanity check for squareIntersection");
+        return s;
+    };
+
+    mat3f getViewMatrixForDirection(const vec3f& direction) {
+        vec3f dummyUp = (glm::abs(glm::normalize(direction)) == vec3f(0, 1, 0))? vec3f(0,0,1) : vec3f(0, 1, 0);
+        vec3f front = glm::normalize(-direction);
+        vec3f right = glm::normalize(glm::cross(dummyUp, front));
+        vec3f up = glm::normalize(glm::cross(front, right));
+        return glm::transpose(
+            mat3f(
+                right.x, right.y, right.z,
+                up.x   , up.y   , up.z   ,
+                front.x, front.y, front.z
+            )
+        );
+    };
+
+    Square getSquare(vec3i pos, Chunk::Face f, const mat3f& viewMatrix) {
+        vec3f center = vec3f(pos)+0.5f+vec3f(offsets[f])*0.5f;
+        std::vector<vec3f> p(4);
+        switch(f) {
+            case Chunk::MINX:
+            case Chunk::MAXX:
+                p[0] = center+vec3f( 0.0f, 0.5f, 0.5f);
+                p[1] = center+vec3f( 0.0f,-0.5f, 0.5f);
+                p[2] = center+vec3f( 0.0f, 0.5f,-0.5f);
+                p[3] = center+vec3f( 0.0f,-0.5f,-0.5f);
+                break;
+            case Chunk::MINY:
+            case Chunk::MAXY:
+                p[0] = center+vec3f( 0.5f, 0.0f, 0.5f);
+                p[1] = center+vec3f(-0.5f, 0.0f, 0.5f);
+                p[2] = center+vec3f( 0.5f, 0.0f,-0.5f);
+                p[3] = center+vec3f(-0.5f, 0.0f,-0.5f);
+                break;
+            case Chunk::MINZ:
+            case Chunk::MAXZ:
+                p[0] = center+vec3f( 0.5f, 0.5f, 0.0f);
+                p[1] = center+vec3f(-0.5f, 0.5f, 0.0f);
+                p[2] = center+vec3f( 0.5f,-0.5f, 0.0f);
+                p[3] = center+vec3f(-0.5f,-0.5f, 0.0f);
+                break;
+            case Chunk::ALL_FACES:
+                VBE_ASSERT_SIMPLE(f != Chunk::ALL_FACES);
+        }
+        vec2f min = vec2f(std::numeric_limits<float>::max());
+        vec2f max = vec2f(std::numeric_limits<float>::lowest());
+        for(vec3f& v : p) {
+            v = viewMatrix*v;
+            min.x = glm::min(min.x, v.x);
+            min.y = glm::min(min.y, v.y);
+            max.x = glm::max(max.x, v.x);
+            max.y = glm::max(max.y, v.y);
+        }
+        return {min, max-min};
+    }
+
     Cone cones[WORLDSIZE][WORLDSIZE][WORLDSIZE];
     bool visited[WORLDSIZE][WORLDSIZE][WORLDSIZE];
+    Square squares[WORLDSIZE][WORLDSIZE][WORLDSIZE];
 }
 
 void World::drawPlayerCam(const Camera* cam) const{
-    int skippedChunks = 0;
     VBE_ASSERT_SIMPLE(renderer->getMode() == DeferredContainer::Deferred);
+    int skippedChunks = 0;
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
     std::queue<vec3i> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
-    //mark all faces of init node as visible
-    Chunk* initialChunk = getChunkCC(initialChunkPos); //used later inside neighbor loop
-    if(initialChunk != nullptr) for(int i = 0; i < 6; ++i) initialChunk->facesVisited.set(i);
-    //collider
-    Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
-    vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
     //memset stuff to 0
     memset(visited, 0, sizeof(visited));
     memset(cones, 0, sizeof(cones));
-    //push chunk
+    //collider
+    Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
+    vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
+    //mark all faces of init node as visible
+    Chunk* initialChunk = getChunkCC(initialChunkPos); //used later inside neighbor loop
+    if(initialChunk != nullptr) for(int i = 0; i < 6; ++i) initialChunk->facesVisited.set(i);
+    //push initial node
     q.push(initialChunkPos);
-    cones[initialChunkPos.x & WORLDSIZE_MASK][initialChunkPos.y & WORLDSIZE_MASK][initialChunkPos.z & WORLDSIZE_MASK].full = true;
+    if(USE_CPU_VISIBILITY) {
+        cones[initialChunkPos.x & WORLDSIZE_MASK][initialChunkPos.y & WORLDSIZE_MASK][initialChunkPos.z & WORLDSIZE_MASK].full = true;
+    }
     //bfs
     Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
     while(!q.empty()) {
@@ -469,9 +587,11 @@ void World::drawPlayerCam(const Camera* cam) const{
         visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK] = true;
         const Cone& currentCone = cones[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK];
         Chunk* currentChunk = getChunkCC(current); //used later inside neighbor loop
-        if(!currentCone.full && currentCone.halfCone == 0.0f) {
-            if(currentChunk != nullptr) skippedChunks++;
-            continue;
+        if(USE_CPU_VISIBILITY) {
+            if(!currentCone.full && currentCone.halfCone == 0.0f) {
+                if(currentChunk != nullptr) skippedChunks++;
+                continue;
+            }
         }
         if(currentChunk != nullptr) {
             Debugger::pushMark("Geometry rebuild", "Time spent rebuilding chunk geometry");
@@ -483,7 +603,7 @@ void World::drawPlayerCam(const Camera* cam) const{
         for(int i = 0; i < 6; ++i) {
             vec3i neighbor = current + offsets[i];
             //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
-            if((neighbor.y >= (int)highestChunkY && (Chunk::Face)i == Chunk::MAXY) || getColumnCC(neighbor) == nullptr) continue;
+            if((neighbor.y >= (int)maxLoadedCoords.y && (Chunk::Face)i == Chunk::MAXY) || getColumnCC(neighbor) == nullptr) continue;
             //manhattan culling
             if(Utils::manhattanDistance(initialChunkPos, neighbor) > Utils::manhattanDistance(initialChunkPos, neighbor)) continue;
             //visibility culling
@@ -495,10 +615,12 @@ void World::drawPlayerCam(const Camera* cam) const{
             Chunk* neighborChunk = getChunkCC(neighbor);
             if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace((Chunk::Face)i));
             //update neighbor cone
-            Debugger::pushMark("Cone Calculation", "Time spent recalculating visibility cones");
-            Cone& na = cones[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK];
-            na = coneUnion(na, coneIntersection(getCone(current, (Chunk::Face)i, initialChunkPos), currentCone));
-            Debugger::popMark();
+            if(USE_CPU_VISIBILITY) {
+                Debugger::pushMark("Cone Calculation", "Time spent recalculating visibility cones");
+                Cone& na = cones[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK];
+                na = coneUnion(na, coneIntersection(getCone(current, (Chunk::Face)i, initialChunkPos), currentCone));
+                Debugger::popMark();
+            }
             //push it
             q.push(neighbor);
         }
@@ -513,6 +635,123 @@ void World::drawPlayerCam(const Camera* cam) const{
     sendDrawCommands(chunksToDraw, Programs.get("deferredChunk"));
     Debugger::popMark(); //batching
     Debugger::numChunksSkipped = skippedChunks;
+}
+
+void World::drawSunCam(const Camera* cam) const{
+    VBE_ASSERT_SIMPLE(renderer->getMode() == DeferredContainer::ShadowMap);
+    int skippedChunks = 0;
+    std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
+    //memset stuff to 0
+    memset(visited, 0, sizeof(visited));
+    if(USE_CPU_VISIBILITY) memset(squares, 0, sizeof(squares));
+    //the queue
+    std::priority_queue<std::pair<float, vec3i>, std::vector<std::pair<float, vec3i>>, fvpaircomp> q;
+    //collider
+    Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
+    vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
+    //since the shadow frustum is hacked to only be as deep as the player view, to keep accurracy high,
+    //chunks that are behind the near plane must be considered.
+    std::bitset<6> ommitedPlanes;
+    ommitedPlanes.set(Frustum::NEAR_PLANE);
+    //sun stuff
+    vec3f sunDir = cam->getForward();
+    mat3f viewMatrix = getViewMatrixForDirection(sunDir);
+    //push initial nodes
+    std::bitset<6> faces = 0;
+    if(sunDir.x != 0.0f) faces.set(sunDir.x < 0.0f? Chunk::MAXX : Chunk::MINX);
+    if(sunDir.y != 0.0f) faces.set(sunDir.y < 0.0f? Chunk::MAXY : Chunk::MINY);
+    if(sunDir.z != 0.0f) faces.set(sunDir.z < 0.0f? Chunk::MAXZ : Chunk::MINZ);
+    for(int i = 0; i < 6; ++i) {
+        if(!faces.test(i)) continue;
+        vec3i min = {
+            (i == Chunk::MAXX) ? maxLoadedCoords.x : minLoadedCoords.x,
+            (i == Chunk::MAXY) ? maxLoadedCoords.y : minLoadedCoords.y,
+            (i == Chunk::MAXZ) ? maxLoadedCoords.z : minLoadedCoords.z
+        };
+        vec3i max = {
+            (i == Chunk::MINX) ? minLoadedCoords.x : maxLoadedCoords.x,
+            (i == Chunk::MINY) ? minLoadedCoords.y : maxLoadedCoords.y,
+            (i == Chunk::MINZ) ? minLoadedCoords.z : maxLoadedCoords.z
+        };
+        for(int x = min.x; x <= max.x; ++x)
+            for(int y = min.y; y <= max.y; ++y)
+                for(int z = min.z; z <= max.z; ++z) {
+                    vec3i coords = vec3i(x, y, z);
+                    float len = glm::dot(vec3f(coords), sunDir);
+                    //fustrum culling
+                    colliderSphere.center = coords*CHUNKSIZE+colliderOffset;
+                    if(!Collision::intersects(cam->getFrustum(), colliderSphere, ommitedPlanes)) continue;
+                    //mark face as visited
+                    Chunk* c = getChunkCC(coords);
+                    if(c != nullptr) c->facesVisited.set((Chunk::Face)i);
+                    //update square
+                    if(USE_CPU_VISIBILITY) {
+                        Square& s = squares[x & WORLDSIZE_MASK][y & WORLDSIZE_MASK][z & WORLDSIZE_MASK];
+                        s = squareUnion(s, getSquare(coords, (Chunk::Face)i, viewMatrix));
+                    }
+                    //push it
+                    q.push(std::make_pair(len, coords));
+                }
+    }
+    //bfs
+    Debugger::pushMark("Deferred BFS", "CPU BFS for the deferred pass");
+    while(!q.empty()) {
+        std::pair<float, vec3i> currentP = q.top();
+        vec3i current = currentP.second;
+        q.pop();
+        //Process current chunk
+        if(visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK]) continue;
+        visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK] = true;
+        const Square& currentSquare = squares[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK];
+        Chunk* currentChunk = getChunkCC(current); //used later inside neighbor loop
+        if(USE_CPU_VISIBILITY) {
+            if(currentSquare.d == vec2f(0.0f)) {
+                if(currentChunk != nullptr) skippedChunks++;
+                continue;
+            }
+        }
+        if(currentChunk != nullptr) {
+            Debugger::pushMark("Geometry rebuild", "Time spent rebuilding chunk geometry");
+            currentChunk->rebuildMesh();
+            Debugger::popMark();
+            chunksToDraw.push_back(currentChunk);
+        }
+        //foreach face
+        for(int i = 0; i < 6; ++i) {
+            vec3i neighbor = current + offsets[i];
+            //out-of-bounds culling (null column, we do explore null chunks since they may be anywhere)
+            if(neighbor.y >= (int)maxLoadedCoords.y && (Chunk::Face)i == Chunk::MAXY) continue;
+            //visited culling
+            if(visited[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK]) continue;
+            //visibility culling
+            if(currentChunk != nullptr && !currentChunk->visibilityTest((Chunk::Face)i)) continue;
+            //fustrum culling
+            colliderSphere.center = neighbor*CHUNKSIZE+colliderOffset;
+            if(!Collision::intersects(cam->getFrustum(), colliderSphere, ommitedPlanes)) continue;
+            //mark face as visited
+            Chunk* neighborChunk = getChunkCC(neighbor);
+            if(neighborChunk != nullptr) neighborChunk->facesVisited.set(Chunk::getOppositeFace((Chunk::Face)i));
+            //update neighbor cone
+            if(USE_CPU_VISIBILITY) {
+                Debugger::pushMark("Square Calculation", "Time spent recalculating visibility squares");
+                Square& ns = squares[neighbor.x & WORLDSIZE_MASK][neighbor.y & WORLDSIZE_MASK][neighbor.z & WORLDSIZE_MASK];
+                ns = squareUnion(ns, squareIntersection(getSquare(current, (Chunk::Face)i, viewMatrix), currentSquare));
+                Debugger::popMark();
+            }
+            //push it
+            float len = glm::dot(vec3f(neighbor), sunDir);
+            q.push(std::make_pair(len, neighbor));
+        }
+    }
+    Debugger::popMark(); //BFS time
+    Debugger::pushMark("Deferred Batching", "Time spent actually sending chunk geometry to the GPU");
+    //setup shaders for batching
+    VBE_ASSERT_SIMPLE(Programs.exists("depthShader"));
+    Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
+    Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
+    sendDrawCommands(chunksToDraw, Programs.get("depthShader"));
+    Debugger::popMark(); //batching
+    Debugger::numChunksSkippedShadow = skippedChunks;
 }
 
 void World::sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const ShaderProgram& program) const {
@@ -540,7 +779,8 @@ void World::sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const Shader
         program.uniform("transforms")->set(transforms);
     }
     MeshBatched::endBatch();
-    Debugger::numChunksDrawn = numDrawn;
+    if(renderer->getMode() == DeferredContainer::Deferred) Debugger::numChunksDrawn = numDrawn;
+    else Debugger::numChunksDrawnShadow = numDrawn;
 }
 
 bool World::batchChunk(Chunk* c, std::vector<vec3i>& transforms, const int batchCount, const Sun* sun) const {
