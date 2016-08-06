@@ -22,6 +22,7 @@ Sun::Sun() {
     cameras[NUM_SUN_CASCADES]->projection = glm::ortho(-10,10,-10,10,-100,100);
     cameras[NUM_SUN_CASCADES]->addTo(this);
     //TODO: figure out best partitioning instead of hard-coding this
+    minZ[0] = -10000;
     maxZ[0] = 8.0f;
     minZ[1] = 8.0f;
     maxZ[1] = 32.0f;
@@ -29,8 +30,6 @@ Sun::Sun() {
     maxZ[2] = 128.0f;
     minZ[3] = 128.0f;
     maxZ[3] = 256.0f;
-    minZ[0] = -10000;
-    maxZ[NUM_SUN_CASCADES-1] = zFar;
     VP = std::vector<mat4f>(NUM_SUN_CASCADES, mat4f(1.0f));
 }
 
@@ -44,26 +43,33 @@ void Sun::update(float deltaTime) {
 }
 
 void Sun::updateCameras() {
-    Player* player = (Player*)this->getGame()->getObjectByName("player");
+    Camera* playerCam = (Camera*)this->getGame()->getObjectByName("playerCam");
     for(int i = 0; i < NUM_SUN_CASCADES+1; ++i) {
-        cameras[i]->pos = player->getPosition();
+        cameras[i]->pos = vec3f(0.0f);
         cameras[i]->lookInDir(getDirection());
         cameras[i]->projection = glm::ortho(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         aabbs[i] = AABB(); //sun view space bounding box for the player-drawn geometry
     }
     //extend the view-space bounding box to enclose the user-seen chunks
-    AABB worldAABB = extendFrustums();
+    extendFrustums();
     for(int i = 0; i < NUM_SUN_CASCADES+1; ++i) {
+        //transform from player view coords to sun cam view coords
+        AABB trueBB = AABB();
+        for(int i2 = 0; i2 < 2; ++i2)
+            for(int j = 0; j < 2; ++j)
+                for(int k = 0; k < 2; ++k) {
+                    vec3f p = aabbs[i].getMin() + aabbs[i].getDimensions()*vec3f(i2, j, k);
+                    if(false && i != NUM_SUN_CASCADES)
+                        p = {p.x, p.y, glm::min(glm::max(minZ[i], p.z), maxZ[i])};
+                    p = vec3f(glm::inverse(playerCam->getView()) * vec4f(p, 1.0));
+                    p = vec3f(cameras[i]->getView()*vec4f(p, 1.0));
+                    trueBB.extend(p);
+                }
+        aabbs[i] = trueBB;
         //unfold the view space AABB into worldspace and position the camera in it's center
-        //first, take the world space center of the view-space bounding box
         vec3f worldCenter = vec3f(glm::inverse(cameras[i]->getView())*vec4f(aabbs[i].getCenter(), 1.0f));
         cameras[i]->pos = worldCenter;
         aabbs[i] = AABB(aabbs[i].getMin() - aabbs[i].getCenter(), aabbs[i].getMax() - aabbs[i].getCenter());
-        float dist = getDistanceFromOutside(i, worldAABB);
-        //take the camera to the back of the box, so the bfs executes correctly on World::draw();
-        cameras[i]->pos -= cameras[i]->getForward()*dist;
-        //adjust minz and maxz accordingly
-        aabbs[i] = AABB(aabbs[i].getMin() + vec3f(0.0f,0.0f, dist), aabbs[i].getMax() + vec3f(0.0f, 0.0f, dist));
         //build actual frustum
         cameras[i]->projection = glm::ortho(aabbs[i].getMin().x, aabbs[i].getMax().x, aabbs[i].getMin().y, aabbs[i].getMax().y, aabbs[i].getMin().z, aabbs[i].getMax().z);
         cameras[i]->recalculateFrustum();
@@ -72,8 +78,7 @@ void Sun::updateCameras() {
         VP[i] = cameras[i]->projection*cameras[i]->getView();
 }
 
-AABB Sun::extendFrustums() {
-    AABB worldAABB = AABB();
+void Sun::extendFrustums() {
     Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
     World* w = (World*)getGame()->getObjectByName("world");
     for(int x = 0; x < WORLDSIZE; ++x)
@@ -82,9 +87,7 @@ AABB Sun::extendFrustums() {
             if(col == nullptr) continue;
             for(unsigned int y = 0; y < col->getChunkCount(); ++y) {
                 Chunk* actual = col->getChunkCC(y);
-                if(actual == nullptr) continue;
-                if(actual->hasMesh()) worldAABB.extend(actual->getWorldSpaceBoundingBox());
-                if(actual->wasDrawedByPlayer()) {
+                if(actual != nullptr && actual->wasDrawedByPlayer()) {
                     std::vector<unsigned int> indexes;
                     AABB bbox = actual->getWorldSpaceBoundingBox();
                     for(int i = 0; i < NUM_SUN_CASCADES; ++i) {
@@ -94,34 +97,26 @@ AABB Sun::extendFrustums() {
                     }
                     if(!indexes.empty()) {
                         indexes.push_back(NUM_SUN_CASCADES);
-                        extend(indexes, actual->getWorldSpaceBoundingBox());
+                        extend(indexes, actual->getWorldSpaceBoundingBox(), pCam);
                     }
                 }
             }
         }
-    return worldAABB;
 }
 
-void Sun::extend(std::vector<unsigned int> index, const AABB& occludedBox) {
+void Sun::extend(std::vector<unsigned int> index, const AABB& occludedBox, const Camera* pCam) {
     for(int i = 0; i < 2; ++i)
         for(int j = 0; j < 2; ++j)
             for(int k = 0; k < 2; ++k) {
                 //project this corner onto the view plane. view matrix is the same
                 //for all cameras at this point so we'll just multiply once
-                vec3f p = vec3f(cameras[0]->getView()
-                                * vec4f(occludedBox.getMin() + occludedBox.getDimensions()*vec3f(i, j, k), 1.0f));
-                for(unsigned int j : index)    aabbs[j].extend(p);
+                vec3f p = vec3f(
+                    pCam->getView() *
+                    vec4f(
+                        occludedBox.getMin() + occludedBox.getDimensions()*vec3f(i, j, k),
+                        1.0f
+                    )
+                );
+                for(unsigned int j : index) aabbs[j].extend(p);
             }
-}
-
-float Sun::getDistanceFromOutside(unsigned int index, const AABB& worldAABB) {
-    float dist = 0.0f;
-    for(int i = 0; i < 2; ++i)
-        for(int j = 0; j < 2; ++j)
-            for(int k = 0; k < 2; ++k) {
-                vec3f p = vec3f(cameras[index]->getView()
-                                * vec4f(worldAABB.getMin() + worldAABB.getDimensions()*vec3f(i, j, k), 1.0f));
-                if(p.z < dist) dist = p.z;
-            }
-    return glm::abs(dist);
 }

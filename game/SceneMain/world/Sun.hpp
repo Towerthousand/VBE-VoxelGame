@@ -21,14 +21,12 @@ class Sun : public GameObject {
         const std::vector<mat4f>& getVPMatrices() const {return VP;}
 
     private:
-        AABB extendFrustums();
-        void extend(std::vector<unsigned int> index, const AABB& occludedBox);
-        float getDistanceFromOutside(unsigned int index, const AABB& worldAABB);
+        void extendFrustums();
+        void extend(std::vector<unsigned int> index, const AABB& occludedBox, const Camera* pCam);
 
         float angle = 45.0f; //sun always moves on the x-y plane (z never changes)
         Camera* cameras[NUM_SUN_CASCADES+1];
         AABB aabbs[NUM_SUN_CASCADES+1];
-        int numOccluders[NUM_SUN_CASCADES+1];
         std::vector<float> minZ;
         std::vector<float> maxZ;
         std::vector<mat4f> VP;
