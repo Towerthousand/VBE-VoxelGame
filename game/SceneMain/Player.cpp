@@ -43,47 +43,47 @@ void Player::fixedUpdate(float deltaTime) {
     if(!Debugger::isShown()) movePos(deltaTime); //this handles collisions
 
     //Limit movement
-    vel.x = 0; // Player only accelerates vertically, so speed.x doesn't carry
-    vel.y = std::fmax(-70,vel.y);
-    vel.z = 0; // Player only accelerates vertically, so speed.z doesn't carry
+    disp.x = 0; // Player only accelerates vertically, so disp.x doesn't carry
+    disp.y = std::fmax(-70, disp.y);
+    disp.z = 0; // Player only accelerates vertically, so disp.z doesn't carry
 
     //feedback to be used by the scene
     onFloor = hitbox->collidesWithWorld(vec3f(0,-0.1,0));
-    isJumping = (vel.y > 0);
+    isJumping = (disp.y > 0);
 }
 
 void Player::processKeys(float deltaTime) {
     World* w = (World*)getGame()->getObjectByName("world");
     //Move player
-    const float speedKeys = 600.0f*deltaTime;
+    const float speedKeys = 30.0f*deltaTime;
     vec2f speedPad = vec2f(Gamepad::axis(0, Gamepad::AxisLeftX), Gamepad::axis(0, Gamepad::AxisLeftY));
     vec2f dir = vec2f(cam->getForward().x,cam->getForward().z);
     dir = (dir == vec2f(0.0f))? vec2f(1.0f,0.0f) : glm::normalize(dir);
     if(Keyboard::pressed(Keyboard::W)) {
-        vel.x += dir.x*speedKeys;
-        vel.z += dir.y*speedKeys;
+        disp.x += dir.x*speedKeys;
+        disp.z += dir.y*speedKeys;
     }
     if(Keyboard::pressed(Keyboard::S)) {
-        vel.x += -dir.x*speedKeys;
-        vel.z += -dir.y*speedKeys;
+        disp.x += -dir.x*speedKeys;
+        disp.z += -dir.y*speedKeys;
     }
     if(Keyboard::pressed(Keyboard::A)) {
-        vel.x += dir.y*speedKeys;
-        vel.z += -dir.x*speedKeys;
+        disp.x += dir.y*speedKeys;
+        disp.z += -dir.x*speedKeys;
     }
     if(Keyboard::pressed(Keyboard::D)) {
-        vel.x += -dir.y*speedKeys;
-        vel.z += dir.x*speedKeys;
+        disp.x += -dir.y*speedKeys;
+        disp.z += dir.x*speedKeys;
     }
     if(glm::length(speedPad) > 0.3f) {
-        vel.x += -dir.x*speedPad.y*speedKeys;
-        vel.z += -dir.y*speedPad.y*speedKeys;
-        vel.x += -dir.y*speedPad.x*speedKeys;
-        vel.z += dir.x*speedPad.x*speedKeys;
+        disp.x += -dir.x*speedPad.y*speedKeys;
+        disp.z += -dir.y*speedPad.y*speedKeys;
+        disp.x += -dir.y*speedPad.x*speedKeys;
+        disp.z += dir.x*speedPad.x*speedKeys;
     }
     if(Keyboard::pressed(Keyboard::Space) || Gamepad::pressed(0, Gamepad::ButtonA))
         //if (onFloor && !isJumping)
-        vel.y = 15;
+        disp.y = 15;
 
     //look around
     vec2f displacement = glm::radians(vec2f(Mouse::movement())*0.1f);
