@@ -12,6 +12,7 @@ SceneMain::SceneMain() {
     this->setName("SCENE");
 
     Window::getInstance()->setTitle("VoxelGame");
+    Window::getInstance()->setVsync(Window::DisabledVsync);
     Mouse::setGrab(false);
     Mouse::setRelativeMode(true);
 

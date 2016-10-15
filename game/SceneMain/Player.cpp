@@ -22,8 +22,6 @@ Player::~Player() {
 }
 
 void Player::update(float deltaTime) {
-    (void) deltaTime;
-
     //take input
     if(!Debugger::isShown()) processKeys(deltaTime);
 

@@ -20,8 +20,9 @@ void Entity::movePos(float deltaTime) { //collisons
     if(hitbox->collidesWithWorld(vec3f(disp.x,0,0))) {
         if ((!hitbox->collidesWithWorld(vec3f(disp.x,1.01,0)) || !hitbox->collidesWithWorld(vec3f(disp.x,0.5,0))) &&
             hitbox->collidesWithWorld(vec3f(0,-2,0))) {
-            //this is for auto climbing. First check: So that it can go through underground
-            //staircases. Second check: So it won't climb if it's in the air.
+            //this is for auto climbing.
+            //First check: So that it can go through underground staircases. 
+            //Second check: So it won't climb if it's in the air.
             pos.y += 15*deltaTime;
             vel.y += 2*deltaTime;
         }
@@ -41,8 +42,9 @@ void Entity::movePos(float deltaTime) { //collisons
     if(hitbox->collidesWithWorld(vec3f(0,0,disp.z))) {
         if ((!hitbox->collidesWithWorld(vec3f(0,1.01,disp.z)) || !hitbox->collidesWithWorld(vec3f(0,0.5,disp.z))) &&
             hitbox->collidesWithWorld(vec3f(0,-2,0))) {
-            //this is for auto climbing. First check: So that it can go through underground
-            //staircases. Second check: So it won't climb if it's in the air.
+            //this is for auto climbing.
+            //First check: So that it can go through underground staircases.
+            //Second check: So it won't climb if it's in the air.
             pos.y += 15*deltaTime;;
             vel.y += 2*deltaTime;;
         }
