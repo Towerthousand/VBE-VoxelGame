@@ -68,14 +68,17 @@ void World::fixedUpdate(float deltaTime) {
     generator.discardTasks();
     Column* newCol = nullptr;
     while((newCol = generator.pullDone()) != nullptr) {
-        if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr) delete newCol;
-        else columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
+        if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr)
+            delete newCol;
+        else
+            columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
     }
     Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2);
     std::vector<std::pair<float,std::pair<int,int> > > tasks;
     minLoadedCoords = vec3i(std::numeric_limits<int>::max());
     maxLoadedCoords = vec3i(std::numeric_limits<int>::lowest());
+    AABB bounds = AABB();
     chunksExist = false;
     for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
         for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
@@ -93,15 +96,12 @@ void World::fixedUpdate(float deltaTime) {
                 Chunk* c = actual->getChunkCC(y);
                 if(c == nullptr) continue;
                 c->update(deltaTime);
-                maxLoadedCoords.x = std::max(maxLoadedCoords.x, c->getX());
-                maxLoadedCoords.y = std::max(maxLoadedCoords.y, (int)c->getY());
-                maxLoadedCoords.z = std::max(maxLoadedCoords.z, c->getZ());
-                minLoadedCoords.x = std::min(minLoadedCoords.x, c->getX());
-                minLoadedCoords.y = std::min(minLoadedCoords.y, (int)c->getY());
-                minLoadedCoords.z = std::min(minLoadedCoords.z, c->getZ());
+                bounds.extend(vec3f(c->getAbsolutePos()));
                 chunksExist = true;
             }
         }
+    minLoadedCoords = vec3i(bounds.getMin()) / CHUNKSIZE;
+    maxLoadedCoords = vec3i(bounds.getMax()) / CHUNKSIZE;
     std::sort(tasks.begin(),tasks.end());
     for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
     Debugger::popMark();
