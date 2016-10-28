@@ -17,6 +17,8 @@
 #define NWORKERS 2
 
 ColumnGenerator::ColumnGenerator(int seed) {
+    currentLock = std::unique_lock<std::mutex>(currentMutex, std::defer_lock);
+    doneLock = std::unique_lock<std::mutex>(doneMutex, std::defer_lock);
     pool = new TaskPool(NWORKERS);
     generator.seed(seed);
     Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
@@ -95,17 +97,36 @@ void ColumnGenerator::enqueueTask(vec2i colPos) {
     });
 }
 
+bool ColumnGenerator::locked() const {
+    return (currentLock.owns_lock() && doneLock.owns_lock());
+}
+
+void ColumnGenerator::lock() {
+    VBE_ASSERT_SIMPLE(!locked());
+    currentLock.lock();
+    doneLock.lock();
+}
+
+void ColumnGenerator::unlock() {
+    VBE_ASSERT_SIMPLE(locked());
+    currentLock.unlock();
+    doneLock.unlock();
+}
+
 void ColumnGenerator::discardTasks() {
     pool->discard();
 }
 
 bool ColumnGenerator::currentlyWorking(vec2i column) {
-    std::unique_lock<std::mutex> lock(currentMutex);
+    std::unique_lock<std::mutex> l;
+    if(!locked()) l = std::unique_lock<std::mutex>(currentMutex);
     return current.find(column) != current.end();
 }
 
 Column* ColumnGenerator::pullDone() {
-    std::unique_lock<std::mutex> lock(doneMutex);
+    std::unique_lock<std::mutex> l;
+    if(!locked()) l = std::unique_lock<std::mutex>(doneMutex);
+
     if (done.empty()) return nullptr;
 
     Column* result = done.front();

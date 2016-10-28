@@ -65,6 +65,7 @@ void World::update(float deltaTime) {
 
 void World::fixedUpdate(float deltaTime) {
     Debugger::pushMark("World Fixed Update", "Time taken to update all blocks and insert new chunks");
+    generator.lock();
     generator.discardTasks();
     Column* newCol = nullptr;
     while((newCol = generator.pullDone()) != nullptr) {
@@ -76,18 +77,16 @@ void World::fixedUpdate(float deltaTime) {
     Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2);
     std::vector<std::pair<float,std::pair<int,int> > > tasks;
-    minLoadedCoords = vec3i(std::numeric_limits<int>::max());
-    maxLoadedCoords = vec3i(std::numeric_limits<int>::lowest());
     AABB bounds = AABB();
     chunksExist = false;
     for(int x = -WORLDSIZE/2; x < WORLDSIZE/2; ++x)
         for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
-            vec2f colPos = playerChunkPos + vec2f(x,z);
+            vec2i colPos = vec2i(playerChunkPos) + vec2i(x,z);
             Column* actual = getColumnCC(colPos.x,0,colPos.y);
-            if(actual == nullptr && !generator.currentlyWorking(vec2i(colPos))) {
-                Column*& realpos = columns[int(colPos.x)&WORLDSIZE_MASK][int(colPos.y)&WORLDSIZE_MASK];
+            if(actual == nullptr && !generator.currentlyWorking(colPos)) {
+                Column*& realpos = columns[colPos.x&WORLDSIZE_MASK][colPos.y&WORLDSIZE_MASK];
                 if(realpos != nullptr) delete realpos;
-                tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(playerChunkPos-colPos),std::pair<int,int>(colPos.x,colPos.y)));
+                tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(vec2f(x, z)),std::pair<int,int>(colPos.x,colPos.y)));
                 realpos = nullptr;
                 continue;
             }
@@ -100,10 +99,12 @@ void World::fixedUpdate(float deltaTime) {
                 chunksExist = true;
             }
         }
+    generator.unlock();
     minLoadedCoords = vec3i(bounds.getMin()) / CHUNKSIZE;
     maxLoadedCoords = vec3i(bounds.getMax()) / CHUNKSIZE;
     std::sort(tasks.begin(),tasks.end());
-    for(unsigned int i = 0; i < tasks.size(); ++i) generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
+    for(unsigned int i = 0; i < tasks.size(); ++i)
+        generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
     Debugger::popMark();
 }
 
