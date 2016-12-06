@@ -83,7 +83,7 @@ void World::fixedUpdate(float deltaTime) {
         for(int z = -WORLDSIZE/2; z < WORLDSIZE/2; ++z) {
             vec2i colPos = vec2i(playerChunkPos) + vec2i(x,z);
             Column* actual = getColumnCC(colPos.x,0,colPos.y);
-            if(actual == nullptr && !generator.currentlyWorking(colPos)) {
+            if(actual == nullptr) {
                 Column*& realpos = columns[colPos.x&WORLDSIZE_MASK][colPos.y&WORLDSIZE_MASK];
                 if(realpos != nullptr) delete realpos;
                 tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(vec2f(x, z)),std::pair<int,int>(colPos.x,colPos.y)));
@@ -104,7 +104,7 @@ void World::fixedUpdate(float deltaTime) {
     maxLoadedCoords = vec3i(bounds.getMax()) / CHUNKSIZE;
     std::sort(tasks.begin(),tasks.end());
     for(unsigned int i = 0; i < tasks.size(); ++i)
-        generator.enqueueTask(vec2i(tasks[i].second.first,tasks[i].second.second));
+        generator.queueLoad(vec2i(tasks[i].second.first,tasks[i].second.second));
     Debugger::popMark();
 }
 

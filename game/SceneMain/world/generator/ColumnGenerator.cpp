@@ -14,12 +14,23 @@
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
-#define NWORKERS 2
+#define NWORKERS_GENERATING 2
+#define NWORKERS_DECORATING 1
+#define NWORKERS_BUILDING 1
+#define NWORKERS_KILLING 1
 
 ColumnGenerator::ColumnGenerator(int seed) {
-    currentLock = std::unique_lock<std::mutex>(currentMutex, std::defer_lock);
+    // Create locks
+    loadedLock = std::unique_lock<std::mutex>(loadedMutex, std::defer_lock);
     doneLock = std::unique_lock<std::mutex>(doneMutex, std::defer_lock);
-    pool = new TaskPool(NWORKERS);
+
+    // Create pools
+    generatePool = new TaskPool(NWORKERS_GENERATING);
+    decoratePool = new TaskPool(NWORKERS_DECORATING);
+    buildPool = new TaskPool(NWORKERS_BUILDING);
+    killPool = new TaskPool(NWORKERS_KILLING);
+
+    // Create funtion tree for creation
     generator.seed(seed);
     Function3DSimplex* simplex31 = new Function3DSimplex(&generator,100,-70,70);
     Function3DSimplex* simplex32 = new Function3DSimplex(&generator,70,-50,50);
@@ -49,8 +60,11 @@ ColumnGenerator::ColumnGenerator(int seed) {
 }
 
 ColumnGenerator::~ColumnGenerator() {
-    pool->discard();
-    delete pool;
+    generatePool->discard();
+    delete generatePool;
+    delete decoratePool;
+    delete buildPool;
+    delete killPool;
     delete entry;
     while(!done.empty()) {
         delete done.front();
@@ -58,69 +72,111 @@ ColumnGenerator::~ColumnGenerator() {
     }
 }
 
-void ColumnGenerator::enqueueTask(vec2i colPos) {
-    pool->enqueue([this, colPos]() {
+void ColumnGenerator::queueLoad(vec2i colPos) {
+    generatePool->enqueue([this, colPos]() {
+        // Grab the job.
         {
-            std::unique_lock<std::mutex> lock(currentMutex);
-            VBE_ASSERT(current.find(colPos) == current.end(), "You may not enqueue a colum that is already being worked on");
-            current.insert(colPos);
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            if(loaded.find(colPos) != loaded.end()) return;
+            loaded.insert(std::pair<vec2i, ColumnData*>(colPos, new ColumnData()));
         }
 
+        // Generate
+        ID3Data raw = entry->getID3Data(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE,CHUNKSIZE,CHUNKSIZE*GENERATIONHEIGHT,CHUNKSIZE);
+
+        // Finished generating. Mark it as Raw.
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
+            ColumnData::State exp = ColumnData::Loading;
+            bool done = loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Raw);
+            VBE_ASSERT_SIMPLE(done);
+            (void) done;
+            loaded.at(colPos)->raw = new ID3Data(std::move(raw));
+        }
+
+        // Queue building (not decorating yet!)
+        queueBuild(colPos);
+    });
+}
+void ColumnGenerator::queueBuild(vec2i colPos) {
+    buildPool->enqueue([this, colPos]() {
+        // Grab the job for Building
+        ID3Data* data = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            if(loaded.find(colPos) == loaded.end()) return;
+            ColumnData::State exp = ColumnData::Raw;
+            if(!loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Building)) {
+                Log::message() << exp << Log::Flush;
+                return;
+            }
+            data = loaded.at(colPos)->raw;
+        }
+
+        // Generate Column object
         Column* col = new Column(colPos.x,colPos.y);
+        // Resize to hold all the chunks
         col->chunks.resize(GENERATIONHEIGHT,nullptr);
-        ID3Data data = entry->getID3Data(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE,CHUNKSIZE,CHUNKSIZE*GENERATIONHEIGHT,CHUNKSIZE);
+        // Traverse all and keep an eye on whether it's full or not
         for(int i = 0; i < GENERATIONHEIGHT; ++i) {
             col->chunks[i] = new Chunk(colPos.x,i,colPos.y);
             bool full = false;
             for(int x = 0; x < CHUNKSIZE; ++x)
                 for(int y = 0; y < CHUNKSIZE; ++y)
                     for(int z = 0; z < CHUNKSIZE; ++z) {
-                        if(data[x][i*CHUNKSIZE+y][z] != 0) full = true;
-                        col->chunks[i]->cubes[x][y][z] = data[x][i*CHUNKSIZE+y][z];
+                        if((*data)[x][i*CHUNKSIZE+y][z] != 0) full = true;
+                        col->chunks[i]->cubes[x][y][z] = (*data)[x][i*CHUNKSIZE+y][z];
                     }
+            // If chunk is empty, delete it
             if(!full) {
                 delete col->chunks[i];
                 col->chunks[i] = nullptr;
             }
         }
+        // Shrink chunk vector
         for(int i = GENERATIONHEIGHT-1; i >= 0; --i) {
             if(col->chunks[i] == nullptr) col->chunks.resize(i);
             else break;
         }
 
+        // Finished building. Mark it as built.
         {
-            std::unique_lock<std::mutex> lock(currentMutex);
-            std::unique_lock<std::mutex> lock2(doneMutex);
-            current.erase(colPos);
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
+            ColumnData::State exp = ColumnData::Building;
+            bool done = loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Built);
+            VBE_ASSERT_SIMPLE(done);
+            (void) done;
+            loaded.at(colPos)->col = col;
+        }
+
+        // Queue for collection
+        {
+            std::lock_guard<std::mutex> lock(doneMutex);
             done.push(col);
         }
     });
 }
 
 bool ColumnGenerator::locked() const {
-    return (currentLock.owns_lock() && doneLock.owns_lock());
+    return (loadedLock.owns_lock() && doneLock.owns_lock());
 }
 
 void ColumnGenerator::lock() {
     VBE_ASSERT_SIMPLE(!locked());
-    currentLock.lock();
+    loadedLock.lock();
     doneLock.lock();
 }
 
 void ColumnGenerator::unlock() {
     VBE_ASSERT_SIMPLE(locked());
-    currentLock.unlock();
+    loadedLock.unlock();
     doneLock.unlock();
 }
 
 void ColumnGenerator::discardTasks() {
-    pool->discard();
-}
-
-bool ColumnGenerator::currentlyWorking(vec2i column) {
-    std::unique_lock<std::mutex> l;
-    if(!locked()) l = std::unique_lock<std::mutex>(currentMutex);
-    return current.find(column) != current.end();
+    generatePool->discard();
 }
 
 Column* ColumnGenerator::pullDone() {
