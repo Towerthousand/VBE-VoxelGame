@@ -66,7 +66,7 @@ void World::update(float deltaTime) {
 void World::fixedUpdate(float deltaTime) {
     Debugger::pushMark("World Fixed Update", "Time taken to update all blocks and insert new chunks");
     generator.lock();
-    generator.discardTasks();
+    generator.discardGenerateTasks();
     Column* newCol = nullptr;
     while((newCol = generator.pullDone()) != nullptr) {
         if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr)

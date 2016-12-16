@@ -13,7 +13,7 @@ class ColumnGenerator {
         ~ColumnGenerator();
 
         void queueLoad(vec2i colPos);
-        void discardTasks();
+        void discardGenerateTasks();
         bool locked() const;
         void lock();
         void unlock();
@@ -22,6 +22,9 @@ class ColumnGenerator {
     private:
         void update(float deltaTime);
         void queueBuild(vec2i colPos);
+        void queueDelete(vec2i colPos);
+        void discardKillTasks();
+        bool inPlayerArea(vec2i colPos) const {(void) colPos; return true;}
 
         struct Comp {
                 bool operator()(const vec2i& a, const vec2i& b) {
@@ -46,10 +49,21 @@ class ColumnGenerator {
                 Decorating,
                 Decorated,
                 Building,
-                Built
+                Built,
+                Deleting,
+                Deleted
             };
 
-            std::atomic<State> state = {State::Loading};
+            State state = State::Loading;
+            bool inUse = false;
+
+            bool canDelete() {
+                return !inUse && (
+                    state == Built ||
+                    state == Decorated ||
+                    state == Raw
+                );
+            }
         };
 
         //      ____   _   __ ______

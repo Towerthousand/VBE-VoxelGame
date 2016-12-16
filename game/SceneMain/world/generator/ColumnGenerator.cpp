@@ -72,46 +72,74 @@ ColumnGenerator::~ColumnGenerator() {
     }
 }
 
+void ColumnGenerator::update(float deltaTime) {
+    (void) deltaTime;
+    std::lock_guard<std::mutex> lock(loadedMutex);
+    discardKillTasks();
+    std::list<vec2i> toDelete;
+    for(const std::pair<vec2i, ColumnData*>& kv : loaded) {
+        if(!inPlayerArea(kv.first) && kv.second->canDelete())
+            queueDelete(kv.first);
+        else if (kv.second->state == ColumnData::Deleted)
+            toDelete.push_back(kv.first);
+    }
+    for(const vec2i& p : toDelete) {
+        ColumnData* cp = loaded.at(p);
+        loaded.erase(p);
+        if(cp->col != nullptr) delete cp->col;
+        if(cp->raw != nullptr) delete cp->raw;
+        delete cp;
+    }
+}
+
 void ColumnGenerator::queueLoad(vec2i colPos) {
     generatePool->enqueue([this, colPos]() {
+        ColumnData* colData = nullptr;
+
         // Grab the job.
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
             if(loaded.find(colPos) != loaded.end()) return;
-            loaded.insert(std::pair<vec2i, ColumnData*>(colPos, new ColumnData()));
+            colData = new ColumnData();
+            loaded.insert(std::pair<vec2i, ColumnData*>(colPos, colData));
         }
 
         // Generate
-        ID3Data raw = entry->getID3Data(colPos.x*CHUNKSIZE,0,colPos.y*CHUNKSIZE,CHUNKSIZE,CHUNKSIZE*GENERATIONHEIGHT,CHUNKSIZE);
+        ID3Data raw = entry->getID3Data(
+            colPos.x*CHUNKSIZE,
+            0,
+            colPos.y*CHUNKSIZE,
+            CHUNKSIZE,
+            CHUNKSIZE*GENERATIONHEIGHT,
+            CHUNKSIZE
+        );
 
         // Finished generating. Mark it as Raw.
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
             VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
-            ColumnData::State exp = ColumnData::Loading;
-            bool done = loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Raw);
-            VBE_ASSERT_SIMPLE(done);
-            (void) done;
-            loaded.at(colPos)->raw = new ID3Data(std::move(raw));
+            VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
+            VBE_ASSERT_SIMPLE(colData->state == ColumnData::Loading);
+            colData->state = ColumnData::Raw;
+            colData->raw = new ID3Data(std::move(raw));
         }
 
         // Queue building (not decorating yet!)
         queueBuild(colPos);
     });
 }
+
 void ColumnGenerator::queueBuild(vec2i colPos) {
     buildPool->enqueue([this, colPos]() {
         // Grab the job for Building
-        ID3Data* data = nullptr;
+        ColumnData* colData = nullptr;
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
-            if(loaded.find(colPos) == loaded.end()) return;
-            ColumnData::State exp = ColumnData::Raw;
-            if(!loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Building)) {
-                Log::message() << exp << Log::Flush;
-                return;
-            }
-            data = loaded.at(colPos)->raw;
+            auto it = loaded.find(colPos);
+            if(it == loaded.end()) return;
+            colData = it->second;
+            if(colData->state != ColumnData::Raw) return;
+            colData->state = ColumnData::Building;
         }
 
         // Generate Column object
@@ -125,8 +153,8 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             for(int x = 0; x < CHUNKSIZE; ++x)
                 for(int y = 0; y < CHUNKSIZE; ++y)
                     for(int z = 0; z < CHUNKSIZE; ++z) {
-                        if((*data)[x][i*CHUNKSIZE+y][z] != 0) full = true;
-                        col->chunks[i]->cubes[x][y][z] = (*data)[x][i*CHUNKSIZE+y][z];
+                        if((*colData->raw)[x][i*CHUNKSIZE+y][z] != 0) full = true;
+                        col->chunks[i]->cubes[x][y][z] = (*colData->raw)[x][i*CHUNKSIZE+y][z];
                     }
             // If chunk is empty, delete it
             if(!full) {
@@ -144,17 +172,45 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
             VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
-            ColumnData::State exp = ColumnData::Building;
-            bool done = loaded.at(colPos)->state.compare_exchange_strong(exp, ColumnData::Built);
-            VBE_ASSERT_SIMPLE(done);
-            (void) done;
-            loaded.at(colPos)->col = col;
+            VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
+            VBE_ASSERT_SIMPLE(colData->state == ColumnData::Building);
+            colData->state = ColumnData::Built;
+            colData->col = col;
+            colData->inUse = true;
         }
 
         // Queue for collection
         {
             std::lock_guard<std::mutex> lock(doneMutex);
             done.push(col);
+        }
+    });
+}
+
+void ColumnGenerator::queueDelete(vec2i colPos) {
+    buildPool->enqueue([this, colPos]() {
+        // Grab the job for Building
+        ColumnData* colData = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            auto it = loaded.find(colPos);
+            if(it == loaded.end()) return;
+            colData = it->second;
+            if(!colData->canDelete()) return;
+            colData->state = ColumnData::Deleting;
+        }
+
+        // Destroy me like one of your french girls
+        // (save to disk, etc etc)
+
+        // Finished Deleting. Mark it as deleted
+        // Main thread will actually call the delete operator.
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
+            VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
+            VBE_ASSERT_SIMPLE(colData->state == ColumnData::Deleting);
+            colData->state = ColumnData::Deleted;
         }
     });
 }
@@ -175,8 +231,12 @@ void ColumnGenerator::unlock() {
     doneLock.unlock();
 }
 
-void ColumnGenerator::discardTasks() {
+void ColumnGenerator::discardGenerateTasks() {
     generatePool->discard();
+}
+
+void ColumnGenerator::discardKillTasks() {
+    killPool->discard();
 }
 
 Column* ColumnGenerator::pullDone() {
