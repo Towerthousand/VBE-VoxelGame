@@ -99,7 +99,7 @@ void World::fixedUpdate(float deltaTime) {
                 chunksExist = true;
             }
         }
-    generator.setRelevantArea(playerChunkPos-2, playerChunkPos+2);
+    generator.setRelevantArea(playerChunkPos-WORLDSIZE/2, playerChunkPos+WORLDSIZE/2-1);
     generator.update();
     generator.unlock();
     minLoadedCoords = vec3i(bounds.getMin()) / CHUNKSIZE;
