@@ -48,8 +48,6 @@ class ColumnGenerator {
             enum State {
                 Loading = 0,
                 Raw,
-                Decorating,
-                Decorated,
                 Building,
                 Built,
                 Deleting,
@@ -62,7 +60,6 @@ class ColumnGenerator {
             bool canDelete() {
                 return refCount == 0 && (
                     state == Built ||
-                    state == Decorated ||
                     state == Raw
                 );
             }
