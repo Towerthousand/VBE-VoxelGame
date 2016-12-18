@@ -77,10 +77,24 @@ void ColumnGenerator::update() {
     discardKillTasks();
     std::list<vec2i> toDelete;
     for(const std::pair<vec2i, ColumnData*>& kv : loaded) {
-        if(!inPlayerArea(kv.first) && kv.second->canDelete())
-            queueDelete(kv.first);
-        else if (kv.second->state == ColumnData::Deleted)
-            toDelete.push_back(kv.first);
+        if(!inPlayerArea(kv.first) && kv.second->canDelete()) {
+            continue;
+        }
+        switch(kv.second->state) {
+            case ColumnData::Loading:
+            case ColumnData::Building:
+            case ColumnData::Deleting:
+            case ColumnData::Built:
+                break;
+            case ColumnData::Raw:
+                queueBuild(kv.first);
+                break;
+            case ColumnData::Deleted:
+                toDelete.push_back(kv.first);
+                break;
+            default:
+                break;
+        }
     }
     for(const vec2i& p : toDelete) {
         ColumnData* cp = loaded.at(p);
@@ -89,7 +103,6 @@ void ColumnGenerator::update() {
         if(cp->raw != nullptr) delete cp->raw;
         delete cp;
     }
-    Log::message() << loaded.size() << Log::Flush;
 }
 
 void ColumnGenerator::queueLoad(vec2i colPos) {
@@ -125,9 +138,6 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             colData->raw = new ID3Data(std::move(raw));
             --colData->refCount;
         }
-
-        // Queue building (not decorating yet!)
-        queueBuild(colPos);
     });
 }
 
