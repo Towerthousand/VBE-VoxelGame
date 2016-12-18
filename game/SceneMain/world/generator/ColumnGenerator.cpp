@@ -78,6 +78,7 @@ void ColumnGenerator::update() {
     std::list<vec2i> toDelete;
     for(const std::pair<vec2i, ColumnData*>& kv : loaded) {
         if(!inPlayerArea(kv.first) && kv.second->canDelete()) {
+            queueDelete(kv.first);
             continue;
         }
         switch(kv.second->state) {
