@@ -152,6 +152,20 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             if(it == loaded.end()) return;
             colData = it->second;
             if(colData->state != ColumnData::Raw) return;
+            for(int x = -1; x <= 1; ++x)
+                for(int y = -1; y <= 1; ++y) {
+                    auto it2 = loaded.find(colPos+vec2i(x, y));
+                    if(it2 == loaded.end())
+                        return;
+                    if(it2->second->state != ColumnData::Raw &&
+                       it2->second->state != ColumnData::Building &&
+                       it2->second->state != ColumnData::Built) {
+                        return;
+                    }
+                }
+            for(int x = -1; x <= 1; ++x)
+                for(int y = -1; y <= 1; ++y)
+                    ++loaded.at(colPos+vec2i(x, y))->refCount;
             colData->state = ColumnData::Building;
             colData->refCount++;
         }
@@ -190,7 +204,9 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Building);
             colData->state = ColumnData::Built;
             colData->col = col;
-            --colData->refCount; // for this thread
+            for(int x = -1; x <= 1; ++x)
+                for(int y = -1; y <= 1; ++y)
+                    --loaded.at(colPos+vec2i(x, y))->refCount;
             ++colData->refCount; // for the player
         }
 
