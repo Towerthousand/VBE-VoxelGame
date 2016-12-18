@@ -72,9 +72,8 @@ ColumnGenerator::~ColumnGenerator() {
     }
 }
 
-void ColumnGenerator::update(float deltaTime) {
-    (void) deltaTime;
-    std::lock_guard<std::mutex> lock(loadedMutex);
+void ColumnGenerator::update() {
+    VBE_ASSERT_SIMPLE(locked());
     discardKillTasks();
     std::list<vec2i> toDelete;
     for(const std::pair<vec2i, ColumnData*>& kv : loaded) {
@@ -90,6 +89,7 @@ void ColumnGenerator::update(float deltaTime) {
         if(cp->raw != nullptr) delete cp->raw;
         delete cp;
     }
+    Log::message() << loaded.size() << Log::Flush;
 }
 
 void ColumnGenerator::queueLoad(vec2i colPos) {
@@ -101,6 +101,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             std::lock_guard<std::mutex> lock(loadedMutex);
             if(loaded.find(colPos) != loaded.end()) return;
             colData = new ColumnData();
+            ++colData->refCount;
             loaded.insert(std::pair<vec2i, ColumnData*>(colPos, colData));
         }
 
@@ -122,6 +123,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Loading);
             colData->state = ColumnData::Raw;
             colData->raw = new ID3Data(std::move(raw));
+            --colData->refCount;
         }
 
         // Queue building (not decorating yet!)
@@ -140,6 +142,7 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             colData = it->second;
             if(colData->state != ColumnData::Raw) return;
             colData->state = ColumnData::Building;
+            colData->refCount++;
         }
 
         // Generate Column object
@@ -176,7 +179,8 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Building);
             colData->state = ColumnData::Built;
             colData->col = col;
-            colData->inUse = true;
+            --colData->refCount; // for this thread
+            ++colData->refCount; // for the player
         }
 
         // Queue for collection
@@ -249,4 +253,28 @@ Column* ColumnGenerator::pullDone() {
     done.pop();
 
     return result;
+}
+
+void ColumnGenerator::unloadColumn(Column* col) {
+    std::unique_lock<std::mutex> l;
+    if(!locked()) l = std::unique_lock<std::mutex>(loadedMutex);
+
+    vec2i colPos = {col->getX(), col->getZ()};
+    VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
+    VBE_ASSERT_SIMPLE(loaded.at(colPos)->col == col);
+    VBE_ASSERT_SIMPLE(loaded.at(colPos)->state == ColumnData::Built);
+    loaded.at(colPos)->refCount--;
+}
+
+bool ColumnGenerator::inPlayerArea(const vec2i& colPos) const {
+    return colPos.x >= relevantMin.x &&
+           colPos.x <= relevantMax.x &&
+           colPos.y >= relevantMin.y &&
+           colPos.y <= relevantMax.y;
+}
+
+void ColumnGenerator::setRelevantArea(const vec2i& min, const vec2i&max) {
+    VBE_ASSERT_SIMPLE(min.x <= max.x && min.y <= max.y);
+    relevantMin = min;
+    relevantMax = max;
 }

@@ -70,12 +70,12 @@ void World::fixedUpdate(float deltaTime) {
     Column* newCol = nullptr;
     while((newCol = generator.pullDone()) != nullptr) {
         if(getColumnCC(newCol->getX(), 0, newCol->getZ()) != nullptr)
-            delete newCol;
+            generator.unloadColumn(newCol);
         else
             columns[newCol->getX()&WORLDSIZE_MASK][newCol->getZ()&WORLDSIZE_MASK] = newCol;
     }
     Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
-    vec2f playerChunkPos = vec2f(vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2);
+    vec2i playerChunkPos = vec2i(cam->getWorldPos().x,cam->getWorldPos().z) >> CHUNKSIZE_POW2;
     std::vector<std::pair<float,std::pair<int,int> > > tasks;
     AABB bounds = AABB();
     chunksExist = false;
@@ -85,7 +85,7 @@ void World::fixedUpdate(float deltaTime) {
             Column* actual = getColumnCC(colPos.x,0,colPos.y);
             if(actual == nullptr) {
                 Column*& realpos = columns[colPos.x&WORLDSIZE_MASK][colPos.y&WORLDSIZE_MASK];
-                if(realpos != nullptr) delete realpos;
+                if(realpos != nullptr) generator.unloadColumn(realpos);
                 tasks.push_back(std::pair<float,std::pair<int,int> >(glm::length(vec2f(x, z)),std::pair<int,int>(colPos.x,colPos.y)));
                 realpos = nullptr;
                 continue;
@@ -99,6 +99,8 @@ void World::fixedUpdate(float deltaTime) {
                 chunksExist = true;
             }
         }
+    generator.setRelevantArea(playerChunkPos-2, playerChunkPos+2);
+    generator.update();
     generator.unlock();
     minLoadedCoords = vec3i(bounds.getMin()) / CHUNKSIZE;
     maxLoadedCoords = vec3i(bounds.getMax()) / CHUNKSIZE;

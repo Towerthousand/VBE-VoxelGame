@@ -17,14 +17,16 @@ class ColumnGenerator {
         bool locked() const;
         void lock();
         void unlock();
+        void unloadColumn(Column* col);
+        void setRelevantArea(const vec2i& min, const vec2i&max);
         Column* pullDone();
+        void update();
 
     private:
-        void update(float deltaTime);
         void queueBuild(vec2i colPos);
         void queueDelete(vec2i colPos);
         void discardKillTasks();
-        bool inPlayerArea(vec2i colPos) const {(void) colPos; return true;}
+        bool inPlayerArea(const vec2i& colPos) const;
 
         struct Comp {
                 bool operator()(const vec2i& a, const vec2i& b) {
@@ -55,16 +57,20 @@ class ColumnGenerator {
             };
 
             State state = State::Loading;
-            bool inUse = false;
+            int refCount = 0;
 
             bool canDelete() {
-                return !inUse && (
+                return refCount == 0 && (
                     state == Built ||
                     state == Decorated ||
                     state == Raw
                 );
             }
         };
+
+        // All deleteable chunks outside this range will be deleted
+        vec2i relevantMin = {0, 0};
+        vec2i relevantMax = {0, 0};
 
         //      ____   _   __ ______
         //     / __ \ / | / // ____/ Do you have a moment
