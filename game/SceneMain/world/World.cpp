@@ -90,7 +90,6 @@ void World::fixedUpdate(float deltaTime) {
                 realpos = nullptr;
                 continue;
             }
-            if(actual == nullptr) continue;
             for(unsigned int y = 0; y < actual->getChunkCount(); ++y){
                 Chunk* c = actual->getChunkCC(y);
                 if(c == nullptr) continue;
