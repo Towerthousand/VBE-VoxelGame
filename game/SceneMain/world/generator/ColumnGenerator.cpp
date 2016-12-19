@@ -14,9 +14,9 @@
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
-#define NWORKERS_GENERATING 2
-#define NWORKERS_DECORATING 1
-#define NWORKERS_BUILDING 1
+#define NWORKERS_GENERATING 4
+#define NWORKERS_DECORATING 2
+#define NWORKERS_BUILDING 2
 #define NWORKERS_KILLING 1
 
 ColumnGenerator::ColumnGenerator(int seed) {
@@ -88,6 +88,9 @@ void ColumnGenerator::update() {
             case ColumnData::Built:
                 break;
             case ColumnData::Raw:
+                queueDecorate(kv.first);
+                break;
+            case ColumnData::Decorated:
                 queueBuild(kv.first);
                 break;
             case ColumnData::Deleted:
@@ -142,9 +145,9 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
     });
 }
 
-void ColumnGenerator::queueBuild(vec2i colPos) {
+void ColumnGenerator::queueDecorate(vec2i colPos) {
     buildPool->enqueue([this, colPos]() {
-        // Grab the job for Building
+        // Grab the job for Decorating
         ColumnData* colData = nullptr;
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
@@ -157,17 +160,56 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
                     auto it2 = loaded.find(colPos+vec2i(x, y));
                     if(it2 == loaded.end())
                         return;
-                    if(it2->second->state != ColumnData::Raw &&
-                       it2->second->state != ColumnData::Building &&
-                       it2->second->state != ColumnData::Built) {
+                    if(it2->second->state < ColumnData::Raw ||
+                       it2->second->state > ColumnData::Built) {
                         return;
                     }
                 }
             for(int x = -1; x <= 1; ++x)
                 for(int y = -1; y <= 1; ++y)
                     ++loaded.at(colPos+vec2i(x, y))->refCount;
+            colData->state = ColumnData::Decorating;
+        }
+
+        // Decorate this.
+        // Aha. Hmm-hmm
+
+        // Finished decorating. Mark it as decorated.
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            VBE_ASSERT_SIMPLE(loaded.find(colPos) != loaded.end());
+            VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
+            VBE_ASSERT_SIMPLE(colData->state == ColumnData::Decorating);
+            colData->state = ColumnData::Decorated;
+            for(int x = -1; x <= 1; ++x)
+                for(int y = -1; y <= 1; ++y)
+                    --loaded.at(colPos+vec2i(x, y))->refCount;
+        }
+    });
+}
+
+void ColumnGenerator::queueBuild(vec2i colPos) {
+    buildPool->enqueue([this, colPos]() {
+        // Grab the job for Building
+        ColumnData* colData = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(loadedMutex);
+            auto it = loaded.find(colPos);
+            if(it == loaded.end()) return;
+            colData = it->second;
+            if(colData->state != ColumnData::Decorated) return;
+            for(int x = -1; x <= 1; ++x)
+                for(int y = -1; y <= 1; ++y) {
+                    auto it2 = loaded.find(colPos+vec2i(x, y));
+                    if(it2 == loaded.end())
+                        return;
+                    if(it2->second->state < ColumnData::Decorated ||
+                       it2->second->state > ColumnData::Built) {
+                        return;
+                    }
+                }
             colData->state = ColumnData::Building;
-            colData->refCount++;
+            ++colData->refCount; // for the player
         }
 
         // Generate Column object
@@ -204,9 +246,7 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Building);
             colData->state = ColumnData::Built;
             colData->col = col;
-            for(int x = -1; x <= 1; ++x)
-                for(int y = -1; y <= 1; ++y)
-                    --loaded.at(colPos+vec2i(x, y))->refCount;
+            --colData->refCount; // for the thread
             ++colData->refCount; // for the player
         }
 

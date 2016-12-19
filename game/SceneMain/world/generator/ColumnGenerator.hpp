@@ -24,6 +24,7 @@ class ColumnGenerator {
 
     private:
         void queueBuild(vec2i colPos);
+        void queueDecorate(vec2i colPos);
         void queueDelete(vec2i colPos);
         void discardKillTasks();
         bool inPlayerArea(const vec2i& colPos) const;
@@ -40,6 +41,9 @@ class ColumnGenerator {
             // Raw column block data. May be empty if the column is
             // loaded into a Column object (so this->col != nullptr)
             ID3Data* raw = nullptr;
+            // Raw column block data. May be empty if the column is
+            // loaded into a Column object (so this->col != nullptr)
+            ID3Data* decorations = nullptr;
             // Finished column, with decorations and entities.
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr
@@ -48,6 +52,8 @@ class ColumnGenerator {
             enum State {
                 Loading = 0,
                 Raw,
+                Decorating,
+                Decorated,
                 Building,
                 Built,
                 Deleting,
