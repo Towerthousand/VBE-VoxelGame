@@ -38,16 +38,15 @@ class ColumnGenerator {
         };
 
         struct ColumnData {
-            // Raw column block data. May be empty if the column is
-            // loaded into a Column object (so this->col != nullptr)
-            ID3Data* raw = nullptr;
-            // Raw column block data. May be empty if the column is
-            // loaded into a Column object (so this->col != nullptr)
-            ID3Data* decorations = nullptr;
-            // Finished column, with decorations and entities.
-            // Will be nullptr if still being loaded, decorated, etc
-            // in which case this->raw != nullptr
-            Column* col = nullptr;
+            struct PairComp {
+                    bool operator()(const std::pair<vec3us, unsigned char>& a, const std::pair<vec3us, unsigned char>& b) {
+                        if(a.first.x != b.first.x) return a.first.x < b.first.x;
+                        if(a.first.y != b.first.y) return a.first.y < b.first.y;
+                        if(a.first.z != b.first.z) return a.first.z < b.first.z;
+                        if(a.second != b.second) return a.second < b.second;
+                        return false;
+                    }
+            };
 
             enum State {
                 Loading = 0,
@@ -60,15 +59,58 @@ class ColumnGenerator {
                 Deleted
             };
 
-            State state = State::Loading;
-            int refCount = 0;
-
-            bool canDelete() {
+            bool canDelete() const {
                 return refCount == 0 && (
                     state == Built ||
                     state == Raw
                 );
             }
+
+            inline void setDecorationWC(vec3i v, unsigned char layer, unsigned int val) {
+                setDecorationRC(v.x - pos.x*CHUNKSIZE, v.y, v.z - pos.y*CHUNKSIZE, layer, val);
+            }
+
+            inline void setDecorationWC(int x, int y, int z, unsigned char layer, unsigned int val) {
+                setDecorationRC(x - pos.x*CHUNKSIZE, y, z - pos.y*CHUNKSIZE, layer, val);
+            }
+
+            inline void setDecorationRC(vec3s v, unsigned char layer, unsigned int val) {
+                setDecorationRC(v.x, v.y, v.z, layer, val);
+            }
+
+            void setDecorationRC(short x, short y, short z, unsigned char layer, unsigned int val) {
+                int x1 = (x+16) >> CHUNKSIZE_POW2;
+                int z1 = (z+16) >> CHUNKSIZE_POW2;
+                VBE_ASSERT_SIMPLE(z1 >= 0 && z1 <= 2 && z1 >= 0 && z1 <= 2);
+                VBE_ASSERT_SIMPLE(y >= 0);
+                auto r = decIn[x1][z1].insert(
+                        std::make_pair(
+                            std::make_pair(
+                                vec3us(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK),
+                                layer
+                            ),
+                            val
+                        )
+                    );
+                VBE_ASSERT(r.second, "Trying to redecorate " << vec3us(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK) << " " << vec4s(x, y, z, layer) << " " << vec2i(x1, z1));
+                (void) r;
+            }
+
+            typedef std::map<std::pair<vec3us, unsigned char>, unsigned int, PairComp> ChunkDecoration;
+            typedef std::vector<std::vector<ChunkDecoration>> DecorationMatrix;
+
+            // Raw column block data. May be empty if the column is
+            // loaded into a Column object (so this->col != nullptr)
+            const ID3Data * raw = nullptr;
+            // Finished column, with decorations and entities.
+            // Will be nullptr if still being loaded, decorated, etc
+            // in which case this->raw != nullptr
+            Column* col = nullptr;
+            DecorationMatrix decIn;
+            ChunkDecoration decOut;
+            State state = State::Loading;
+            int refCount = 0;
+            vec2i pos = {0, 0};
         };
 
         // All deleteable chunks outside this range will be deleted

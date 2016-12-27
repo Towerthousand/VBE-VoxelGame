@@ -14,9 +14,9 @@
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
-#define NWORKERS_GENERATING 4
-#define NWORKERS_DECORATING 2
-#define NWORKERS_BUILDING 2
+#define NWORKERS_GENERATING 2
+#define NWORKERS_DECORATING 1
+#define NWORKERS_BUILDING 1
 #define NWORKERS_KILLING 1
 
 ColumnGenerator::ColumnGenerator(int seed) {
@@ -118,6 +118,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             std::lock_guard<std::mutex> lock(loadedMutex);
             if(loaded.find(colPos) != loaded.end()) return;
             colData = new ColumnData();
+            colData->pos = colPos;
             ++colData->refCount;
             loaded.insert(std::pair<vec2i, ColumnData*>(colPos, colData));
         }
@@ -139,6 +140,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Loading);
             colData->state = ColumnData::Raw;
+            colData->decIn = ColumnData::DecorationMatrix(3, std::vector<ColumnData::ChunkDecoration>(3));
             colData->raw = new ID3Data(std::move(raw));
             --colData->refCount;
         }
@@ -149,6 +151,7 @@ void ColumnGenerator::queueDecorate(vec2i colPos) {
     buildPool->enqueue([this, colPos]() {
         // Grab the job for Decorating
         ColumnData* colData = nullptr;
+        bool onMyOwn = false;
         {
             std::lock_guard<std::mutex> lock(loadedMutex);
             auto it = loaded.find(colPos);
@@ -158,12 +161,26 @@ void ColumnGenerator::queueDecorate(vec2i colPos) {
             for(int x = -1; x <= 1; ++x)
                 for(int y = -1; y <= 1; ++y) {
                     auto it2 = loaded.find(colPos+vec2i(x, y));
+                    // This chunk is in the edge of the currently loaded world.
+                    // Wait for neighboring chunks to be loaded/created
                     if(it2 == loaded.end())
                         return;
+                    // This chunk has a neighbor who is being created or destroyed
                     if(it2->second->state < ColumnData::Raw ||
-                       it2->second->state > ColumnData::Built) {
+                       it2->second->state > ColumnData::Built)
                         return;
-                    }
+                    // Special case (shouldn't happen unless you tamper with weird
+                    // savegames or have manually deleted chunks. What happens here
+                    // is that a chunk is being loaded from scratch with a fully loaded
+                    // (and built) chunk by it's side. Since decorating is a chunk-to-chunk
+                    // process (each chunk needs the neighboring input to proceed), if we just
+                    // go on we'll be losing the potential decorations from the already-built
+                    // chunk. Hence, we must do it differently: Generate this chunk by generating
+                    // all 8 surrounding chunks and decorating them, then apply this chunk's
+                    // decorations to the real neighbors who are too being decorated (skip the
+                    // built ones)
+                    if(it2->second->state > ColumnData::Decorated)
+                        onMyOwn = true;
                 }
             for(int x = -1; x <= 1; ++x)
                 for(int y = -1; y <= 1; ++y)
@@ -171,8 +188,28 @@ void ColumnGenerator::queueDecorate(vec2i colPos) {
             colData->state = ColumnData::Decorating;
         }
 
-        // Decorate this.
-        // Aha. Hmm-hmm
+        // Regenerating broken chunks is not supported yet. Try not to mess up your saves ;)
+        VBE_ASSERT(!onMyOwn, "Unsupported standalone chunk regen");
+        (void) onMyOwn;
+
+        // Decorate here. You can add any stuff you whant by calling setDecorationRC on colData.
+        // Decorations can be placed anywhere on the nearby world space: That is: from
+        // [-16, 31] on x and z, [0, min(32767, CHUNKSIZE*GENERATIONHEIGHT)] on y. If these
+        // decorations fall out of this chunk (outside of the [0, 15] range for x or z) they will
+        // be pushed onto the corresponding chunk at the end of the decoration stage.
+
+        // Testing decorations for spawn chunk
+        if(colPos == vec2i(0,0)) {
+            for(short i = -2; i < 2; ++i)
+                for(short y = 0; y < 128; ++y) {
+                    colData->setDecorationRC(i   , y,    8, 0, 5);
+                    colData->setDecorationRC(8   , y,    i, 0, 5);
+                    colData->setDecorationRC(16+i, y,    8, 0, 5);
+                    colData->setDecorationRC(8   , y, 16+i, 0, 5);
+                }
+            for(short y = 0; y < 256; ++y)
+                colData->setDecorationRC(8, y, 8, 0, 6);
+        }
 
         // Finished decorating. Mark it as decorated.
         {
@@ -182,8 +219,16 @@ void ColumnGenerator::queueDecorate(vec2i colPos) {
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Decorating);
             colData->state = ColumnData::Decorated;
             for(int x = -1; x <= 1; ++x)
-                for(int y = -1; y <= 1; ++y)
-                    --loaded.at(colPos+vec2i(x, y))->refCount;
+                for(int y = -1; y <= 1; ++y) {
+                    ColumnData* nd = loaded.at(colPos+vec2i(x, y));
+                    --nd->refCount;
+                    // If this is the current chunk or the chunk is already fully decorated, skip
+                    if(nd == colData || nd->state > ColumnData::Decorated)
+                        continue;
+                    // Push all decorations onto neighboring chunks so that they can use them
+                    // on their building step.
+                    nd->decOut.insert(colData->decIn[x+1][y+1].begin(), colData->decIn[x+1][y+1].end());
+                }
         }
     });
 }
@@ -214,6 +259,8 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
 
         // Generate Column object
         Column* col = new Column(colPos.x,colPos.y);
+        // Gather decorations
+        colData->decOut.insert(colData->decIn[1][1].begin(), colData->decIn[1][1].end());
         // Resize to hold all the chunks
         col->chunks.resize(GENERATIONHEIGHT,nullptr);
         // Traverse all and keep an eye on whether it's full or not
@@ -223,8 +270,22 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             for(int x = 0; x < CHUNKSIZE; ++x)
                 for(int y = 0; y < CHUNKSIZE; ++y)
                     for(int z = 0; z < CHUNKSIZE; ++z) {
-                        if((*colData->raw)[x][i*CHUNKSIZE+y][z] != 0) full = true;
-                        col->chunks[i]->cubes[x][y][z] = (*colData->raw)[x][i*CHUNKSIZE+y][z];
+                        vec3us c = {x, i*CHUNKSIZE+y, z};
+                        // Start off with generation data
+                        unsigned int dest = (*colData->raw)[c.x][c.y][c.z];
+                        // Search for match
+                        auto it = colData->decOut.lower_bound(std::make_pair(c, 0));
+                        if(it != colData->decOut.end() && it->first.first == c) {
+                            // Search for highest layer
+                            while(it != colData->decOut.end() && it->first.first == c)
+                               ++it;
+                            --it;
+                            // Only override Generation val if layer > 127 or air.
+                            if(it->first.second >= 127 || dest == 0)
+                                dest = it->second;
+                        }
+                        if(dest != 0) full = true;
+                        col->chunks[i]->cubes[x][y][z] = dest;
                     }
             // If chunk is empty, delete it
             if(!full) {
