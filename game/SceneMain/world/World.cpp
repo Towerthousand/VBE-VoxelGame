@@ -99,13 +99,13 @@ void World::fixedUpdate(float deltaTime) {
             }
         }
     generator.setRelevantArea(playerChunkPos-WORLDSIZE/2, playerChunkPos+WORLDSIZE/2-1);
+    std::sort(tasks.begin(),tasks.end());
+    for(unsigned int i = 0; i < tasks.size(); ++i)
+        generator.queueLoad(vec2i(tasks[i].second.first,tasks[i].second.second));
     generator.update();
     generator.unlock();
     minLoadedCoords = vec3i(bounds.getMin()) / CHUNKSIZE;
     maxLoadedCoords = vec3i(bounds.getMax()) / CHUNKSIZE;
-    std::sort(tasks.begin(),tasks.end());
-    for(unsigned int i = 0; i < tasks.size(); ++i)
-        generator.queueLoad(vec2i(tasks[i].second.first,tasks[i].second.second));
     Debugger::popMark();
 }
 
