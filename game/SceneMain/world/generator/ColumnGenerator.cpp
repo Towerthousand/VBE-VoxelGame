@@ -14,7 +14,7 @@
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
 
-#define NWORKERS_GENERATING 2
+#define NWORKERS_GENERATING 4
 #define NWORKERS_DECORATING 1
 #define NWORKERS_BUILDING 1
 #define NWORKERS_KILLING 1
@@ -74,7 +74,9 @@ ColumnGenerator::~ColumnGenerator() {
 
 void ColumnGenerator::update() {
     VBE_ASSERT_SIMPLE(locked());
-    discardKillTasks();
+    killPool->discard();
+    buildPool->discard();
+    decoratePool->discard();
     std::list<vec2i> toDelete;
     for(const std::pair<vec2i, ColumnData*>& kv : loaded) {
         if(!inPlayerArea(kv.first) && kv.second->canDelete()) {
@@ -365,10 +367,6 @@ void ColumnGenerator::unlock() {
 
 void ColumnGenerator::discardGenerateTasks() {
     generatePool->discard();
-}
-
-void ColumnGenerator::discardKillTasks() {
-    killPool->discard();
 }
 
 Column* ColumnGenerator::pullDone() {

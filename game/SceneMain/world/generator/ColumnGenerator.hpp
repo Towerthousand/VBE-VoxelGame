@@ -4,7 +4,6 @@
 #include "FunctionTerrain.hpp"
 #include <atomic>
 
-class FunctionTerrain;
 class TaskPool;
 class Column;
 class ColumnGenerator {
@@ -21,21 +20,6 @@ class ColumnGenerator {
         void setRelevantArea(const vec2i& min, const vec2i&max);
         Column* pullDone();
         void update();
-
-    private:
-        void queueBuild(vec2i colPos);
-        void queueDecorate(vec2i colPos);
-        void queueDelete(vec2i colPos);
-        void discardKillTasks();
-        bool inPlayerArea(const vec2i& colPos) const;
-
-        struct Comp {
-                bool operator()(const vec2i& a, const vec2i& b) {
-                    if(a.x != b.x) return a.x < b.x;
-                    if(a.y != b.y) return a.y < b.y;
-                    return false;
-                }
-        };
 
         struct ColumnData {
             struct PairComp {
@@ -112,6 +96,21 @@ class ColumnGenerator {
             int refCount = 0;
             vec2i pos = {0, 0};
         };
+
+    private:
+        void queueBuild(vec2i colPos);
+        void queueDecorate(vec2i colPos);
+        void queueDelete(vec2i colPos);
+        bool inPlayerArea(const vec2i& colPos) const;
+
+        struct Comp {
+                bool operator()(const vec2i& a, const vec2i& b) {
+                    if(a.x != b.x) return a.x < b.x;
+                    if(a.y != b.y) return a.y < b.y;
+                    return false;
+                }
+        };
+
 
         // All deleteable chunks outside this range will be deleted
         vec2i relevantMin = {0, 0};
