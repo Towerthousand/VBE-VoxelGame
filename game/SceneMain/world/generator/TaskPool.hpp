@@ -23,6 +23,7 @@ class TaskPool {
         -> std::future<typename std::result_of<F(Args...)>::type>;
 
         void discard();
+        int size();
 
     private:
         std::vector< std::thread > workers;
@@ -85,6 +86,11 @@ auto TaskPool::enqueue(F&& f, Args&&... args)
 inline void TaskPool::discard() {
     std::unique_lock<std::mutex> lock(queue_mutex);
     tasks = std::queue< std::function<void()> >();
+}
+
+int TaskPool::size() {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    return tasks.size();
 }
 
 #endif //TASKPOOL_HPP
