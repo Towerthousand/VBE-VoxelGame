@@ -27,7 +27,7 @@ float2Data Function2DSimplex::getFloat2Data(int x, int z, int sx, int sz) { //wo
     for(int localX = 0; localX < sx; ++localX)
         for(int localZ = 0; localZ < sz; ++localZ) {
             vec2d pos((x+localX)/scale,(z+localZ)/scale);
-            result[localX][localZ] = valSimplex2D(pos.x,pos.y); //more precision, slower
+            result[localX][localZ] = valSimplex2D(pos.x,pos.y);
         }
     return result;
 }
