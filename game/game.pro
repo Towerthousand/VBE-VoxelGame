@@ -23,6 +23,8 @@ SOURCES += main.cpp \
     SceneMain/BlurContainer.cpp \
     SceneMain/world/Column.cpp \
     SceneMain/world/Chunk.cpp \
+    SceneMain/world/generator/Noise3D.cpp \
+    SceneMain/world/generator/Noise2D.cpp \
     SceneMain/world/generator/Function2DConst.cpp \
     SceneMain/world/generator/Function2DSimplex.cpp \
     SceneMain/world/generator/Function3DAdd.cpp \
@@ -30,6 +32,7 @@ SOURCES += main.cpp \
     SceneMain/world/generator/Function3DSimplex.cpp \
     SceneMain/world/generator/Function3DSub.cpp \
     SceneMain/world/generator/Function3DYcoord.cpp \
+    SceneMain/world/generator/Function3DHelix.cpp \
     SceneMain/world/generator/FunctionTerrainHeightmap.cpp \
     SceneMain/world/generator/FunctionTerrainJoin.cpp \
     SceneMain/world/generator/FunctionTerrainOverlay.cpp \
@@ -41,8 +44,7 @@ SOURCES += main.cpp \
     SceneMain/world/DeferredCubeLight.cpp \
     SceneMain/world/Sun.cpp \
     SceneMain/Manager.cpp \
-    SceneMain/Debugger.cpp \
-    SceneMain/world/generator/Function3DHelix.cpp
+    SceneMain/Debugger.cpp
 
 HEADERS += \
     commons.hpp \
@@ -53,6 +55,8 @@ HEADERS += \
     SceneMain/BlurContainer.hpp \
     SceneMain/world/Column.hpp \
     SceneMain/world/Chunk.hpp \
+    SceneMain/world/generator/Noise3D.hpp \
+    SceneMain/world/generator/Noise2D.hpp \
     SceneMain/world/generator/Function2D.hpp \
     SceneMain/world/generator/Function2DConst.hpp \
     SceneMain/world/generator/Function2DSimplex.hpp \

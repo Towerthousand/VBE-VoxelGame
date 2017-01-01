@@ -4,7 +4,9 @@
 
 class Noise2D {
     public:
-        Noise2D();
+        Noise2D(std::mt19937* generator, float min, float max, float scale);
+        ~Noise2D();
+
         float get(float x, float y) const;
         float octavedGet(float x, float y, unsigned int octaves) const;
 
@@ -12,9 +14,12 @@ class Noise2D {
         int fastfloor(const float x) const;
         float dot(const int* g, const float x, const float y) const;
 
-        std::mt19937* generator;
+        float min = 0.0f;
+        float max = 1.0f;
+        mutable float scale = 1.0f;
+
         std::vector<int> perm;
         static const int grad3[12][3];
 };
 
-#endif // NOISE_HPP
+#endif // NOISE2D_HPP
