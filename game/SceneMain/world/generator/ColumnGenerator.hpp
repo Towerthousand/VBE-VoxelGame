@@ -6,6 +6,7 @@
 
 class TaskPool;
 class Column;
+class Dec;
 class ColumnGenerator {
     public:
          ColumnGenerator(int seed);
@@ -126,6 +127,8 @@ class ColumnGenerator {
 
         // Terrain generation entrypoint
         FunctionTerrain* entry = nullptr;
+        // Terrain decorators
+        std::vector<Dec*> decorators;
 
         // All loaded Columns. May be missing decorations
         std::unique_lock<std::mutex> loadedLock;
@@ -150,6 +153,7 @@ class ColumnGenerator {
 
         // Jobs that unload a ColumnData
         TaskPool* killPool = nullptr;
+
 };
 
 #endif // WORLDGENERATOR_HPP

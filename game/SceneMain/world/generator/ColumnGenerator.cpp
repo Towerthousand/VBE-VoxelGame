@@ -13,6 +13,7 @@
 #include "FunctionTerrainJoin.hpp"
 #include "Function3DHelix.hpp"
 #include "TaskPool.hpp"
+#include "DecTrees.hpp"
 
 #define NWORKERS_GENERATING 4
 #define NWORKERS_DECORATING 1
@@ -57,6 +58,9 @@ ColumnGenerator::ColumnGenerator(int seed) {
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(join2,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
     entry = over2;
+
+    // Create decorators
+    decorators.push_back(new DecTrees(&generator));
 }
 
 ColumnGenerator::~ColumnGenerator() {
@@ -70,6 +74,8 @@ ColumnGenerator::~ColumnGenerator() {
         delete done.front();
         done.pop();
     }
+    for(auto d : decorators)
+        delete d;
 }
 
 void ColumnGenerator::update() {
@@ -212,6 +218,9 @@ void ColumnGenerator::queueDecorate(vec2i colPos) {
             for(short y = 0; y < 256; ++y)
                 colData->setDecorationRC(8, y, 8, 0, 6);
         }
+
+        for(Dec* d : decorators)
+            d->decorate(colData);
 
         // Finished decorating. Mark it as decorated.
         {

@@ -4,7 +4,7 @@
 
 class Dec { //abstract
     public:
-        Dec() : Dec() {}
+        Dec() {}
         virtual ~Dec() {}
 
         virtual void decorate(ColumnGenerator::ColumnData* col) = 0;
