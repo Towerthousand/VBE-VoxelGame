@@ -153,7 +153,6 @@ class ColumnGenerator {
 
         // Jobs that unload a ColumnData
         TaskPool* killPool = nullptr;
-
 };
 
 #endif // WORLDGENERATOR_HPP

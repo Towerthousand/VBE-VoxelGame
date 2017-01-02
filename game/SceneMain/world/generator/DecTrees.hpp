@@ -9,8 +9,6 @@ class DecTrees final : public Dec {
             gridNoise(rng, 0.0f, 1.0f, 60.0f),
             dispNoiseX(rng, -0.5f, 0.5f, 0.1f),
             dispNoiseY(rng, -0.5f, 0.5f, 0.1f),
-            //dispNoiseX(rng, 0.0f, 0.0f, 0.1f),
-            //dispNoiseY(rng, 0.0f, 0.0f, 0.1f),
             dropNoise(rng, 0.0f, 1.0f, 100.0f) {}
         virtual ~DecTrees() {}
 
