@@ -77,7 +77,6 @@ class ColumnGenerator {
                             val
                         )
                     );
-                VBE_ASSERT(r.second, "Trying to redecorate " << vec3us(x & CHUNKSIZE_MASK, y, z & CHUNKSIZE_MASK) << " " << vec4s(x, y, z, layer) << " " << vec2i(x1, z1));
                 (void) r;
             }
 
