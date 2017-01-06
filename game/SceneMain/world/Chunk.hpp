@@ -92,7 +92,7 @@ class Chunk {
         World* world = nullptr;
         DeferredContainer* renderer = nullptr;
 
-        static const int textureIndexes[9][6];
+        static const int textureIndexes[10][6];
         static std::vector<vec3c> visibilityNodes;
         static vec3c d[6];
 

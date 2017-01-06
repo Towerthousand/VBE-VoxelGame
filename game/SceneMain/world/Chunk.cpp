@@ -7,7 +7,7 @@
 
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 
-const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, bottom, top
+const int Chunk::textureIndexes[10][6] = { //order is front, back, left, right, bottom, top
                                           {0, 0, 0, 0, 0, 0}, //0 = air (empty, will never be used)
                                           {2, 2, 2, 2, 2, 2}, //1 = dirt
                                           {3, 3, 3, 3, 3, 3}, //2 = stone
@@ -16,7 +16,8 @@ const int Chunk::textureIndexes[9][6] = { //order is front, back, left, right, b
                                           {5, 5, 5, 5, 5, 5}, //5 = cobble
                                           {6, 6, 6, 6, 7, 7}, //6 = log
                                           {8, 8, 8, 8, 8, 8}, //7 = planks
-                                          {9, 9, 9, 9, 9, 9}  //8 = sand
+                                          {9, 9, 9, 9, 9, 9},  //8 = sand
+                                          {10, 10, 10, 10, 10, 10}  //9 = leaves
                                         };
 std::vector<vec3c> Chunk::visibilityNodes;
 vec3c Chunk::d[6] = {
