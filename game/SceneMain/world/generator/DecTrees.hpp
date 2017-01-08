@@ -14,8 +14,6 @@ class DecTrees final : public Dec {
     public:
         DecTrees(std::mt19937* rng) :
             gridNoise(rng, 0.0f, 1.0f, 60.0f),
-            //dispNoiseX(rng, 0.0f, 0.0f, 0.1f),
-            //dispNoiseY(rng, 0.0f, 0.0f, 0.1f),
             dispNoiseX(rng, DECTREES_MIN_POWER, DECTREES_MAX_POWER, 0.1f),
             dispNoiseY(rng, DECTREES_MIN_POWER, DECTREES_MAX_POWER, 0.1f),
             dropNoise(rng, 0.0f, 1.0f, 100.0f),
@@ -35,17 +33,45 @@ class DecTrees final : public Dec {
             std::mt19937 gen(seed);
 
             int top = (*col->raw)[0].size();
+
+            // Tree height
             int tHeight = 8+gen()%8;
+
+            // Find Base
+            unsigned int base = 0;
+            for(int i = top-1; i >= 0; --i)
+                if((*col->raw)[pos.x][i][pos.y] != 0) {
+                    base = i;
+                    break;
+                }
 
             struct Branch {
                 unsigned int height, length, dir;
             };
 
-            static const vec2i disp[4] = {
-                { 0,  1},
-                { 1,  0},
-                { 0, -1},
-                {-1,  0},
+            // directions a branch for a given dir [n, s, e, w]
+            // can branch in
+            static const vec3i bDirs[4][9] = {
+                {
+                    { 0, 0, 1},{ 1, 0, 1},{-1, 0, 1},
+                    { 0, 1, 1},{ 1, 1, 1},{-1, 1, 1},
+                    { 0,-1, 1},{ 1,-1, 1},{-1,-1, 1},
+                },
+                {
+                    { 0, 0,-1},{ 1, 0,-1},{-1, 0,-1},
+                    { 0, 1,-1},{ 1, 1,-1},{-1, 1,-1},
+                    { 0,-1,-1},{ 1,-1,-1},{-1,-1,-1},
+                },
+                {
+                    { 1, 0, 0},{ 1, 0, 1},{ 1, 0,-1},
+                    { 1, 1, 0},{ 1, 1, 1},{ 1, 1,-1},
+                    { 1,-1, 0},{ 1,-1, 1},{ 1,-1,-1},
+                },
+                {
+                    {-1, 0, 0},{-1, 0, 1},{-1, 0,-1},
+                    {-1, 1, 0},{-1, 1, 1},{-1, 1,-1},
+                    {-1,-1, 0},{-1,-1, 1},{-1,-1,-1},
+                }
             };
 
             std::vector<Branch> branches(2+gen()%5);
@@ -57,29 +83,23 @@ class DecTrees final : public Dec {
                 b.dir = gen()%4;
             }
 
-            // Find Base
-            unsigned int base = 0;
-            for(int i = top-1; i >= 0; --i)
-                if((*col->raw)[pos.x][i][pos.y] != 0) {
-                    base = i;
-                    break;
-                }
-
             // Draw trunk
             for(int i = 0; i < tHeight; ++i) {
                 vec3i c = {pos.x, base+i+1, pos.y};
                 col->setDecorationRC(c, 1, 6);
-                if(i > 5)
+                if(tHeight-i < 5)
                     leafCubes.push_back(c);
             }
 
             // Draw branches
-            for(const Branch& b : branches)
+            for(const Branch& b : branches) {
+                vec3i p = {pos.x, base+b.height, pos.y};
                 for(unsigned int i = 1; i <= b.length; ++i) {
-                    vec3i c = {pos.x + disp[b.dir].x*i, base+b.height, pos.y+disp[b.dir].y*i};
-                    col->setDecorationRC(c, 1, 6);
-                    leafCubes.push_back(c);
+                    p += bDirs[b.dir][gen()%9];
+                    col->setDecorationRC(p, 1, 6);
+                    leafCubes.push_back(p);
                 }
+            }
 
             // Draw leaves
             for(const vec3i& c: leafCubes) {
@@ -94,7 +114,10 @@ class DecTrees final : public Dec {
                 for(int dx = -1; dx <= 1; ++dx)
                     for(int dy = -1; dy <= 1; ++dy)
                         for(int dz = -1; dz <= 1; ++dz) {
-                            if(gen()%10 != 0)
+                            // Randomly drop some of the outer leaves
+                            // to look more detailed
+                            int manhattanDist = abs(dx)+abs(dy)+abs(dz);
+                            if((gen()%3 == 0 && manhattanDist > 1))
                                 continue;
                             col->setDecorationRC(c+vec3i(dx, dy, dz), 1, 9);
                         }
