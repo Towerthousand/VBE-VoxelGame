@@ -81,7 +81,6 @@ class ColumnGenerator {
             }
 
             typedef std::map<std::pair<vec3us, unsigned char>, unsigned int, PairComp> ChunkDecoration;
-            typedef std::vector<std::vector<ChunkDecoration>> DecorationMatrix;
 
             // Raw column block data. May be empty if the column is
             // loaded into a Column object (so this->col != nullptr)
@@ -90,7 +89,7 @@ class ColumnGenerator {
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr
             Column* col = nullptr;
-            DecorationMatrix decIn;
+            ChunkDecoration decIn[3][3];
             ChunkDecoration decOut;
             State state = State::Loading;
             int refCount = 0;

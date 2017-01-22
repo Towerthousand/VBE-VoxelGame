@@ -159,7 +159,6 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Loading);
             colData->state = ColumnData::Raw;
-            colData->decIn = ColumnData::DecorationMatrix(3, std::vector<ColumnData::ChunkDecoration>(3));
             colData->raw = new ID3Data(std::move(raw));
             --colData->refCount;
         }
