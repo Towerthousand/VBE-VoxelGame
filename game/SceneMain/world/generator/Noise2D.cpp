@@ -28,9 +28,7 @@ Noise2D::Noise2D(std::mt19937* generator, float min, float max, float scale)
 Noise2D::~Noise2D() {
 }
 
-float Noise2D::get(float x, float y) const {
-    x = x/scale;
-    y = y/scale;
+float Noise2D::simplex(float x, float y) const {
     // Noise contributions from the three corners
     float n0, n1, n2;
 
@@ -103,15 +101,14 @@ float Noise2D::get(float x, float y) const {
 }
 
 float Noise2D::octavedGet(float x, float y, unsigned int octaves) const {
-    float initScale = scale;
+    float currScale = scale;
     float val = 0.0f;
     float numParts = float(1 << octaves) - 1;
-    for(unsigned int i = 0; i < octaves; ++i) {
-        float importance = float(1 << (octaves-i-1))/numParts;
-        val += get(x, y)*importance;
-        scale *= 0.5f;
+    for(unsigned int i = 1; i <= octaves; ++i) {
+        float importance = float(1 << (octaves-i))/numParts;
+        val += simplex(x/currScale, y/currScale)*importance;
+        currScale *= 0.5f;
     }
-    scale = initScale;
     return val;
 }
 
