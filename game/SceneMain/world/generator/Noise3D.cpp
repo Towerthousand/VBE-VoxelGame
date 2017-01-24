@@ -128,15 +128,14 @@ float Noise3D::get(float x, float y, float z) const {
 }
 
 float Noise3D::octavedGet(float x, float y, float z, unsigned int octaves) const {
-    float initScale = scale;
+    float currScale= scale;
     float val = 0.0f;
     float numParts = float(1 << octaves) - 1;
     for(unsigned int i = 0; i < octaves; ++i) {
         float importance = float(1 << (octaves-i-1))/numParts;
         val += get(x, y, z)*importance;
-        scale *= 0.5f;
+        currScale *= 0.5f;
     }
-    scale = initScale;
     return val;
 }
 
