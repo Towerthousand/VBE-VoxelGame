@@ -28,7 +28,7 @@ Noise3D::Noise3D(std::mt19937* generator, float min, float max, float scale)
 Noise3D::~Noise3D() {
 }
 
-float Noise3D::get(float x, float y, float z) const {
+float Noise3D::simplex(float x, float y, float z) const {
     x = x/scale;
     y = y/scale;
     z = z/scale;
@@ -133,7 +133,7 @@ float Noise3D::octavedGet(float x, float y, float z, unsigned int octaves) const
     float numParts = float(1 << octaves) - 1;
     for(unsigned int i = 0; i < octaves; ++i) {
         float importance = float(1 << (octaves-i-1))/numParts;
-        val += get(x, y, z)*importance;
+        val += simplex(x, y, z)*importance;
         currScale *= 0.5f;
     }
     return val;
