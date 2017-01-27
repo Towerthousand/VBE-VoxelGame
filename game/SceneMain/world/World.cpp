@@ -622,7 +622,7 @@ void World::drawPlayerCam(const Camera* cam) const{
             //manhattan culling
             if(Utils::manhattanDistance(initialChunkPos, neighbor) > Utils::manhattanDistance(initialChunkPos, neighbor)) continue;
             //visibility culling
-            if(currentChunk != nullptr && !currentChunk->visibilityTest((Chunk::Face)i)) continue;
+            if(currentChunk != nullptr && !currentChunk->visibilityTest((Chunk::Face)i) && currentChunk != initialChunk) continue;
             //fustrum culling
             colliderSphere.center = neighbor*CHUNKSIZE+colliderOffset;
             if(!Collision::intersects(cam->getFrustum(), colliderSphere)) continue;
