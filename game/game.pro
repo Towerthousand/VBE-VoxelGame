@@ -36,7 +36,7 @@ SOURCES += main.cpp \
     SceneMain/world/generator/FunctionTerrainHeightmap.cpp \
     SceneMain/world/generator/FunctionTerrainJoin.cpp \
     SceneMain/world/generator/FunctionTerrainOverlay.cpp \
-    SceneMain/world/generator/FunctionTerrrainVolume.cpp \
+    SceneMain/world/generator/FunctionTerrainVolume.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \
@@ -70,7 +70,7 @@ HEADERS += \
     SceneMain/world/generator/FunctionTerrainHeightmap.hpp \
     SceneMain/world/generator/FunctionTerrainJoin.hpp \
     SceneMain/world/generator/FunctionTerrainOverlay.hpp \
-    SceneMain/world/generator/FunctionTerrrainVolume.hpp \
+    SceneMain/world/generator/FunctionTerrainVolume.hpp \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \
