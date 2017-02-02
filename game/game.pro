@@ -71,6 +71,7 @@ HEADERS += \
     SceneMain/world/generator/FunctionTerrainJoin.hpp \
     SceneMain/world/generator/FunctionTerrainOverlay.hpp \
     SceneMain/world/generator/FunctionTerrainVolume.hpp \
+    SceneMain/world/generator/GenParams.hpp \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \

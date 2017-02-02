@@ -7,8 +7,9 @@ FunctionTerrainOverlay::FunctionTerrainOverlay(FunctionTerrain *source, unsigned
 FunctionTerrainOverlay::~FunctionTerrainOverlay() {
 }
 
-ID3Data FunctionTerrainOverlay::getID3Data(int x, int y, int z, int sx, int sy, int sz) { //x, y, z are chunkgrid coords
-    ID3Data src = source->getID3Data(x,y,z,sx,sy,sz);
+ID3Data FunctionTerrainOverlay::getID3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) { //x, y, z are chunkgrid coords
+    (void) params;
+    ID3Data src = source->getID3Data(x,y,z,sx,sy,sz,params);
     for(int i = 0; i < sx; ++i)
         for(int j = 0; j < sy-1; ++j)
             for(int k = 0; k < sz; ++k)

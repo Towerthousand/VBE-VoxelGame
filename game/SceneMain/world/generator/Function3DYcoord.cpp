@@ -6,7 +6,8 @@ Function3DYcoord::Function3DYcoord() {
 Function3DYcoord::~Function3DYcoord() {
 }
 
-float3Data Function3DYcoord::getFloat3Data(int x, int y, int z, int sx, int sy, int sz) {
+float3Data Function3DYcoord::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) {
+    (void) params;
     (void) x;
     (void) z;
     float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));

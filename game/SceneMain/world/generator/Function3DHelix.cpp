@@ -27,7 +27,8 @@ float Function3DHelix::helix(float x, float y, float z) {
     return 0;
 }
 
-float3Data Function3DHelix::getFloat3Data(int x, int y, int z, int sx, int sy, int sz) {
+float3Data Function3DHelix::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) {
+    (void) params;
     float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
     for(int localX = 0; localX < sx; ++localX)
         for(int localY = 0; localY < sy; ++localY)

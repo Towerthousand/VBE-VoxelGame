@@ -8,7 +8,7 @@ class Function3DSimplex : public Function3D {
         Function3DSimplex(std::mt19937* generator, float min, float max, float scale);
         ~Function3DSimplex();
 
-        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
+        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
     private:
         Noise3D noise;
 };

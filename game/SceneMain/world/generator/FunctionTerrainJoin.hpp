@@ -6,7 +6,7 @@ class FunctionTerrainJoin : public FunctionTerrain {
     public:
         FunctionTerrainJoin(FunctionTerrain* A, FunctionTerrain* B);
         virtual ~FunctionTerrainJoin();
-        ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
+        ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
     private:
         FunctionTerrain* funcA;
         FunctionTerrain* funcB;

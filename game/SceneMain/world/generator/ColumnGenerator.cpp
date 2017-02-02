@@ -6,7 +6,7 @@
 #include "Function3DYcoord.hpp"
 #include "Function3DAdd.hpp"
 #include "Function2DConst.hpp"
-#include "FunctionTerrrainVolume.hpp"
+#include "FunctionTerrainVolume.hpp"
 #include "FunctionTerrainOverlay.hpp"
 #include "Function2DSimplex.hpp"
 #include "FunctionTerrainHeightmap.hpp"
@@ -31,31 +31,11 @@ ColumnGenerator::ColumnGenerator(int seed) {
     buildPool = new TaskPool(NWORKERS_BUILDING);
     killPool = new TaskPool(NWORKERS_KILLING);
 
-    // Create funtion tree for creation
+    // Create function tree for creation
     generator.seed(seed);
-    Function3DSimplex* simplex31 = new Function3DSimplex(&generator,-70,70,100);
-    Function3DSimplex* simplex32 = new Function3DSimplex(&generator,-50,50,70);
-    Function3DSimplex* simplex33 = new Function3DSimplex(&generator,-30,30,50);
-    Function3DSimplex* simplex34 = new Function3DSimplex(&generator,-20,20,25);
-    Function3DSimplex* simplex35 = new Function3DSimplex(&generator,-5,5,10);
-    Function3DAdd* add1 = new Function3DAdd({simplex31, simplex32, simplex33, simplex34, simplex35});
-    Function3DYcoord* coord1 = new Function3DYcoord();
-    Function2DConst* const1 = new Function2DConst(70);
-    Function3DSub* sub1 = new Function3DSub(coord1,const1);
-    Function3DSub* sub2 = new Function3DSub(add1,sub1);
-    Function3DHelix* hel1 = new Function3DHelix(20,20,5,0,-20,0,5,25,40);
-    Function3DHelix* hel3 = new Function3DHelix(5,10,5,0,-10,10,10,25,40);
-    Function3DHelix* hel2 = new Function3DHelix(5,10,5,15,-10,10,10,25,40);
-    Function3DHelix* hel4 = new Function3DHelix(20,20,5,45,-20,0,5,25,40);
-    Function3DAdd* add2 = new Function3DAdd({sub2, hel1, hel2, hel3, hel4});
-    FunctionTerrrainVolume* vol1 = new FunctionTerrrainVolume(add2, 2);
     Function2DSimplex* simplex21 = new Function2DSimplex(&generator,90,95,50);
-    Function2DSimplex* simplex22 = new Function2DSimplex(&generator,0,130,100);
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
-    FunctionTerrainHeightmap* terrain2 = new FunctionTerrainHeightmap(simplex22,2);
-    FunctionTerrainJoin* join1 = new FunctionTerrainJoin(terrain2,terrain1);
-    FunctionTerrainJoin* join2 = new FunctionTerrainJoin(vol1,join1);
-    FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(join2,1,2,4);
+    FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
     entry = over2;
 
@@ -64,7 +44,7 @@ ColumnGenerator::ColumnGenerator(int seed) {
         Function3DYcoord* c = new Function3DYcoord();
         Function2DConst* co = new Function2DConst(70);
         Function3DSub* s = new Function3DSub(co, c);
-        FunctionTerrrainVolume* v1 = new FunctionTerrrainVolume(s, 2);
+        FunctionTerrainVolume* v1 = new FunctionTerrainVolume(s, 2);
         FunctionTerrainOverlay* o1 = new FunctionTerrainOverlay(v1,1,2,4);
         FunctionTerrainOverlay* o2 = new FunctionTerrainOverlay(o1,3,1,1);
         entry = o2;
@@ -149,7 +129,8 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             colPos.y*CHUNKSIZE,
             CHUNKSIZE,
             CHUNKSIZE*GENERATIONHEIGHT,
-            CHUNKSIZE
+            CHUNKSIZE,
+            nullptr
         );
 
         // Finished generating. Mark it as Raw.

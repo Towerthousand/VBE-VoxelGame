@@ -6,7 +6,7 @@ class Function3DSub : public Function3D {
     public:
         Function3DSub(Function3D* A, Function3D* B);
         ~Function3DSub();
-        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz); //world coords
+        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
 
     private:
         Function3D* funcA;

@@ -7,7 +7,8 @@ Function3DSimplex::Function3DSimplex(std::mt19937* generator, float min, float m
 Function3DSimplex::~Function3DSimplex() {
 }
 
-float3Data Function3DSimplex::getFloat3Data(int x, int y, int z, int sx, int sy, int sz) { //world coords
+float3Data Function3DSimplex::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) { //world coords
+    (void) params;
     float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
     for(int x2 = x; x2 < x+sx; ++x2)
         for(int y2 = y; y2 < y+sy; ++y2)
