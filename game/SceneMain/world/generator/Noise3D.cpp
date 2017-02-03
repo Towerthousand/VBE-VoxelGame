@@ -29,9 +29,6 @@ Noise3D::~Noise3D() {
 }
 
 float Noise3D::simplex(float x, float y, float z) const {
-    x = x/scale;
-    y = y/scale;
-    z = z/scale;
     float n0, n1, n2, n3; // Noise contributions from the four corners
 
     // Skew the input space to determine which simplex cell we're in
@@ -128,12 +125,12 @@ float Noise3D::simplex(float x, float y, float z) const {
 }
 
 float Noise3D::octavedGet(float x, float y, float z, unsigned int octaves) const {
-    float currScale= scale;
+    float currScale = scale;
     float val = 0.0f;
     float numParts = float(1 << octaves) - 1;
     for(unsigned int i = 0; i < octaves; ++i) {
         float importance = float(1 << (octaves-i-1))/numParts;
-        val += simplex(x, y, z)*importance;
+        val += simplex(x/currScale, y/currScale, z/currScale)*importance;
         currScale *= 0.5f;
     }
     return val;
