@@ -5,11 +5,15 @@
 
 class Function2DSimplex : public Function2D {
     public:
-        Function2DSimplex(std::mt19937* generator, float min, float max, float scale);
+        Function2DSimplex(std::mt19937* generator, float GenParams::* min, float GenParams::* max, float GenParams::* scale);
         ~Function2DSimplex();
 
         float2Data getFloat2Data(int x, int z, int sx, int sz, GenParams* params); //world coords
     private:
         Noise2D noise;
+
+        float GenParams::* min;
+        float GenParams::* max;
+        float GenParams::* scale;
 };
 #endif // FUNCTION2DSIMPLEX_HPP
