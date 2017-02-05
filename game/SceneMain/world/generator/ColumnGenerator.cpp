@@ -33,7 +33,7 @@ ColumnGenerator::ColumnGenerator(int seed) {
 
     // Create function tree for creation
     generator.seed(seed);
-    Function2DSimplex* simplex21 = new Function2DSimplex(&generator,90,95,50);
+    Function2DSimplex* simplex21 = new Function2DSimplex(&generator, &GenParams::lo, &GenParams::hi, &GenParams::scale);
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
@@ -49,6 +49,18 @@ ColumnGenerator::ColumnGenerator(int seed) {
         FunctionTerrainOverlay* o2 = new FunctionTerrainOverlay(o1,3,1,1);
         entry = o2;
     }
+
+    // Generation params
+    genParams[OCEAN] = {
+        10.0f,
+        30.0f,
+        100.0f
+    };
+    genParams[PLAINS] = {
+        90.0f,
+        110.0f,
+        100.0f
+    };
 
     // Create decorators
     decorators.push_back(new DecTrees(&generator));
@@ -103,7 +115,7 @@ void ColumnGenerator::update() {
         ColumnData* cp = loaded.at(p);
         loaded.erase(p);
         if(cp->col != nullptr) delete cp->col;
-        if(cp->raw != nullptr) delete cp->raw;
+        if(cp->raw != nullptr) delete[] cp->raw;
         delete cp;
     }
 }
@@ -123,15 +135,16 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
         }
 
         // Generate
-        ID3Data raw = entry->getID3Data(
-            colPos.x*CHUNKSIZE,
-            0,
-            colPos.y*CHUNKSIZE,
-            CHUNKSIZE,
-            CHUNKSIZE*GENERATIONHEIGHT,
-            CHUNKSIZE,
-            nullptr
-        );
+        unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
+        memset(raw, 0, CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT*sizeof(unsigned int));
+        for(int x = 0; x < CHUNKSIZE; ++x)
+            for(int z = 0; z < CHUNKSIZE; ++z)
+                entry->fillData(
+                    colPos.x*CHUNKSIZE+x,
+                    colPos.y*CHUNKSIZE+z,
+                    &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
+                    colPos.x > 0? &genParams[OCEAN] : &genParams[PLAINS]
+                );
 
         // Finished generating. Mark it as Raw.
         {
@@ -140,7 +153,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             VBE_ASSERT_SIMPLE(loaded.at(colPos) == colData);
             VBE_ASSERT_SIMPLE(colData->state == ColumnData::Loading);
             colData->state = ColumnData::Raw;
-            colData->raw = new ID3Data(std::move(raw));
+            colData->raw = raw;
             --colData->refCount;
         }
     });
@@ -270,11 +283,11 @@ void ColumnGenerator::queueBuild(vec2i colPos) {
             col->chunks[i] = new Chunk(colPos.x,i,colPos.y);
             bool full = false;
             for(int x = 0; x < CHUNKSIZE; ++x)
-                for(int y = 0; y < CHUNKSIZE; ++y)
-                    for(int z = 0; z < CHUNKSIZE; ++z) {
+                for(int z = 0; z < CHUNKSIZE; ++z)
+                    for(int y = 0; y < CHUNKSIZE; ++y) {
                         vec3us c = {x, i*CHUNKSIZE+y, z};
                         // Start off with generation data
-                        unsigned int dest = (*colData->raw)[c.x][c.y][c.z];
+                        unsigned int dest = colData->raw[c.x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + c.z*CHUNKSIZE*GENERATIONHEIGHT + c.y];
                         // Search for match
                         auto it = colData->decOut.lower_bound(std::make_pair(c, 0));
                         if(it != colData->decOut.end() && it->first.first == c) {

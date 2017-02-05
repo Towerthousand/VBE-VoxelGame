@@ -84,7 +84,7 @@ class ColumnGenerator {
 
             // Raw column block data. May be empty if the column is
             // loaded into a Column object (so this->col != nullptr)
-            const ID3Data * raw = nullptr;
+            const unsigned int* raw = nullptr;
             // Finished column, with decorations and entities.
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr
@@ -151,6 +151,9 @@ class ColumnGenerator {
 
         // Jobs that unload a ColumnData
         TaskPool* killPool = nullptr;
+
+        // Generation parameters for the different biomes
+        GenParams genParams[NUM_BIOMES];
 };
 
 #endif // WORLDGENERATOR_HPP
