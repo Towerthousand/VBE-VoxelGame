@@ -53,12 +53,12 @@ ColumnGenerator::ColumnGenerator(int seed) {
     // Generation params
     genParams[OCEAN] = {
         10.0f,
-        30.0f,
+        70.0f,
         100.0f
     };
     genParams[PLAINS] = {
-        90.0f,
-        110.0f,
+        130.0f,
+        140.0f,
         100.0f
     };
 
@@ -136,15 +136,39 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
 
         // Generate
         unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
-        memset(raw, 0, CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT*sizeof(unsigned int));
         for(int x = 0; x < CHUNKSIZE; ++x)
-            for(int z = 0; z < CHUNKSIZE; ++z)
+            for(int z = 0; z < CHUNKSIZE; ++z) {
+                // Testing. Par will be an average of the nearby biomes.
+                GenParams par = genParams[OCEAN];
+                float realz = colPos.y*CHUNKSIZE+z;
+                float contribO = 0.0f;
+                float contribP = 0.0f;
+
+                if(realz < 0) {
+                    contribO = 1.0f;
+                    contribP = 0.0f;
+                    if(realz > -40.0f)
+                        contribP = (1.0f*(40.0f+realz))/40.0f;
+                    contribP = -2.0f/2 * (glm::cos(glm::pi<float>()*contribP/2.0f) - 1);
+                    par = (genParams[OCEAN]*contribO + genParams[PLAINS]*contribP)/(contribO + contribP);
+                }
+                else if(realz > 0) {
+                    contribO = 0.0f;
+                    contribP = 1.0f;
+                    if(realz < 40.0f)
+                        contribO = (1.0f*(40.0f-realz))/40.0f;
+                    contribO = -2.0f/2 * (glm::cos(glm::pi<float>()*contribO/2.0f) - 1);
+                    par = (genParams[OCEAN]*contribO + genParams[PLAINS]*contribP)/(contribO + contribP);
+                }
+                else
+                    par = (genParams[OCEAN] + genParams[PLAINS])/2.0f;
                 entry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
-                    colPos.x > 0? &genParams[OCEAN] : &genParams[PLAINS]
+                    &par
                 );
+            }
 
         // Finished generating. Mark it as Raw.
         {
