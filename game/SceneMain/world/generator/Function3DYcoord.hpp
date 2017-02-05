@@ -6,7 +6,7 @@ class Function3DYcoord : public Function3D {
     public:
         Function3DYcoord();
         ~Function3DYcoord();
-        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
+        virtual void fillData(int x, int z, floatType* data, GenParams* params) override;
 };
 
 #endif // FUNCTION3DYCOORD_HPP

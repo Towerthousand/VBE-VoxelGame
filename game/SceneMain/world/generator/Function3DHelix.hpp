@@ -6,7 +6,7 @@ class Function3DHelix : public Function3D {
     public:
         Function3DHelix(float period, float width, float range, float offset, float yoffset, float zoffset, float tiling, float sin, float sin2);
         ~Function3DHelix();
-        float3Data getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
+        virtual void fillData(int x, int z, floatType* data, GenParams* params) override;
 
     private:
         float helix(float x, float y, float z);

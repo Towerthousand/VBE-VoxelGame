@@ -8,7 +8,7 @@ class Function2DSimplex : public Function2D {
         Function2DSimplex(std::mt19937* generator, float GenParams::* min, float GenParams::* max, float GenParams::* scale);
         ~Function2DSimplex();
 
-        float2Data getFloat2Data(int x, int z, int sx, int sz, GenParams* params); //world coords
+        floatType getValue(int x, int z, GenParams* params) override;
     private:
         Noise2D noise;
 

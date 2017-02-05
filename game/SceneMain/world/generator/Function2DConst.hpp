@@ -6,7 +6,7 @@ class Function2DConst : public Function2D {
     public:
         Function2DConst(float val);
         ~Function2DConst();
-        float2Data getFloat2Data(int x, int z, int sx, int sz, GenParams* params); //world coords
+        floatType getValue(int x, int z, GenParams* params) override;
 
     private:
         float val;

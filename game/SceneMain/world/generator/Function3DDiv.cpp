@@ -8,14 +8,11 @@ Function3DDiv::~Function3DDiv(){
     delete funcB;
 }
 
-float3Data Function3DDiv::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) {
-    (void) params;
-    float3Data dataA = funcA->getFloat3Data(x,y,z,sx,sy,sz,params);
-    float3Data dataB = funcB->getFloat3Data(x,y,z,sx,sy,sz,params);
-    float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
-    for(int i = 0; i < sx; ++i)
-        for(int j = 0; j < sy; ++j)
-            for(int k = 0; k < sz; ++k)
-                result[i][j][k] = dataA[i][j][k] / dataB[i][j][k];
-    return result;
+void Function3DDiv::fillData(int x, int z, floatType* data, GenParams* params) {
+    floatType* divisor = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
+    funcA->fillData(x, z, data, params);
+    funcB->fillData(x, z, divisor, params);
+    for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
+        data[y] /= divisor[y];
+    delete[] divisor;
 }

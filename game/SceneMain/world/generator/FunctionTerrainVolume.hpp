@@ -7,7 +7,7 @@ class FunctionTerrainVolume : public FunctionTerrain {
     public:
         FunctionTerrainVolume(Function3D* source, unsigned int blockID);
         virtual ~FunctionTerrainVolume();
-        ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
+        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) override;
     private:
         Function3D* source;
         unsigned int blockID;

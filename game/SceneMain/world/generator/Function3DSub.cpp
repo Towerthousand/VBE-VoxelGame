@@ -8,14 +8,11 @@ Function3DSub::~Function3DSub(){
     delete funcB;
 }
 
-float3Data Function3DSub::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) {
-    (void) params;
-    float3Data dataA = funcA->getFloat3Data(x,y,z,sx,sy,sz,params);
-    float3Data dataB = funcB->getFloat3Data(x,y,z,sx,sy,sz,params);
-    float3Data result(sx,float2Data(sy,float1Data(sz,0.0)));
-    for(int i = 0; i < sx; ++i)
-        for(int j = 0; j < sy; ++j)
-            for(int k = 0; k < sz; ++k)
-                result[i][j][k] = dataA[i][j][k] - dataB[i][j][k];
-    return result;
+void Function3DSub::fillData(int x, int z, floatType* data, GenParams* params) {
+    floatType* substract = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
+    funcA->fillData(x, z, data, params);
+    funcB->fillData(x, z, substract, params);
+    for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
+        data[y] -= substract[y];
+    delete[] substract;
 }

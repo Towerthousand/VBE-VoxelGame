@@ -7,18 +7,14 @@ FunctionTerrainOverlay::FunctionTerrainOverlay(FunctionTerrain *source, unsigned
 FunctionTerrainOverlay::~FunctionTerrainOverlay() {
 }
 
-ID3Data FunctionTerrainOverlay::getID3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) { //x, y, z are chunkgrid coords
-    (void) params;
-    ID3Data src = source->getID3Data(x,y,z,sx,sy,sz,params);
-    for(int i = 0; i < sx; ++i)
-        for(int j = 0; j < sy-1; ++j)
-            for(int k = 0; k < sz; ++k)
-                if (src[i][j][k] == surfaceID && src[i][j+1][k] == 0)
-                    for (int a = 0; a < depth; ++a) {
-                        if ( (j-a)>= 0 && src[i][j-a][k] == surfaceID)
-                            src[i][j-a][k] = overlayID;
-                        else
-                            break;
-                    }
-    return src;
+void FunctionTerrainOverlay::fillData(int x, int z, unsigned int* data, GenParams* params) {
+    source->fillData(x, z, data, params);
+    for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE-1; ++y)
+        if (data[y] == surfaceID && data[y+1] == 0)
+            for (int a = 0; a < depth; ++a) {
+                if (y-a >= 0 && data[y-a] == surfaceID)
+                    data[y-a] = overlayID;
+                else
+                    break;
+            }
 }

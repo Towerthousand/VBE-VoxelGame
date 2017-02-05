@@ -7,7 +7,7 @@ class FunctionTerrainHeightmap : public FunctionTerrain {
     public:
         FunctionTerrainHeightmap(Function2D* source, unsigned int blockID);
         virtual ~FunctionTerrainHeightmap();
-        ID3Data getID3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params); //world coords
+        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) override;
     private:
         Function2D* source;
         unsigned int blockID;

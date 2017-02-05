@@ -7,15 +7,16 @@ Function3DAdd::~Function3DAdd(){
     for(Function3D* f : operands) delete f;
 }
 
-float3Data Function3DAdd::getFloat3Data(int x, int y, int z, int sx, int sy, int sz, GenParams* params) {
-    (void) params;
-    std::vector<float3Data> data;
-    for(unsigned int i = 1; i < operands.size(); ++i) data.push_back(operands[i]->getFloat3Data(x, y, z, sx, sy, sz, params));
-    float3Data ret = operands[0]->getFloat3Data(x, y, z, sx, sy, sz, params);
-    for(unsigned int d = 1; d < data.size(); ++d)
-        for(int i = 0; i < sx; ++i)
-            for(int j = 0; j < sy; ++j)
-                for(int k = 0; k < sz; ++k)
-                    ret[i][j][k] += data[d][i][j][k];
-    return ret;
+void Function3DAdd::fillData(int x, int z, floatType* data, GenParams* params) {
+    std::vector<floatType*> sources;
+    for(unsigned int i = 1; i < operands.size(); ++i) {
+        sources.push_back(new floatType[GENERATIONHEIGHT*CHUNKSIZE]);
+        operands[i]->fillData(x, z, sources[i-1], params);
+    }
+    operands[0]->fillData(x, z, data, params);
+    for(floatType* s : sources)
+        for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
+            data[y] += s[y];
+    for(floatType* s : sources)
+        delete[] s;
 }
