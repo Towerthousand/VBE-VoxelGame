@@ -44,6 +44,7 @@ SOURCES += main.cpp \
     SceneMain/world/DeferredCubeLight.cpp \
     SceneMain/world/Sun.cpp \
     SceneMain/Manager.cpp \
+    SceneMain/world/generator/GenParams.cpp \
     SceneMain/Debugger.cpp
 
 HEADERS += \
