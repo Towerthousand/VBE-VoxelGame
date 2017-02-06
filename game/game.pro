@@ -23,20 +23,21 @@ SOURCES += main.cpp \
     SceneMain/BlurContainer.cpp \
     SceneMain/world/Column.cpp \
     SceneMain/world/Chunk.cpp \
-    SceneMain/world/generator/Noise3D.cpp \
-    SceneMain/world/generator/Noise2D.cpp \
-    SceneMain/world/generator/Function2DConst.cpp \
-    SceneMain/world/generator/Function2DSimplex.cpp \
-    SceneMain/world/generator/Function3DAdd.cpp \
-    SceneMain/world/generator/Function3DDiv.cpp \
-    SceneMain/world/generator/Function3DSimplex.cpp \
-    SceneMain/world/generator/Function3DSub.cpp \
-    SceneMain/world/generator/Function3DYcoord.cpp \
-    SceneMain/world/generator/Function3DHelix.cpp \
-    SceneMain/world/generator/FunctionTerrainHeightmap.cpp \
-    SceneMain/world/generator/FunctionTerrainJoin.cpp \
-    SceneMain/world/generator/FunctionTerrainOverlay.cpp \
-    SceneMain/world/generator/FunctionTerrainVolume.cpp \
+    SceneMain/world/generator/terrainFunctions/Noise3D.cpp \
+    SceneMain/world/generator/terrainFunctions/Noise2D.cpp \
+    SceneMain/world/generator/terrainFunctions/Function2DConst.cpp \
+    SceneMain/world/generator/terrainFunctions/Function2DSimplex.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DAdd.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DDiv.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DSimplex.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DSub.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DYcoord.cpp \
+    SceneMain/world/generator/terrainFunctions/Function3DHelix.cpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainHeightmap.cpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.cpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.cpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.cpp \
+    SceneMain/world/generator/terrainFunctions/GenParams.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \
@@ -44,7 +45,6 @@ SOURCES += main.cpp \
     SceneMain/world/DeferredCubeLight.cpp \
     SceneMain/world/Sun.cpp \
     SceneMain/Manager.cpp \
-    SceneMain/world/generator/GenParams.cpp \
     SceneMain/Debugger.cpp
 
 HEADERS += \
@@ -56,23 +56,24 @@ HEADERS += \
     SceneMain/BlurContainer.hpp \
     SceneMain/world/Column.hpp \
     SceneMain/world/Chunk.hpp \
-    SceneMain/world/generator/Noise3D.hpp \
-    SceneMain/world/generator/Noise2D.hpp \
-    SceneMain/world/generator/Function2D.hpp \
-    SceneMain/world/generator/Function2DConst.hpp \
-    SceneMain/world/generator/Function2DSimplex.hpp \
-    SceneMain/world/generator/Function3D.hpp \
-    SceneMain/world/generator/Function3DAdd.hpp \
-    SceneMain/world/generator/Function3DDiv.hpp \
-    SceneMain/world/generator/Function3DSimplex.hpp \
-    SceneMain/world/generator/Function3DSub.hpp \
-    SceneMain/world/generator/Function3DYcoord.hpp \
-    SceneMain/world/generator/FunctionTerrain.hpp \
-    SceneMain/world/generator/FunctionTerrainHeightmap.hpp \
-    SceneMain/world/generator/FunctionTerrainJoin.hpp \
-    SceneMain/world/generator/FunctionTerrainOverlay.hpp \
-    SceneMain/world/generator/FunctionTerrainVolume.hpp \
-    SceneMain/world/generator/GenParams.hpp \
+    SceneMain/world/generator/terrainFunctions/Noise3D.hpp \
+    SceneMain/world/generator/terrainFunctions/Noise2D.hpp \
+    SceneMain/world/generator/terrainFunctions/Function2D.hpp \
+    SceneMain/world/generator/terrainFunctions/Function2DConst.hpp \
+    SceneMain/world/generator/terrainFunctions/Function2DSimplex.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3D.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DAdd.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DDiv.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DSimplex.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DSub.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DYcoord.hpp \
+    SceneMain/world/generator/terrainFunctions/Function3DHelix.hpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrain.hpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainHeightmap.hpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.hpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.hpp \
+    SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.hpp \
+    SceneMain/world/generator/terrainFunctions/GenParams.hpp \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \
@@ -81,8 +82,7 @@ HEADERS += \
     SceneMain/world/generator/TaskPool.hpp \
     SceneMain/world/Sun.hpp \
     SceneMain/Manager.hpp \
-    SceneMain/Debugger.hpp \
-    SceneMain/world/generator/Function3DHelix.hpp
+    SceneMain/Debugger.hpp
 
 OTHER_FILES += \
     assets/shaders/quad.vert \

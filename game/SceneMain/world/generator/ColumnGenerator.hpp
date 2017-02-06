@@ -1,8 +1,7 @@
 #ifndef WORLDGENERATOR_HPP
 #define WORLDGENERATOR_HPP
 #include "commons.hpp"
-#include "FunctionTerrain.hpp"
-#include <atomic>
+#include "terrainFunctions/FunctionTerrain.hpp"
 
 class TaskPool;
 class Column;

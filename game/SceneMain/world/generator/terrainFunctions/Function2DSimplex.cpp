@@ -8,5 +8,5 @@ Function2DSimplex::~Function2DSimplex() {
 }
 
 floatType Function2DSimplex::getValue(int x, int z, GenParams* params) {
-    return params->*min + (params->*max-params->*min)*noise.get(x/params->*scale, z/params->*scale);
+    return params->*min + (params->*max-params->*min)*(1.0f-glm::abs(-1.0f+2.0f*noise.octavedGet(x/params->*scale, z/params->*scale, 4)));
 }
