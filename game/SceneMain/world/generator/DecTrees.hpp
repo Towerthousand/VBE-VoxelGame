@@ -1,7 +1,7 @@
 #ifndef DECTREES_HPP
 #define DECTREES_HPP
 #include "Dec.hpp"
-#include "terrainFunctions/Noise2D.hpp"
+#include "Noise2D.hpp"
 
 #define DECTREES_MIN_GRID_SIZE 2
 #define DECTREES_MAX_GRID_SIZE 4

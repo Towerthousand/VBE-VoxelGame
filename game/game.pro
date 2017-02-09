@@ -23,8 +23,8 @@ SOURCES += main.cpp \
     SceneMain/BlurContainer.cpp \
     SceneMain/world/Column.cpp \
     SceneMain/world/Chunk.cpp \
-    SceneMain/world/generator/terrainFunctions/Noise3D.cpp \
-    SceneMain/world/generator/terrainFunctions/Noise2D.cpp \
+    SceneMain/world/generator/Noise3D.cpp \
+    SceneMain/world/generator/Noise2D.cpp \
     SceneMain/world/generator/terrainFunctions/Function2DConst.cpp \
     SceneMain/world/generator/terrainFunctions/Function2DSimplex.cpp \
     SceneMain/world/generator/terrainFunctions/Function3DAdd.cpp \
@@ -37,7 +37,7 @@ SOURCES += main.cpp \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.cpp \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.cpp \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.cpp \
-    SceneMain/world/generator/terrainFunctions/GenParams.cpp \
+    SceneMain/world/generator/GenParams.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \
@@ -56,8 +56,8 @@ HEADERS += \
     SceneMain/BlurContainer.hpp \
     SceneMain/world/Column.hpp \
     SceneMain/world/Chunk.hpp \
-    SceneMain/world/generator/terrainFunctions/Noise3D.hpp \
-    SceneMain/world/generator/terrainFunctions/Noise2D.hpp \
+    SceneMain/world/generator/Noise3D.hpp \
+    SceneMain/world/generator/Noise2D.hpp \
     SceneMain/world/generator/terrainFunctions/Function2D.hpp \
     SceneMain/world/generator/terrainFunctions/Function2DConst.hpp \
     SceneMain/world/generator/terrainFunctions/Function2DSimplex.hpp \
@@ -73,7 +73,7 @@ HEADERS += \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.hpp \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.hpp \
     SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.hpp \
-    SceneMain/world/generator/terrainFunctions/GenParams.hpp \
+    SceneMain/world/generator/GenParams.hpp \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
     SceneMain/Player.hpp \
