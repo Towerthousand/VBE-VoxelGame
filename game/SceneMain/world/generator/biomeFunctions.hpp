@@ -15,12 +15,12 @@ class BiomeSet final {
         const bool reverse = false;
 };
 
-class BiomeFunction { //abstract
+class FunctionBiome { //abstract
     public:
-        BiomeFunction(std::mt19937* generator) {
+        FunctionBiome(std::mt19937* generator) {
             randomOffset = (*generator)();
         }
-        virtual ~BiomeFunction() {
+        virtual ~FunctionBiome() {
         }
 
         virtual std::vector<int> getBiomeData(int px, int pz, int sx, int sz) const = 0;
@@ -45,9 +45,9 @@ class BiomeFunction { //abstract
         }
 };
 
-class BiomeConst final : public BiomeFunction {
+class BiomeConst final : public FunctionBiome {
     public:
-        BiomeConst(std::mt19937* generator, int biome) : BiomeFunction(generator), biome(biome) {
+        BiomeConst(std::mt19937* generator, int biome) : FunctionBiome(generator), biome(biome) {
         }
 
         virtual ~BiomeConst() {
@@ -62,10 +62,10 @@ class BiomeConst final : public BiomeFunction {
         const int biome = 0;
 };
 
-class BiomeCombine final : public BiomeFunction {
+class BiomeCombine final : public FunctionBiome {
     public:
-        BiomeCombine(std::mt19937* generator, BiomeFunction* baseA, BiomeFunction* baseB, BiomeSet setA, BiomeSet setB, int replace=-1)
-            : BiomeFunction(generator), baseA(baseA), baseB(baseB), setA(setA), setB(setB), replace(replace) {
+        BiomeCombine(std::mt19937* generator, FunctionBiome* baseA, FunctionBiome* baseB, BiomeSet setA, BiomeSet setB, int replace=-1)
+            : FunctionBiome(generator), baseA(baseA), baseB(baseB), setA(setA), setB(setB), replace(replace) {
         }
         virtual ~BiomeCombine() {
         }
@@ -84,16 +84,16 @@ class BiomeCombine final : public BiomeFunction {
             return dataA;
         }
     private:
-        const BiomeFunction* baseA = nullptr;
-        const BiomeFunction* baseB = nullptr;
+        const FunctionBiome* baseA = nullptr;
+        const FunctionBiome* baseB = nullptr;
         const BiomeSet setA;
         const BiomeSet setB;
         const int replace = -1;
 };
 
-class BiomeIsland final : public BiomeFunction {
+class BiomeIsland final : public FunctionBiome {
     public:
-        BiomeIsland(std::mt19937* generator, BiomeFunction* base) : BiomeFunction(generator), base(base) {
+        BiomeIsland(std::mt19937* generator, FunctionBiome* base) : FunctionBiome(generator), base(base) {
         }
         virtual ~BiomeIsland() {
         }
@@ -147,13 +147,13 @@ class BiomeIsland final : public BiomeFunction {
             return data;
         }
     private:
-        const BiomeFunction* base = nullptr;
+        const FunctionBiome* base = nullptr;
 };
 
-class BiomeOutline final : public BiomeFunction {
+class BiomeOutline final : public FunctionBiome {
     public:
-        BiomeOutline(std::mt19937* generator, BiomeFunction* base, BiomeSet biomes, BiomeSet nextTo, int outlineBiome, bool outer = false) :
-            BiomeFunction(generator), base(base), biomes(biomes), nextTo(nextTo), outlineBiome(outlineBiome), outer(outer) {
+        BiomeOutline(std::mt19937* generator, FunctionBiome* base, BiomeSet biomes, BiomeSet nextTo, int outlineBiome, bool outer = false) :
+            FunctionBiome(generator), base(base), biomes(biomes), nextTo(nextTo), outlineBiome(outlineBiome), outer(outer) {
             VBE_ASSERT_SIMPLE(base != nullptr);
         }
 
@@ -194,22 +194,22 @@ class BiomeOutline final : public BiomeFunction {
         }
 
     private:
-        const BiomeFunction* base = nullptr;
+        const FunctionBiome* base = nullptr;
         const BiomeSet biomes;
         const BiomeSet nextTo;
         const int outlineBiome = 0;
         const bool outer = false;
 };
 
-class BiomeReplace final : public BiomeFunction {
+class BiomeReplace final : public FunctionBiome {
     public:
-        BiomeReplace(std::mt19937* generator, BiomeFunction* base, BiomeSet from, std::vector<std::pair<int, int>> to, bool noEdges = false) :
-            BiomeFunction(generator), base(base), from(from), to(to), noEdges(noEdges) {
+        BiomeReplace(std::mt19937* generator, FunctionBiome* base, BiomeSet from, std::vector<std::pair<int, int>> to, bool noEdges = false) :
+            FunctionBiome(generator), base(base), from(from), to(to), noEdges(noEdges) {
             VBE_ASSERT_SIMPLE(base != nullptr);
             VBE_ASSERT_SIMPLE(!to.empty());
         }
-        BiomeReplace(std::mt19937* generator, BiomeFunction* base, BiomeSet from, int to, int prob, bool noEdges = false) :
-            BiomeFunction(generator), base(base), from(from), to({{to, 1}, {-1, prob-1}}), noEdges(noEdges) {
+        BiomeReplace(std::mt19937* generator, FunctionBiome* base, BiomeSet from, int to, int prob, bool noEdges = false) :
+            FunctionBiome(generator), base(base), from(from), to({{to, 1}, {-1, prob-1}}), noEdges(noEdges) {
             VBE_ASSERT_SIMPLE(prob > 1);
             VBE_ASSERT_SIMPLE(base != nullptr);
         }
@@ -279,15 +279,15 @@ class BiomeReplace final : public BiomeFunction {
         }
 
     private:
-        const BiomeFunction* base = nullptr;
+        const FunctionBiome* base = nullptr;
         const BiomeSet from;
         const std::vector<std::pair<int, int>> to;
         const bool noEdges = false;
 };
 
-class BiomeSmooth final : public BiomeFunction {
+class BiomeSmooth final : public FunctionBiome {
     public:
-        BiomeSmooth(std::mt19937* generator, BiomeFunction* base) : BiomeFunction(generator), base(base) {
+        BiomeSmooth(std::mt19937* generator, FunctionBiome* base) : FunctionBiome(generator), base(base) {
         }
         virtual ~BiomeSmooth() {
         }
@@ -327,12 +327,12 @@ class BiomeSmooth final : public BiomeFunction {
         }
 
     private:
-        const BiomeFunction* base = nullptr;
+        const FunctionBiome* base = nullptr;
 };
 
-class BiomeZoom final : public BiomeFunction {
+class BiomeZoom final : public FunctionBiome {
     public:
-        BiomeZoom(std::mt19937* generator, BiomeFunction* base, bool fuzzy=false) : BiomeFunction(generator), base(base), fuzzy(fuzzy) {
+        BiomeZoom(std::mt19937* generator, FunctionBiome* base, bool fuzzy=false) : FunctionBiome(generator), base(base), fuzzy(fuzzy) {
             VBE_ASSERT_SIMPLE(base != nullptr);
         }
 
@@ -420,7 +420,7 @@ class BiomeZoom final : public BiomeFunction {
             }
         }
 
-        const BiomeFunction* base = nullptr;
+        const FunctionBiome* base = nullptr;
         const bool fuzzy = false;
 };
 
