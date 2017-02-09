@@ -25,18 +25,6 @@ SOURCES += main.cpp \
     SceneMain/world/Chunk.cpp \
     SceneMain/world/generator/Noise3D.cpp \
     SceneMain/world/generator/Noise2D.cpp \
-    SceneMain/world/generator/terrainFunctions/Function2DConst.cpp \
-    SceneMain/world/generator/terrainFunctions/Function2DSimplex.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DAdd.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DDiv.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DSimplex.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DSub.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DYcoord.cpp \
-    SceneMain/world/generator/terrainFunctions/Function3DHelix.cpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainHeightmap.cpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.cpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.cpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.cpp \
     SceneMain/world/generator/GenParams.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
@@ -58,21 +46,6 @@ HEADERS += \
     SceneMain/world/Chunk.hpp \
     SceneMain/world/generator/Noise3D.hpp \
     SceneMain/world/generator/Noise2D.hpp \
-    SceneMain/world/generator/terrainFunctions/Function2D.hpp \
-    SceneMain/world/generator/terrainFunctions/Function2DConst.hpp \
-    SceneMain/world/generator/terrainFunctions/Function2DSimplex.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3D.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DAdd.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DDiv.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DSimplex.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DSub.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DYcoord.hpp \
-    SceneMain/world/generator/terrainFunctions/Function3DHelix.hpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrain.hpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainHeightmap.hpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainJoin.hpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainOverlay.hpp \
-    SceneMain/world/generator/terrainFunctions/FunctionTerrainVolume.hpp \
     SceneMain/world/generator/GenParams.hpp \
     SceneMain/world/generator/ColumnGenerator.hpp \
     SceneMain/Entity.hpp \
