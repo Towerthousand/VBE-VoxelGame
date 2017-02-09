@@ -85,6 +85,8 @@ class ColumnGenerator {
             // Raw column block data. May be empty if the column is
             // loaded into a Column object (so this->col != nullptr)
             const unsigned int* raw = nullptr;
+            // Raw biome data. Idem.
+            Biome* biomes = nullptr;
             // Finished column, with decorations and entities.
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr

@@ -126,6 +126,7 @@ void ColumnGenerator::update() {
         loaded.erase(p);
         if(cp->col != nullptr) delete cp->col;
         if(cp->raw != nullptr) delete[] cp->raw;
+        if(cp->biomes != nullptr) delete[] cp->biomes;
         delete cp;
     }
 }
@@ -144,34 +145,19 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             loaded.insert(std::pair<vec2i, ColumnData*>(colPos, colData));
         }
 
-        // Generate
+        // Generate biomes
+        colData->biomes = new Biome[(CHUNKSIZE*2)*(CHUNKSIZE*2)];
+        std::vector<int> biomevec = biomeEntry->getBiomeData(colPos.x*CHUNKSIZE-(CHUNKSIZE/2), colPos.y*CHUNKSIZE-(CHUNKSIZE/2), CHUNKSIZE*2, CHUNKSIZE*2);
+        for(int x = 0; x < CHUNKSIZE*2; ++x)
+            for(int z = 0; z < CHUNKSIZE*2; ++z)
+                colData->biomes[x*CHUNKSIZE*2+z] = Biome(biomevec[z*CHUNKSIZE*2+x]);
+
+        // Generate cube data
         unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
         for(int x = 0; x < CHUNKSIZE; ++x)
             for(int z = 0; z < CHUNKSIZE; ++z) {
                 // Testing. Par will be an average of the nearby biomes.
-                GenParams par = genParams[OCEAN];
-                float realz = colPos.y*CHUNKSIZE+z;
-                float contribO = 0.0f;
-                float contribP = 0.0f;
-
-                if(realz < 0) {
-                    contribO = 1.0f;
-                    contribP = 0.0f;
-                    if(realz > -40.0f)
-                        contribP = (1.0f*(40.0f+realz))/40.0f;
-                    contribP = -2.0f/2 * (glm::cos(glm::pi<float>()*contribP/2.0f) - 1);
-                    par = (genParams[OCEAN]*contribO + genParams[PLAINS]*contribP)/(contribO + contribP);
-                }
-                else if(realz > 0) {
-                    contribO = 0.0f;
-                    contribP = 1.0f;
-                    if(realz < 40.0f)
-                        contribO = (1.0f*(40.0f-realz))/40.0f;
-                    contribO = -2.0f/2 * (glm::cos(glm::pi<float>()*contribO/2.0f) - 1);
-                    par = (genParams[OCEAN]*contribO + genParams[PLAINS]*contribP)/(contribO + contribP);
-                }
-                else
-                    par = (genParams[OCEAN] + genParams[PLAINS])/2.0f;
+                GenParams par = genParams[colData->biomes[(CHUNKSIZE/2+x)*(CHUNKSIZE*2)+(CHUNKSIZE/2+z)]];
                 terrainEntry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
