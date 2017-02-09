@@ -1,17 +1,6 @@
 #include "ColumnGenerator.hpp"
 #include "../Column.hpp"
 #include "../Chunk.hpp"
-#include "terrainFunctions/Function3DSimplex.hpp"
-#include "terrainFunctions/Function3DSub.hpp"
-#include "terrainFunctions/Function3DYcoord.hpp"
-#include "terrainFunctions/Function3DAdd.hpp"
-#include "terrainFunctions/Function2DConst.hpp"
-#include "terrainFunctions/FunctionTerrainVolume.hpp"
-#include "terrainFunctions/FunctionTerrainOverlay.hpp"
-#include "terrainFunctions/Function2DSimplex.hpp"
-#include "terrainFunctions/FunctionTerrainHeightmap.hpp"
-#include "terrainFunctions/FunctionTerrainJoin.hpp"
-#include "terrainFunctions/Function3DHelix.hpp"
 #include "TaskPool.hpp"
 #include "DecTrees.hpp"
 
@@ -37,7 +26,27 @@ ColumnGenerator::ColumnGenerator(int seed) {
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
-    entry = over2;
+    terrainEntry = over2;
+
+    // Create function tree for biomes
+    FunctionBiome* b = new BiomeConst(&generator, OCEAN);
+    b = new BiomeReplace(&generator, b, BiomeSet({OCEAN}), PLAINS, 2, false);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeZoom(&generator, b, true);
+    b = new BiomeSmooth(&generator, b);
+    b = new BiomeSmooth(&generator, b);
+    biomeEntry = b;
 
     // Testing, flat grass at y=70
     if(0) {
@@ -47,18 +56,18 @@ ColumnGenerator::ColumnGenerator(int seed) {
         FunctionTerrainVolume* v1 = new FunctionTerrainVolume(s, 2);
         FunctionTerrainOverlay* o1 = new FunctionTerrainOverlay(v1,1,2,4);
         FunctionTerrainOverlay* o2 = new FunctionTerrainOverlay(o1,3,1,1);
-        entry = o2;
+        terrainEntry = o2;
     }
 
     // Generation params
     genParams[OCEAN] = {
-        10.0f,
+        0.0f,
         70.0f,
         100.0f
     };
     genParams[PLAINS] = {
-        130.0f,
-        140.0f,
+        230.0f,
+        250.0f,
         100.0f
     };
 
@@ -72,7 +81,8 @@ ColumnGenerator::~ColumnGenerator() {
     delete decoratePool;
     delete buildPool;
     delete killPool;
-    delete entry;
+    delete terrainEntry;
+    delete biomeEntry;
     while(!done.empty()) {
         delete done.front();
         done.pop();
@@ -162,7 +172,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                 }
                 else
                     par = (genParams[OCEAN] + genParams[PLAINS])/2.0f;
-                entry->fillData(
+                terrainEntry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],

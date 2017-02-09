@@ -1,7 +1,8 @@
 #ifndef WORLDGENERATOR_HPP
 #define WORLDGENERATOR_HPP
 #include "commons.hpp"
-#include "terrainFunctions/FunctionTerrain.hpp"
+#include "terrainFunctions.hpp"
+#include "biomeFunctions.hpp"
 
 class TaskPool;
 class Column;
@@ -123,9 +124,11 @@ class ColumnGenerator {
         std::mt19937 generator;
 
         // Terrain generation entrypoint
-        FunctionTerrain* entry = nullptr;
+        FunctionTerrain* terrainEntry = nullptr;
         // Terrain decorators
         std::vector<Dec*> decorators;
+        // Biome generation entrypoint
+        FunctionBiome* biomeEntry = nullptr;
 
         // All loaded Columns. May be missing decorations
         std::unique_lock<std::mutex> loadedLock;
