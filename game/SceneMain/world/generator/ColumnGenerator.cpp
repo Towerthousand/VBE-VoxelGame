@@ -61,13 +61,13 @@ ColumnGenerator::ColumnGenerator(int seed) {
 
     // Generation params
     genParams[OCEAN] = {
-        0.0f,
-        70.0f,
+        90.0f,
+        120.0f,
         100.0f
     };
     genParams[PLAINS] = {
-        230.0f,
-        250.0f,
+        130.0f,
+        150.0f,
         100.0f
     };
 
@@ -152,12 +152,44 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
             for(int z = 0; z < CHUNKSIZE*2; ++z)
                 colData->biomes[x*CHUNKSIZE*2+z] = Biome(biomevec[z*CHUNKSIZE*2+x]);
 
+        static thread_local short* biomeSums = new short[(CHUNKSIZE*2)*(CHUNKSIZE*2)*NUM_BIOMES];
+
+        memset(biomeSums, 0, (CHUNKSIZE*2)*(CHUNKSIZE*2)*NUM_BIOMES);
+
+        // Two-pass 2D biome cumsum
+        for(int b = 0; b < NUM_BIOMES; ++b)
+            for(int x = 0; x < CHUNKSIZE*2; ++x)
+                for(int z = 0; z < CHUNKSIZE*2; ++z) {
+                    biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] = colData->biomes[x*CHUNKSIZE*2+z] == Biome(b)? 1 : 0;
+                    if(x > 0) biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x-1)*(CHUNKSIZE*2)+z];
+                }
+        for(int b = 0; b < NUM_BIOMES; ++b)
+            for(int x = 0; x < CHUNKSIZE*2; ++x)
+                for(int z = 1; z < CHUNKSIZE*2; ++z)
+                    biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+(z-1)];
+
         // Generate cube data
         unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
         for(int x = 0; x < CHUNKSIZE; ++x)
             for(int z = 0; z < CHUNKSIZE; ++z) {
-                // Testing. Par will be an average of the nearby biomes.
-                GenParams par = genParams[colData->biomes[(CHUNKSIZE/2+x)*(CHUNKSIZE*2)+(CHUNKSIZE/2+z)]];
+                //Generate average
+                GenParams par;
+                memset(&par, 0, sizeof(par));
+                int total = 0;
+                for(int b = 0; b < NUM_BIOMES; ++b) {
+                    // + Top right
+                    int sum = biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x+CHUNKSIZE)*(CHUNKSIZE*2)+(z+CHUNKSIZE)];
+                    // - Bottom right
+                    sum -= biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x+CHUNKSIZE)*(CHUNKSIZE*2)+z];
+                    // - Top left
+                    sum -= biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+(z+CHUNKSIZE)];
+                    // + Bottom left
+                    sum += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+z];
+                    total += sum;
+                    par += genParams[b]*sum;
+                }
+                par /= total;
+                // Generate terrain
                 terrainEntry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
