@@ -8,6 +8,7 @@
 #define NWORKERS_DECORATING 1
 #define NWORKERS_BUILDING 1
 #define NWORKERS_KILLING 1
+#define BIOME_RADIUS 16
 
 ColumnGenerator::ColumnGenerator(int seed) {
     // Create locks
@@ -61,13 +62,13 @@ ColumnGenerator::ColumnGenerator(int seed) {
 
     // Generation params
     genParams[OCEAN] = {
-        90.0f,
+        100.0f,
         120.0f,
         100.0f
     };
     genParams[PLAINS] = {
-        130.0f,
         150.0f,
+        190.0f,
         100.0f
     };
 
@@ -146,27 +147,26 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
         }
 
         // Generate biomes
-        colData->biomes = new Biome[(CHUNKSIZE*2)*(CHUNKSIZE*2)];
-        std::vector<int> biomevec = biomeEntry->getBiomeData(colPos.x*CHUNKSIZE-(CHUNKSIZE/2), colPos.y*CHUNKSIZE-(CHUNKSIZE/2), CHUNKSIZE*2, CHUNKSIZE*2);
-        for(int x = 0; x < CHUNKSIZE*2; ++x)
-            for(int z = 0; z < CHUNKSIZE*2; ++z)
-                colData->biomes[x*CHUNKSIZE*2+z] = Biome(biomevec[z*CHUNKSIZE*2+x]);
+        static const int BIOME_MATRIX_SIZE = CHUNKSIZE+BIOME_RADIUS*2;
+        colData->biomes = new Biome[BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE];
+        std::vector<int> biomevec = biomeEntry->getBiomeData(colPos.x*CHUNKSIZE-BIOME_RADIUS, colPos.y*CHUNKSIZE-BIOME_RADIUS, BIOME_MATRIX_SIZE, BIOME_MATRIX_SIZE);
+        for(int x = 0; x < BIOME_MATRIX_SIZE; ++x)
+            for(int z = 0; z < BIOME_MATRIX_SIZE; ++z)
+                colData->biomes[x*BIOME_MATRIX_SIZE+z] = Biome(biomevec[z*BIOME_MATRIX_SIZE+x]);
 
-        static thread_local short* biomeSums = new short[(CHUNKSIZE*2)*(CHUNKSIZE*2)*NUM_BIOMES];
-
-        memset(biomeSums, 0, (CHUNKSIZE*2)*(CHUNKSIZE*2)*NUM_BIOMES);
+        static thread_local int* biomeSums = new int[BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE*NUM_BIOMES];
 
         // Two-pass 2D biome cumsum
         for(int b = 0; b < NUM_BIOMES; ++b)
-            for(int x = 0; x < CHUNKSIZE*2; ++x)
-                for(int z = 0; z < CHUNKSIZE*2; ++z) {
-                    biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] = colData->biomes[x*CHUNKSIZE*2+z] == Biome(b)? 1 : 0;
-                    if(x > 0) biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x-1)*(CHUNKSIZE*2)+z];
+            for(int x = 0; x < BIOME_MATRIX_SIZE; ++x)
+                for(int z = 0; z < BIOME_MATRIX_SIZE; ++z) {
+                    biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z] = colData->biomes[x*BIOME_MATRIX_SIZE+z] == Biome(b)? 1 : 0;
+                    if(x > 0) biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z] += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+(x-1)*BIOME_MATRIX_SIZE+z];
                 }
         for(int b = 0; b < NUM_BIOMES; ++b)
-            for(int x = 0; x < CHUNKSIZE*2; ++x)
-                for(int z = 1; z < CHUNKSIZE*2; ++z)
-                    biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*CHUNKSIZE*2+z] += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+(z-1)];
+            for(int x = 0; x < BIOME_MATRIX_SIZE; ++x)
+                for(int z = 1; z < BIOME_MATRIX_SIZE; ++z)
+                    biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z] += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+(z-1)];
 
         // Generate cube data
         unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
@@ -178,13 +178,13 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                 int total = 0;
                 for(int b = 0; b < NUM_BIOMES; ++b) {
                     // + Top right
-                    int sum = biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x+CHUNKSIZE)*(CHUNKSIZE*2)+(z+CHUNKSIZE)];
+                    int sum = biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+(x+BIOME_RADIUS*2)*BIOME_MATRIX_SIZE+(z+BIOME_RADIUS*2)];
                     // - Bottom right
-                    sum -= biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+(x+CHUNKSIZE)*(CHUNKSIZE*2)+z];
+                    sum -= biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+(x+BIOME_RADIUS*2)*BIOME_MATRIX_SIZE+z];
                     // - Top left
-                    sum -= biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+(z+CHUNKSIZE)];
+                    sum -= biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+(z+BIOME_RADIUS*2)];
                     // + Bottom left
-                    sum += biomeSums[b*(CHUNKSIZE*2)*(CHUNKSIZE*2)+x*(CHUNKSIZE*2)+z];
+                    sum += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z];
                     total += sum;
                     par += genParams[b]*sum;
                 }
