@@ -10,6 +10,26 @@
 #define NWORKERS_KILLING 1
 #define BIOME_RADIUS 16
 
+// Generation params
+const std::valarray<float> ColumnGenerator::genParams[NUM_BIOMES] = {
+    { //OCEAN
+        100.0f,
+        120.0f,
+        2.0f,
+        5.0f,
+        4.0f,
+        0.0f
+    },
+    { //PLAINS
+        150.0f,
+        190.0f,
+        2.0f,
+        5.0f,
+        4.0f,
+        1.0f
+    }
+};
+
 ColumnGenerator::ColumnGenerator(int seed) {
     // Create locks
     loadedLock = std::unique_lock<std::mutex>(loadedMutex, std::defer_lock);
@@ -23,7 +43,7 @@ ColumnGenerator::ColumnGenerator(int seed) {
 
     // Create function tree for creation
     generator.seed(seed);
-    Function2DSimplex* simplex21 = new Function2DSimplex(&generator, &GenParams::lo, &GenParams::hi, &GenParams::scale);
+    Function2DSimplex* simplex21 = new Function2DSimplex(&generator, SIMPLEX_LOW, SIMPLEX_HIGH, 100.0f);
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
@@ -60,20 +80,8 @@ ColumnGenerator::ColumnGenerator(int seed) {
         terrainEntry = o2;
     }
 
-    // Generation params
-    genParams[OCEAN] = {
-        100.0f,
-        120.0f,
-        100.0f
-    };
-    genParams[PLAINS] = {
-        150.0f,
-        190.0f,
-        100.0f
-    };
-
     // Create decorators
-    decorators.push_back(new DecTrees(&generator));
+    decorators.push_back(new DecTrees(&generator, TREE_MIN_GRID, TREE_MAX_GRID, TREE_CUTOFF, TREE_DROP_CHANCE));
 }
 
 ColumnGenerator::~ColumnGenerator() {
@@ -128,6 +136,7 @@ void ColumnGenerator::update() {
         if(cp->col != nullptr) delete cp->col;
         if(cp->raw != nullptr) delete[] cp->raw;
         if(cp->biomes != nullptr) delete[] cp->biomes;
+        if(cp->params != nullptr) delete[] cp->params;
         delete cp;
     }
 }
@@ -147,9 +156,8 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
         }
 
         // Generate biomes
-        static const int BIOME_MATRIX_SIZE = CHUNKSIZE+BIOME_RADIUS*2;
         colData->biomes = new Biome[BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE];
-        std::vector<int> biomevec = biomeEntry->getBiomeData(colPos.x*CHUNKSIZE-BIOME_RADIUS, colPos.y*CHUNKSIZE-BIOME_RADIUS, BIOME_MATRIX_SIZE, BIOME_MATRIX_SIZE);
+        std::vector<int> biomevec = biomeEntry->getBiomeData(colPos.x*CHUNKSIZE-BIOME_MATRIX_MARGIN, colPos.y*CHUNKSIZE-BIOME_MATRIX_MARGIN, BIOME_MATRIX_SIZE, BIOME_MATRIX_SIZE);
         for(int x = 0; x < BIOME_MATRIX_SIZE; ++x)
             for(int z = 0; z < BIOME_MATRIX_SIZE; ++z)
                 colData->biomes[x*BIOME_MATRIX_SIZE+z] = Biome(biomevec[z*BIOME_MATRIX_SIZE+x]);
@@ -168,13 +176,12 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                 for(int z = 1; z < BIOME_MATRIX_SIZE; ++z)
                     biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z] += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+(z-1)];
 
-        // Generate cube data
-        unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
+        colData->params = new std::valarray<float>[CHUNKSIZE*CHUNKSIZE];
         for(int x = 0; x < CHUNKSIZE; ++x)
             for(int z = 0; z < CHUNKSIZE; ++z) {
                 //Generate average
-                GenParams par;
-                memset(&par, 0, sizeof(par));
+                std::valarray<float>* par = &colData->params[x*CHUNKSIZE+z];
+                par->resize(NUM_BIOME_PARAMS, 0.0f);
                 int total = 0;
                 for(int b = 0; b < NUM_BIOMES; ++b) {
                     // + Top right
@@ -186,15 +193,21 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                     // + Bottom left
                     sum += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z];
                     total += sum;
-                    par += genParams[b]*sum;
+                    (*par) += genParams[b]*float(sum);
                 }
-                par /= total;
+                (*par) /= total;
+            }
+
+        // Generate cube data
+        unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
+        for(int x = 0; x < CHUNKSIZE; ++x)
+            for(int z = 0; z < CHUNKSIZE; ++z) {
                 // Generate terrain
                 terrainEntry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
-                    &par
+                    &colData->params[x*CHUNKSIZE+z]
                 );
             }
 

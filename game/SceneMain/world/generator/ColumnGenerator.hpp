@@ -4,6 +4,9 @@
 #include "terrainFunctions.hpp"
 #include "biomeFunctions.hpp"
 
+#define BIOME_MATRIX_MARGIN 16
+#define BIOME_MATRIX_SIZE (CHUNKSIZE+BIOME_MATRIX_MARGIN*2)
+
 class TaskPool;
 class Column;
 class Dec;
@@ -87,6 +90,7 @@ class ColumnGenerator {
             const unsigned int* raw = nullptr;
             // Raw biome data. Idem.
             Biome* biomes = nullptr;
+            std::valarray<float>* params = nullptr;
             // Finished column, with decorations and entities.
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr
@@ -97,6 +101,9 @@ class ColumnGenerator {
             int refCount = 0;
             vec2i pos = {0, 0};
         };
+
+        // Generation parameters for the different biomes
+        static const std::valarray<float> genParams[NUM_BIOMES];
 
     private:
         void queueBuild(vec2i colPos);
@@ -155,9 +162,6 @@ class ColumnGenerator {
 
         // Jobs that unload a ColumnData
         TaskPool* killPool = nullptr;
-
-        // Generation parameters for the different biomes
-        GenParams genParams[NUM_BIOMES];
 };
 
 #endif // WORLDGENERATOR_HPP
