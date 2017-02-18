@@ -90,7 +90,6 @@ class ColumnGenerator {
             const unsigned int* raw = nullptr;
             // Raw biome data. Idem.
             Biome* biomes = nullptr;
-            std::valarray<float>* params = nullptr;
             // Finished column, with decorations and entities.
             // Will be nullptr if still being loaded, decorated, etc
             // in which case this->raw != nullptr

@@ -116,7 +116,6 @@ void ColumnGenerator::update() {
         if(cp->col != nullptr) delete cp->col;
         if(cp->raw != nullptr) delete[] cp->raw;
         if(cp->biomes != nullptr) delete[] cp->biomes;
-        if(cp->params != nullptr) delete[] cp->params;
         delete cp;
     }
 }
@@ -156,12 +155,13 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                 for(int z = 1; z < BIOME_MATRIX_SIZE; ++z)
                     biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z] += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+(z-1)];
 
-        colData->params = new std::valarray<float>[CHUNKSIZE*CHUNKSIZE];
+        // Generate cube data
+        unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
         for(int x = 0; x < CHUNKSIZE; ++x)
             for(int z = 0; z < CHUNKSIZE; ++z) {
-                //Generate average
-                std::valarray<float>* par = &colData->params[x*CHUNKSIZE+z];
-                par->resize(NUM_BIOME_PARAMS, 0.0f);
+                // Calculate average
+                static thread_local std::valarray<float> par;
+                par.resize(NUM_BIOME_PARAMS, 0.0f);
                 int total = 0;
                 for(int b = 0; b < NUM_BIOMES; ++b) {
                     // + Top right
@@ -173,21 +173,15 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                     // + Bottom left
                     sum += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z];
                     total += sum;
-                    (*par) += BIOME_PARAMS[b]*float(sum);
+                    par += BIOME_PARAMS[b]*float(sum);
                 }
-                (*par) /= total;
-            }
-
-        // Generate cube data
-        unsigned int* raw =  new unsigned int[CHUNKSIZE*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT];
-        for(int x = 0; x < CHUNKSIZE; ++x)
-            for(int z = 0; z < CHUNKSIZE; ++z) {
+                par /= total;
                 // Generate terrain
                 terrainEntry->fillData(
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
-                    &colData->params[x*CHUNKSIZE+z],
+                    &par,
                     &BIOME_INT_PARAMS[colData->biomes[(BIOME_MATRIX_MARGIN+x)*BIOME_MATRIX_SIZE+z]]
                 );
             }
