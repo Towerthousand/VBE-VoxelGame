@@ -24,7 +24,7 @@ ColumnGenerator::ColumnGenerator(int seed) {
     // Create function tree for creation
     generator.seed(seed);
     Function2DSimplex* simplex21 = new Function2DSimplex(&generator, SIMPLEX_LOW, SIMPLEX_HIGH, 100.0f);
-    FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21,2);
+    FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21, MAIN_TERRAIN);
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
     terrainEntry = over2;

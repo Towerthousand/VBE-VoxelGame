@@ -227,21 +227,20 @@ class Function2DSimplex : public Function2D {
 
 class FunctionTerrainHeightmap : public FunctionTerrain {
     public:
-        FunctionTerrainHeightmap(Function2D *source, unsigned int blockID) :
+        FunctionTerrainHeightmap(Function2D *source, BiomeIntParam blockID) :
             source(source), blockID(blockID) {
         }
         ~FunctionTerrainHeightmap() {
             delete source;
         }
         virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
-            (void) intParams;
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
-                data[y] = source->getValue(x, z, params) < y? 0 : blockID;
+                data[y] = source->getValue(x, z, params) < y? 0 : (*intParams)[blockID];
         }
 
     private:
         Function2D* source;
-        unsigned int blockID;
+        BiomeIntParam blockID;
 };
 
 class FunctionTerrainOverlay : public FunctionTerrain {

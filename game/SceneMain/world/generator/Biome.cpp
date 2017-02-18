@@ -17,7 +17,7 @@ const std::valarray<float> BIOME_PARAMS[NUM_BIOMES] = {
 const std::valarray<int> BIOME_INT_PARAMS[NUM_BIOMES] = {
     //OCEAN
     {
-        0,   // MAIN_TERRAIN
+        2,   // MAIN_TERRAIN
         2,   // TREE_MIN_GRID
         5,   // TREE_MAX_GRID
         4,   // TREE_CUTOFF
@@ -25,7 +25,7 @@ const std::valarray<int> BIOME_INT_PARAMS[NUM_BIOMES] = {
     },
     //PLAINS
     {
-        0,   // MAIN_TERRAIN
+        2,   // MAIN_TERRAIN
         2,   // TREE_MIN_GRID
         5,   // TREE_MAX_GRID
         4,   // TREE_CUTOFF
