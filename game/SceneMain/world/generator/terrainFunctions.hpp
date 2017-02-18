@@ -2,6 +2,7 @@
 #define TERRAINFUNCTIONS_HPP
 #include "commons.hpp"
 #include "Noise2D.hpp"
+#include "Noise3D.hpp"
 #include "GenParams.hpp"
 
 typedef double floatType; //put double here for more precision in world gen.
@@ -11,7 +12,7 @@ class Function3D { //abstract
         Function3D() {}
         virtual ~Function3D() {}
         //x,z are world coords
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) = 0;
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) = 0;
 };
 
 class Function2D : public Function3D{ //abstract
@@ -19,8 +20,8 @@ class Function2D : public Function3D{ //abstract
         Function2D() : Function3D() {}
         virtual ~Function2D() {}
         //x,z are world coords
-        virtual floatType getValue(int x, int z, GenParams* params) = 0;
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override final {
+        virtual floatType getValue(int x, int z, const std::valarray<float>* params) = 0;
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override final {
             floatType val = getValue(x, z, params);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
                 data[y] = val;
@@ -32,9 +33,29 @@ class FunctionTerrain {//abstract
         FunctionTerrain() {}
         virtual ~FunctionTerrain() {}
         //x,z are world coords
-        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) = 0;
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) = 0;
 };
 
+class Function3DSimplex : public Function3D {
+    public:
+        Function3DSimplex(std::mt19937* generator, BiomeParam min, BiomeParam max, float scale)
+            : noise(generator), min(min), max(max), scale(scale) {
+        }
+        ~Function3DSimplex() {
+        }
+        void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
+            for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y) {
+                data[y] = (*params)[min] + ((*params)[max]-(*params)[min])*noise.octavedGet(x/scale, y/scale, z/scale, 4);
+            }
+        }
+
+    private:
+        Noise3D noise;
+
+        BiomeParam min;
+        BiomeParam max;
+        float scale;
+};
 
 class Function3DAdd : public Function3D {
     public:
@@ -45,7 +66,7 @@ class Function3DAdd : public Function3D {
                 delete f;
         }
 
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override {
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
             std::vector<floatType*> sources;
             for(unsigned int i = 1; i < operands.size(); ++i) {
                 sources.push_back(new floatType[GENERATIONHEIGHT*CHUNKSIZE]);
@@ -71,7 +92,7 @@ class Function3DDiv : public Function3D {
             delete funcA;
             delete funcB;
         }
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override {
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
             floatType* divisor = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
             funcA->fillData(x, z, data, params);
             funcB->fillData(x, z, divisor, params);
@@ -93,7 +114,7 @@ class Function3DSub : public Function3D {
             delete funcA;
             delete funcB;
         }
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override {
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
             floatType* substract = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
             funcA->fillData(x, z, data, params);
             funcB->fillData(x, z, substract, params);
@@ -113,7 +134,7 @@ class Function3DYcoord : public Function3D {
         }
         ~Function3DYcoord() {
         }
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override {
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
             (void) params;
             (void) x;
             (void) z;
@@ -140,7 +161,7 @@ class Function3DHelix : public Function3D {
         ~Function3DHelix() {
         }
 
-        virtual void fillData(int x, int z, floatType* data, GenParams* params) override {
+        virtual void fillData(int x, int z, floatType* data, const std::valarray<float>* params) override {
             (void) params;
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
                 data[y] = helix(x, y, z);
@@ -175,7 +196,7 @@ class Function2DConst : public Function2D {
         }
         ~Function2DConst() {
         }
-        floatType getValue(int x, int z, GenParams* params) override {
+        floatType getValue(int x, int z, const std::valarray<float>* params) override {
             (void) x;
             (void) z;
             (void) params;
@@ -188,21 +209,21 @@ class Function2DConst : public Function2D {
 
 class Function2DSimplex : public Function2D {
     public:
-        Function2DSimplex(std::mt19937* generator, float GenParams::* min, float GenParams::* max, float GenParams::* scale)
+        Function2DSimplex(std::mt19937* generator, BiomeParam min, BiomeParam max, float scale)
             : noise(generator), min(min), max(max), scale(scale) {
         }
         ~Function2DSimplex() {
         }
-        floatType getValue(int x, int z, GenParams* params) override {
-            return params->*min + (params->*max-params->*min)*noise.octavedGet(x/params->*scale, z/params->*scale, 4);
+        floatType getValue(int x, int z, const std::valarray<float>* params) override {
+            return (*params)[min] + ((*params)[max]-(*params)[min])*noise.octavedGet(x/scale, z/scale, 4);
         }
 
     private:
         Noise2D noise;
 
-        float GenParams::* min;
-        float GenParams::* max;
-        float GenParams::* scale;
+        BiomeParam min;
+        BiomeParam max;
+        float scale;
 };
 
 class FunctionTerrainHeightmap : public FunctionTerrain {
@@ -213,7 +234,7 @@ class FunctionTerrainHeightmap : public FunctionTerrain {
         ~FunctionTerrainHeightmap() {
             delete source;
         }
-        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) override {
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
                 data[y] = source->getValue(x, z, params) < y? 0 : blockID;
         }
@@ -233,7 +254,7 @@ class FunctionTerrainOverlay : public FunctionTerrain {
             delete source;
         }
 
-        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) override {
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
             source->fillData(x, z, data, params);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE-1; ++y)
                 if (data[y] == surfaceID && data[y+1] == 0)
@@ -260,7 +281,7 @@ class FunctionTerrainVolume : public FunctionTerrain {
         ~FunctionTerrainVolume() {
             delete source;
         }
-        virtual void fillData(int x, int z, unsigned int* data, GenParams* params) override {
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
             floatType* sourceData = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
             source->fillData(x, z, sourceData, params);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y) {
