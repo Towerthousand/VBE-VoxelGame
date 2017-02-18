@@ -192,19 +192,18 @@ class Function3DHelix : public Function3D {
 
 class Function2DConst : public Function2D {
     public:
-        Function2DConst(float val) : val(val) {
+        Function2DConst(BiomeParam val) : val(val) {
         }
         ~Function2DConst() {
         }
         floatType getValue(int x, int z, const std::valarray<float>* params) override {
             (void) x;
             (void) z;
-            (void) params;
-            return val;
+            return (*params)[val];
         }
 
     private:
-        float val;
+        BiomeParam val;
 };
 
 class Function2DSimplex : public Function2D {
