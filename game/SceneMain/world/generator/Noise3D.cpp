@@ -6,8 +6,7 @@ const int Noise3D::grad3[12][3] = {
     {0,1,1}, {0,-1,1}, {0,1,-1}, {0,-1,-1}
 };
 
-Noise3D::Noise3D(std::mt19937* generator, float min, float max, float scale)
-    : min(min), max(max), scale(scale) {
+Noise3D::Noise3D(std::mt19937* generator) {
     //generate permutation
     std::uniform_int_distribution<int> distribution(0,255);
     perm.resize(256);
@@ -28,7 +27,7 @@ Noise3D::Noise3D(std::mt19937* generator, float min, float max, float scale)
 Noise3D::~Noise3D() {
 }
 
-float Noise3D::simplex(float x, float y, float z) const {
+float Noise3D::get(float x, float y, float z) const {
     float n0, n1, n2, n3; // Noise contributions from the four corners
 
     // Skew the input space to determine which simplex cell we're in
@@ -121,16 +120,16 @@ float Noise3D::simplex(float x, float y, float z) const {
     //scale the result
     result += 1; //in [0,2]
     result *= 0.5; // in [0,1]
-    return (min + (max-min) * result);
+    return result;
 }
 
 float Noise3D::octavedGet(float x, float y, float z, unsigned int octaves) const {
-    float currScale = scale;
+    float currScale = 1.0f;
     float val = 0.0f;
     float numParts = float(1 << octaves) - 1;
     for(unsigned int i = 0; i < octaves; ++i) {
         float importance = float(1 << (octaves-i-1))/numParts;
-        val += simplex(x/currScale, y/currScale, z/currScale)*importance;
+        val += get(x/currScale, y/currScale, z/currScale)*importance;
         currScale *= 0.5f;
     }
     return val;
