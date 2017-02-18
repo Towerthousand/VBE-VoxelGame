@@ -7,47 +7,14 @@ enum Biome {
     NUM_BIOMES
 };
 
-struct GenParams {
-    float lo;
-    float hi;
-    float scale;
-
-    GenParams& operator+=(const GenParams& p) {
-        lo += p.lo;
-        hi += p.hi;
-        scale += p.scale;
-
-        return *this;
-    };
-
-    GenParams& operator-=(const GenParams& p) {
-        lo -= p.lo;
-        hi -= p.hi;
-        scale -= p.scale;
-
-        return *this;
-    };
-
-    GenParams& operator*=(const float& f) {
-        lo *= f;
-        hi *= f;
-        scale *= f;
-
-        return *this;
-    };
-
-    GenParams& operator/=(const float& f) {
-        lo /= f;
-        hi /= f;
-        scale /= f;
-
-        return *this;
-    };
+enum BiomeParam {
+    SIMPLEX_LOW = 0,
+    SIMPLEX_HIGH,
+    TREE_MIN_GRID,
+    TREE_MAX_GRID,
+    TREE_CUTOFF,
+    TREE_DROP_CHANCE,
+    NUM_BIOME_PARAMS
 };
-
-GenParams operator+(const GenParams& a, const GenParams& b);
-GenParams operator-(const GenParams& a, const GenParams& b);
-GenParams operator*(const GenParams& a, const float& b);
-GenParams operator/(const GenParams& a, const float& b);
 
 #endif // GENPARAMS3D_HPP

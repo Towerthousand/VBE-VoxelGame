@@ -25,7 +25,6 @@ SOURCES += main.cpp \
     SceneMain/world/Chunk.cpp \
     SceneMain/world/generator/Noise3D.cpp \
     SceneMain/world/generator/Noise2D.cpp \
-    SceneMain/world/generator/GenParams.cpp \
     SceneMain/world/generator/ColumnGenerator.cpp \
     SceneMain/Entity.cpp \
     SceneMain/Player.cpp \

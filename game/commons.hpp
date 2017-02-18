@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <bitset>
 #include <unordered_set>
+#include <valarray>
 
 constexpr int CHUNKSIZE_POW2 = 4;
 constexpr int CHUNKSIZE = 16; //in voxels
