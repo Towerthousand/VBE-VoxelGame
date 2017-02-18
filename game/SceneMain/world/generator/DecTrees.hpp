@@ -129,31 +129,44 @@ class DecTrees final : public Dec {
             int margin = (1 << DECTREES_MAX_GRID_SIZE);
             for(int i = -margin; i < CHUNKSIZE+margin; ++i)
                 for(int j = -margin; j < CHUNKSIZE+margin; ++j) {
-                    // Get the generation params for this spot's biome
+                    // Get the generation params for this cube's biome
                     Biome b = col->biomes[(i+BIOME_MATRIX_MARGIN)*BIOME_MATRIX_SIZE+(j+BIOME_MATRIX_MARGIN)];
-                    const std::valarray<float>* params = &ColumnGenerator::genParams[b];
+                    const std::valarray<float>* params = &BIOME_PARAMS[b];
+
+                    // c = coords for this cube
                     vec2i c = vec2i(i,j) + offset;
+
+                    // Early exit if trees disabled
+                    if((*params)[dropChance] == 1.0f)
+                        continue;
+
                     // DECTREES_MIN_GRID_SIZE <= gridsize <= DECTREES_MAX_GRID_SIZE
-                    int gridsize = 1 << int(floor((*params)[minGrid]+getNoise(&gridNoise, c.x, c.y, 0.0f, 1.0f, 60.0f, 4)*(((*params)[maxGrid]+1)-(*params)[minGrid])));
+                    float gridSizeNoise = getNoise(&gridNoise, c.x, c.y, 0.0f, 1.0f, 60.0f, 4);
+                    int gridsize = 1 << int(floor((*params)[minGrid]+gridSizeNoise*(((*params)[maxGrid]+1)-(*params)[minGrid])));
 
                     // Gridsize too big
                     if(gridsize > (1 << int(glm::floor((*params)[gridCutoff]))))
                         continue;
+
                     // For this gridsize, this is not the adequate
                     // position to displace
                     if(c%gridsize != vec2i(0))
                         continue;
-                    // Random drop to make it look more patched
+
+                    // Random drop
                     if(getNoise(&dropNoise, c.x, c.y, 0.0f, 1.0f, 100.0f, 4) < (*params)[dropChance])
                         continue;
 
                     // Random displacement
-                    vec2f disp = vec2f(getNoise(&dispNoiseX, c.x, c.y, -0.5f, 0.5f, 0.1f)*gridsize-1, getNoise(&dispNoiseY, c.x, c.y, -0.5f, 0.5f, 0.1f)*gridsize-1);
+                    vec2f disp = vec2f(
+                        getNoise(&dispNoiseX, c.x, c.y, -0.5f, 0.5f, 0.1f)*gridsize-1,
+                        getNoise(&dispNoiseY, c.x, c.y, -0.5f, 0.5f, 0.1f)*gridsize-1
+                    );
 
                     // The final position of the tree
                     vec2i p = c - offset + vec2i(glm::round(disp));
 
-                    // Only processed if it falls in this chunk
+                    // Only processed if it falls inside this chunk
                     if(p.x >= 0 && p.x < CHUNKSIZE && p.y >= 0 && p.y < CHUNKSIZE)
                         trees.push_back(p);
                 }

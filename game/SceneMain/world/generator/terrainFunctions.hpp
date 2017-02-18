@@ -3,7 +3,7 @@
 #include "commons.hpp"
 #include "Noise2D.hpp"
 #include "Noise3D.hpp"
-#include "GenParams.hpp"
+#include "Biome.hpp"
 
 typedef double floatType; //put double here for more precision in world gen.
 
