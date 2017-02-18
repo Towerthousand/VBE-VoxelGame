@@ -1,5 +1,6 @@
-#ifndef GENPARAMS3D_HPP
-#define GENPARAMS3D_HPP
+#ifndef BIOME_HPP
+#define BIOME_HPP
+#include <valarray>
 
 enum Biome {
     OCEAN = 0,
@@ -17,4 +18,6 @@ enum BiomeParam {
     NUM_BIOME_PARAMS
 };
 
-#endif // GENPARAMS3D_HPP
+extern const std::valarray<float> BIOME_PARAMS[NUM_BIOMES];
+
+#endif // BIOME_HPP

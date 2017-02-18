@@ -10,26 +10,6 @@
 #define NWORKERS_KILLING 1
 #define BIOME_RADIUS 16
 
-// Generation params
-const std::valarray<float> ColumnGenerator::genParams[NUM_BIOMES] = {
-    { //OCEAN
-        100.0f,
-        120.0f,
-        2.0f,
-        5.0f,
-        4.0f,
-        0.0f
-    },
-    { //PLAINS
-        150.0f,
-        190.0f,
-        2.0f,
-        5.0f,
-        4.0f,
-        1.0f
-    }
-};
-
 ColumnGenerator::ColumnGenerator(int seed) {
     // Create locks
     loadedLock = std::unique_lock<std::mutex>(loadedMutex, std::defer_lock);
@@ -193,7 +173,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                     // + Bottom left
                     sum += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z];
                     total += sum;
-                    (*par) += genParams[b]*float(sum);
+                    (*par) += BIOME_PARAMS[b]*float(sum);
                 }
                 (*par) /= total;
             }

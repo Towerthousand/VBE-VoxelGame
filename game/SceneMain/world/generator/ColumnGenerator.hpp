@@ -102,9 +102,6 @@ class ColumnGenerator {
             vec2i pos = {0, 0};
         };
 
-        // Generation parameters for the different biomes
-        static const std::valarray<float> genParams[NUM_BIOMES];
-
     private:
         void queueBuild(vec2i colPos);
         void queueDecorate(vec2i colPos);
