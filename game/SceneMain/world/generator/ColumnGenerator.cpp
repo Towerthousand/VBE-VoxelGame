@@ -49,16 +49,16 @@ ColumnGenerator::ColumnGenerator(int seed) {
     b = new BiomeSmooth(&generator, b);
     biomeEntry = b;
 
-    // Testing, flat grass at y=70
-    if(0) {
-        Function3DYcoord* c = new Function3DYcoord();
-        Function2DConst* co = new Function2DConst(70);
-        Function3DSub* s = new Function3DSub(co, c);
-        FunctionTerrainVolume* v1 = new FunctionTerrainVolume(s, 2);
-        FunctionTerrainOverlay* o1 = new FunctionTerrainOverlay(v1,1,2,4);
-        FunctionTerrainOverlay* o2 = new FunctionTerrainOverlay(o1,3,1,1);
-        terrainEntry = o2;
-    }
+    //// Testing, flat grass at y=70
+    //if(0) {
+    //    Function3DYcoord* c = new Function3DYcoord();
+    //    Function2DConst* co = new Function2DConst(70);
+    //    Function3DSub* s = new Function3DSub(co, c);
+    //    FunctionTerrainVolume* v1 = new FunctionTerrainVolume(s, 2);
+    //    FunctionTerrainOverlay* o1 = new FunctionTerrainOverlay(v1,1,2,4);
+    //    FunctionTerrainOverlay* o2 = new FunctionTerrainOverlay(o1,3,1,1);
+    //    terrainEntry = o2;
+    //}
 
     // Create decorators
     decorators.push_back(new DecTrees(&generator, TREE_MIN_GRID, TREE_MAX_GRID, TREE_CUTOFF, TREE_DROP_CHANCE));
