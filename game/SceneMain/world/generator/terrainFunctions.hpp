@@ -33,7 +33,7 @@ class FunctionTerrain {//abstract
         FunctionTerrain() {}
         virtual ~FunctionTerrain() {}
         //x,z are world coords
-        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) = 0;
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) = 0;
 };
 
 class Function3DSimplex : public Function3D {
@@ -234,7 +234,8 @@ class FunctionTerrainHeightmap : public FunctionTerrain {
         ~FunctionTerrainHeightmap() {
             delete source;
         }
-        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
+            (void) intParams;
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y)
                 data[y] = source->getValue(x, z, params) < y? 0 : blockID;
         }
@@ -254,8 +255,8 @@ class FunctionTerrainOverlay : public FunctionTerrain {
             delete source;
         }
 
-        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
-            source->fillData(x, z, data, params);
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
+            source->fillData(x, z, data, params, intParams);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE-1; ++y)
                 if (data[y] == surfaceID && data[y+1] == 0)
                     for (int a = 0; a < depth; ++a) {
@@ -281,7 +282,8 @@ class FunctionTerrainVolume : public FunctionTerrain {
         ~FunctionTerrainVolume() {
             delete source;
         }
-        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params) override {
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
+            (void) intParams;
             floatType* sourceData = new floatType[GENERATIONHEIGHT*CHUNKSIZE];
             source->fillData(x, z, sourceData, params);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE; ++y) {

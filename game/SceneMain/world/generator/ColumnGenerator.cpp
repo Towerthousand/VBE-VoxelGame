@@ -187,7 +187,8 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                     colPos.x*CHUNKSIZE+x,
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
-                    &colData->params[x*CHUNKSIZE+z]
+                    &colData->params[x*CHUNKSIZE+z],
+                    &BIOME_INT_PARAMS[colData->biomes[(BIOME_MATRIX_MARGIN+x)*BIOME_MATRIX_SIZE+z]]
                 );
             }
 

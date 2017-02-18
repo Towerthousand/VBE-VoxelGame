@@ -7,7 +7,7 @@
 
 class DecTrees final : public Dec {
     public:
-        DecTrees(std::mt19937* rng, BiomeParam minGrid, BiomeParam maxGrid, BiomeParam gridCutoff, BiomeParam dropChance) :
+        DecTrees(std::mt19937* rng, BiomeIntParam minGrid, BiomeIntParam maxGrid, BiomeIntParam gridCutoff, BiomeIntParam dropChance) :
             minGrid(minGrid),
             maxGrid(maxGrid),
             gridCutoff(gridCutoff),
@@ -131,13 +131,13 @@ class DecTrees final : public Dec {
                 for(int j = -margin; j < CHUNKSIZE+margin; ++j) {
                     // Get the generation params for this cube's biome
                     Biome b = col->biomes[(i+BIOME_MATRIX_MARGIN)*BIOME_MATRIX_SIZE+(j+BIOME_MATRIX_MARGIN)];
-                    const std::valarray<float>* params = &BIOME_PARAMS[b];
+                    const std::valarray<int>* params = &BIOME_INT_PARAMS[b];
 
                     // c = coords for this cube
                     vec2i c = vec2i(i,j) + offset;
 
                     // Early exit if trees disabled
-                    if((*params)[dropChance] == 1.0f)
+                    if((*params)[dropChance] == 100)
                         continue;
 
                     // DECTREES_MIN_GRID_SIZE <= gridsize <= DECTREES_MAX_GRID_SIZE
@@ -154,7 +154,7 @@ class DecTrees final : public Dec {
                         continue;
 
                     // Random drop
-                    if(getNoise(&dropNoise, c.x, c.y, 0.0f, 1.0f, 100.0f, 4) < (*params)[dropChance])
+                    if(getNoise(&dropNoise, c.x, c.y, 0.0f, 1.0f, 100.0f, 4) < (*params)[dropChance]*0.01f)
                         continue;
 
                     // Random displacement
@@ -178,10 +178,10 @@ class DecTrees final : public Dec {
             return min+(max-min)*noise->octavedGet(x/scale, y/scale, octaves);
         }
 
-        BiomeParam minGrid;
-        BiomeParam maxGrid;
-        BiomeParam gridCutoff;
-        BiomeParam dropChance;
+        BiomeIntParam minGrid;
+        BiomeIntParam maxGrid;
+        BiomeIntParam gridCutoff;
+        BiomeIntParam dropChance;
         Noise2D gridNoise;
         Noise2D dispNoiseX;
         Noise2D dispNoiseY;
