@@ -245,7 +245,7 @@ class FunctionTerrainHeightmap : public FunctionTerrain {
 
 class FunctionTerrainOverlay : public FunctionTerrain {
     public:
-        FunctionTerrainOverlay(FunctionTerrain *source, unsigned int overlayID, unsigned int surfaceID, unsigned int depth) :
+        FunctionTerrainOverlay(FunctionTerrain *source, BiomeIntParam overlayID, BiomeIntParam surfaceID, BiomeParam depth) :
             source(source), overlayID(overlayID), surfaceID(surfaceID), depth(depth) {
         }
 
@@ -256,10 +256,10 @@ class FunctionTerrainOverlay : public FunctionTerrain {
         virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
             source->fillData(x, z, data, params, intParams);
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE-1; ++y)
-                if (data[y] == surfaceID && data[y+1] == 0)
-                    for (int a = 0; a < depth; ++a) {
-                        if (y-a >= 0 && data[y-a] == surfaceID)
-                            data[y-a] = overlayID;
+                if (data[y] == (unsigned int)(*intParams)[surfaceID] && data[y+1] == 0)
+                    for (int a = 0; a < (*params)[depth]; ++a) {
+                        if (y-a >= 0 && data[y-a] == (unsigned int)(*intParams)[surfaceID])
+                            data[y-a] = (*intParams)[overlayID];
                         else
                             break;
                     }
@@ -267,9 +267,9 @@ class FunctionTerrainOverlay : public FunctionTerrain {
 
     private:
         FunctionTerrain* source;
-        unsigned int overlayID;
-        unsigned int surfaceID;
-        int depth;
+        BiomeIntParam overlayID;
+        BiomeIntParam surfaceID;
+        BiomeParam depth;
 };
 
 class FunctionTerrainVolume : public FunctionTerrain {
