@@ -255,6 +255,9 @@ class FunctionTerrainOverlay : public FunctionTerrain {
 
         virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
             source->fillData(x, z, data, params, intParams);
+            // Early exit
+            if((*intParams)[surfaceID] == (*intParams)[overlayID])
+                return;
             for(int y = 0; y < GENERATIONHEIGHT*CHUNKSIZE-1; ++y)
                 if (data[y] == (unsigned int)(*intParams)[surfaceID] && data[y+1] == 0)
                     for (int a = 0; a < (*params)[depth]; ++a) {
