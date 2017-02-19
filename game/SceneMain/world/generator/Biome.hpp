@@ -11,11 +11,15 @@ enum Biome {
 enum BiomeParam {
     SIMPLEX_LOW = 0,
     SIMPLEX_HIGH,
+    LOW_SURFACE_DEPTH,
+    SURFACE_DEPTH,
     NUM_BIOME_PARAMS
 };
 
 enum BiomeIntParam {
     MAIN_TERRAIN = 0,
+    LOW_SURFACE,
+    SURFACE,
     TREE_MIN_GRID,
     TREE_MAX_GRID,
     TREE_CUTOFF,

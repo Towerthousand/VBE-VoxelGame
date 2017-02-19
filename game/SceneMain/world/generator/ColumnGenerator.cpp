@@ -8,7 +8,7 @@
 #define NWORKERS_DECORATING 1
 #define NWORKERS_BUILDING 1
 #define NWORKERS_KILLING 1
-#define BIOME_RADIUS 16
+#define BIOME_RADIUS 32
 
 ColumnGenerator::ColumnGenerator(int seed) {
     // Create locks
@@ -25,8 +25,8 @@ ColumnGenerator::ColumnGenerator(int seed) {
     generator.seed(seed);
     Function2DSimplex* simplex21 = new Function2DSimplex(&generator, SIMPLEX_LOW, SIMPLEX_HIGH, 100.0f);
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21, MAIN_TERRAIN);
-    FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1,1,2,4);
-    FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1,3,1,1);
+    FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1, LOW_SURFACE, MAIN_TERRAIN, LOW_SURFACE_DEPTH);
+    FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1, SURFACE, LOW_SURFACE, SURFACE_DEPTH);
     terrainEntry = over2;
 
     // Create function tree for biomes
@@ -160,18 +160,34 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
         for(int x = 0; x < CHUNKSIZE; ++x)
             for(int z = 0; z < CHUNKSIZE; ++z) {
                 // Calculate average
-                static thread_local std::valarray<float> par;
+                std::valarray<float> par;
                 par.resize(NUM_BIOME_PARAMS, 0.0f);
                 int total = 0;
                 for(int b = 0; b < NUM_BIOMES; ++b) {
                     // + Top right
-                    int sum = biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+(x+BIOME_RADIUS*2)*BIOME_MATRIX_SIZE+(z+BIOME_RADIUS*2)];
+                    int sum = biomeSums[
+                        b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE
+                        +(x+BIOME_MATRIX_MARGIN+BIOME_RADIUS)*BIOME_MATRIX_SIZE
+                        +(z+BIOME_MATRIX_MARGIN+BIOME_RADIUS)
+                    ];
                     // - Bottom right
-                    sum -= biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+(x+BIOME_RADIUS*2)*BIOME_MATRIX_SIZE+z];
+                    sum -= biomeSums[
+                        b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE
+                        +(x+BIOME_MATRIX_MARGIN+BIOME_RADIUS)*BIOME_MATRIX_SIZE
+                        +(z+BIOME_MATRIX_MARGIN-BIOME_RADIUS)
+                    ];
                     // - Top left
-                    sum -= biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+(z+BIOME_RADIUS*2)];
+                    sum -= biomeSums[
+                        b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE
+                        +(x+BIOME_MATRIX_MARGIN-BIOME_RADIUS)*BIOME_MATRIX_SIZE
+                        +(z+BIOME_MATRIX_MARGIN+BIOME_RADIUS)
+                    ];
                     // + Bottom left
-                    sum += biomeSums[b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE+x*BIOME_MATRIX_SIZE+z];
+                    sum += biomeSums[
+                        b*BIOME_MATRIX_SIZE*BIOME_MATRIX_SIZE
+                        +(x+BIOME_MATRIX_MARGIN-BIOME_RADIUS)*BIOME_MATRIX_SIZE
+                        +(z+BIOME_MATRIX_MARGIN-BIOME_RADIUS)
+                    ];
                     total += sum;
                     par += BIOME_PARAMS[b]*float(sum);
                 }
@@ -182,7 +198,7 @@ void ColumnGenerator::queueLoad(vec2i colPos) {
                     colPos.y*CHUNKSIZE+z,
                     &raw[x*CHUNKSIZE*CHUNKSIZE*GENERATIONHEIGHT + z*CHUNKSIZE*GENERATIONHEIGHT],
                     &par,
-                    &BIOME_INT_PARAMS[colData->biomes[(BIOME_MATRIX_MARGIN+x)*BIOME_MATRIX_SIZE+z]]
+                    &BIOME_INT_PARAMS[colData->biomes[(BIOME_MATRIX_MARGIN+x)*BIOME_MATRIX_SIZE+(BIOME_MATRIX_MARGIN+z)]]
                 );
             }
 

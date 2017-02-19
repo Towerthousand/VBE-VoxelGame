@@ -4,7 +4,7 @@
 #include "terrainFunctions.hpp"
 #include "biomeFunctions.hpp"
 
-#define BIOME_MATRIX_MARGIN 16
+#define BIOME_MATRIX_MARGIN 32
 #define BIOME_MATRIX_SIZE (CHUNKSIZE+BIOME_MATRIX_MARGIN*2)
 
 class TaskPool;
