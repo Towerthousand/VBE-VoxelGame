@@ -24,6 +24,7 @@ enum BiomeIntParam {
     TREE_MAX_GRID,
     TREE_CUTOFF,
     TREE_DROP_CHANCE,
+    SEA_LEVEL,
 };
 
 extern const std::valarray<float> BIOME_PARAMS[NUM_BIOMES];

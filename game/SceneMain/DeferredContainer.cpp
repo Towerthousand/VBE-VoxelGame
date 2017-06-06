@@ -46,6 +46,16 @@ void DeferredContainer::draw() const {
     glDisable(GL_DEPTH_CLAMP);
     Debugger::popMark(); //shadow
 
+    //Transparent shadowmap pass
+    Debugger::pushMark("Transparent ShadowMap Pass", "Time spent rendering transparent geometry to the layered shadowmap");
+    glEnable(GL_DEPTH_CLAMP);
+    drawMode = TransShadowMap;
+    RenderTargetBase::bind(sunTargetTrans);
+    GL_ASSERT(glClear(GL_DEPTH_BUFFER_BIT));
+    ContainerObject::draw();
+    glDisable(GL_DEPTH_CLAMP);
+    Debugger::popMark(); //transparent shadow
+
     Debugger::pushMark("Light Pass", "Time spent rendering deferred lights");
     //bind output texture (screen)
     RenderTargetBase::bind(screen);
@@ -54,7 +64,7 @@ void DeferredContainer::draw() const {
     //Light pass
     GL_ASSERT(glEnable(GL_BLEND));
     GL_ASSERT(glBlendFunc(GL_ONE, GL_ONE)); //additive
-    GL_ASSERT(glDepthMask(GL_TRUE));
+    GL_ASSERT(glDepthMask(GL_FALSE));
     GL_ASSERT(glDepthFunc(GL_ALWAYS));
     drawMode = Light;
     ContainerObject::draw();
@@ -62,6 +72,7 @@ void DeferredContainer::draw() const {
 
     //Ambient+Visibility pass
     Debugger::pushMark("Ambient+Visibility Pass", "Time spent rendering ambient light and sunlight contribution to the scene");
+    GL_ASSERT(glDepthMask(GL_TRUE));
     const Camera* cam = (Camera*)getGame()->getObjectByName("playerCam");
     Sun* sun = (Sun*)getGame()->getObjectByName("sun");
     glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
@@ -87,11 +98,13 @@ void DeferredContainer::draw() const {
     Programs.get("ambientPass").uniform("depthPlanes")->set(sun->getDepthPlanes());
     Programs.get("ambientPass").uniform("depth")->set(gBuffer.getTexture(RenderTargetBase::DEPTH));
     Programs.get("ambientPass").uniform("sunDepth")->set(sunTarget.getTexture(RenderTargetBase::DEPTH));
+    Programs.get("ambientPass").uniform("sunDepthTrans")->set(sunTargetTrans.getTexture(RenderTargetBase::DEPTH));
     quad->draw(Programs.get("ambientPass"));
     Debugger::popMark(); //ambient+shadowmap
 
     //Forward pass
     Debugger::pushMark("Forward Pass", "Time spent rendering forward-render stuff");
+    GL_ASSERT(glDepthMask(GL_TRUE));
     GL_ASSERT(glDepthFunc(GL_LEQUAL));
     GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); //forward rendering blending
     drawMode = Forward;
@@ -115,6 +128,14 @@ Texture2D* DeferredContainer::getDepth() const {
     return gBuffer.getTexture(RenderTargetBase::DEPTH);
 }
 
+Texture2DArray* DeferredContainer::getTransSunDepth() const {
+    return sunTargetTrans.getTexture(RenderTargetBase::DEPTH);
+}
+
+Texture2DArray* DeferredContainer::getSunDepth() const {
+    return sunTarget.getTexture(RenderTargetBase::DEPTH);
+}
+
 void DeferredContainer::makeTarget() {
     if(Window::getInstance()->getSize() == gBuffer.getSize()) return;
     vec2ui size = Window::getInstance()->getSize();
@@ -129,11 +150,17 @@ void DeferredContainer::makeTarget() {
     gBuffer.setTexture(RenderTargetBase::COLOR0, &GBColor0); //COLOR
     gBuffer.setTexture(RenderTargetBase::COLOR1, &GBColor1); //NORMAL, BRIGHTNESS, SPECULAR FACTOR
     if(sunTarget.getSize() == vec2ui(0)) { //invalid (this is the first makeTarget() )
-        SDepth = Texture2DArray(vec3ui(4096,4096,NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
+        SDepth = Texture2DArray(vec3ui(4096,4096, NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
         SDepth.setFilter(GL_LINEAR, GL_LINEAR);
         SDepth.setComparison(GL_GREATER);
         sunTarget = RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
         sunTarget.setTexture(RenderTargetBase::DEPTH, &SDepth); //Z-BUFFER
+
+        SDepthTrans = Texture2DArray(vec3ui(4096,4096, NUM_SUN_CASCADES), TextureFormat::DEPTH_COMPONENT32F);
+        SDepthTrans.setFilter(GL_LINEAR, GL_LINEAR);
+        SDepthTrans.setComparison(GL_GREATER);
+        sunTargetTrans = RenderTargetLayered(4096, 4096, NUM_SUN_CASCADES);
+        sunTargetTrans.setTexture(RenderTargetBase::DEPTH, &SDepthTrans); //Z-BUFFER
     }
 }
 

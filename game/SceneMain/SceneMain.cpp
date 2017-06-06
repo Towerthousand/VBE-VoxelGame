@@ -1,7 +1,6 @@
 #include "SceneMain.hpp"
 #include "Player.hpp"
 #include "DeferredContainer.hpp"
-#include "DeferredLight.hpp"
 #include "BlurContainer.hpp"
 #include "world/World.hpp"
 #include "world/DeferredCubeLight.hpp"
@@ -124,6 +123,7 @@ void SceneMain::loadResources() {
     Programs.add("blurMaskPass", ShaderProgram(Storage::openAsset("shaders/quad.vert"), Storage::openAsset("shaders/blurMaskPass.frag")));
     Programs.add("depthShader", ShaderProgram(Storage::openAsset("shaders/depth.vert"), Storage::openAsset("shaders/depth.geom"), Storage::openAsset("shaders/depth.frag")));
     Programs.add("deferredChunk", ShaderProgram(Storage::openAsset("shaders/chunkDeferred.vert"), Storage::openAsset("shaders/chunkDeferred.frag")));
+    Programs.add("forwardChunk", ShaderProgram(Storage::openAsset("shaders/chunkForward.vert"), Storage::openAsset("shaders/chunkForward.frag")));
 }
 
 void SceneMain::update(float deltaTime) {

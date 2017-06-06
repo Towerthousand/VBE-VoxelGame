@@ -28,6 +28,7 @@ const std::valarray<int> BIOME_INT_PARAMS[NUM_BIOMES] = {
         5,   // TREE_MAX_GRID
         4,   // TREE_CUTOFF
         100, // TREE_DROP_CHANCE
+        155, // SEA_LEVEL
     },
     //PLAINS
     {
@@ -38,5 +39,6 @@ const std::valarray<int> BIOME_INT_PARAMS[NUM_BIOMES] = {
         5,   // TREE_MAX_GRID
         4,   // TREE_CUTOFF
         0,   // TREE_DROP_CHANCE
+        0,   // SEA_LEVEL
     }
 };

@@ -9,6 +9,7 @@ class DeferredContainer : public ContainerObject {
             Deferred = 0,
             Light,
             ShadowMap,
+            TransShadowMap,
             Forward
         };
 
@@ -21,6 +22,8 @@ class DeferredContainer : public ContainerObject {
         Texture2D* getColor0() const;
         Texture2D* getColor1() const;
         Texture2D* getDepth() const;
+        Texture2DArray* getTransSunDepth() const;
+        Texture2DArray* getSunDepth() const;
 
     private:
         void makeTarget();
@@ -33,9 +36,11 @@ class DeferredContainer : public ContainerObject {
         Texture2D GBColor1;
 
         RenderTargetLayered sunTarget;
+        RenderTargetLayered sunTargetTrans;
 
         //the texture for the sun target
         Texture2DArray SDepth;
+        Texture2DArray SDepthTrans;
 
         mutable DrawMode drawMode = Deferred;
         mutable MeshBase* quad = nullptr;

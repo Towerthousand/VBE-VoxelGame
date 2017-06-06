@@ -27,7 +27,8 @@ ColumnGenerator::ColumnGenerator(int seed) {
     FunctionTerrainHeightmap* terrain1 = new FunctionTerrainHeightmap(simplex21, MAIN_TERRAIN);
     FunctionTerrainOverlay* over1 = new FunctionTerrainOverlay(terrain1, LOW_SURFACE, MAIN_TERRAIN, LOW_SURFACE_DEPTH);
     FunctionTerrainOverlay* over2 = new FunctionTerrainOverlay(over1, SURFACE, LOW_SURFACE, SURFACE_DEPTH);
-    terrainEntry = over2;
+    FunctionTerrainOcean* ocean = new FunctionTerrainOcean(over2, SEA_LEVEL);
+    terrainEntry = ocean;
 
     // Create function tree for biomes
     FunctionBiome* b = new BiomeConst(&generator, OCEAN);

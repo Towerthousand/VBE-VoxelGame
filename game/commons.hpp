@@ -22,7 +22,6 @@ constexpr int CHUNKSIZE_MASK = CHUNKSIZE-1;
 constexpr int WORLDSIZE = 512/CHUNKSIZE;
 constexpr int GENERATIONHEIGHT = 256/CHUNKSIZE;
 constexpr int WORLDSIZE_MASK = WORLDSIZE-1;
-constexpr int TEXSIZE = 8;
 extern bool USE_CPU_VISIBILITY;
 
 namespace Utils {

@@ -23,6 +23,7 @@ SOURCES += main.cpp \
     SceneMain/BlurContainer.cpp \
     SceneMain/world/Column.cpp \
     SceneMain/world/Chunk.cpp \
+    SceneMain/world/Cube.cpp \
     SceneMain/world/generator/Noise3D.cpp \
     SceneMain/world/generator/Noise2D.cpp \
     SceneMain/world/generator/Biome.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     SceneMain/BlurContainer.hpp \
     SceneMain/world/Column.hpp \
     SceneMain/world/Chunk.hpp \
+    SceneMain/world/Cube.hpp \
     SceneMain/world/generator/Noise3D.hpp \
     SceneMain/world/generator/Noise2D.hpp \
     SceneMain/world/generator/Biome.hpp \
@@ -69,5 +71,7 @@ OTHER_FILES += \
     assets/shaders/depth.vert \
     assets/shaders/chunkDeferred.vert \
     assets/shaders/chunkDeferred.frag \
+    assets/shaders/chunkForward.vert \
+    assets/shaders/chunkForward.frag \
     assets/shaders/cubeLight.frag \
     assets/shaders/depth.geom

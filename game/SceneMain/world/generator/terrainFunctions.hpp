@@ -301,4 +301,27 @@ class FunctionTerrainVolume : public FunctionTerrain {
         unsigned int blockID;
 };
 
+class FunctionTerrainOcean : public FunctionTerrain {
+    public:
+        FunctionTerrainOcean(FunctionTerrain *source, BiomeIntParam seaLevel) :
+            source(source), seaLevel(seaLevel) {
+        }
+
+        ~FunctionTerrainOcean() {
+            delete source;
+        }
+
+        virtual void fillData(int x, int z, unsigned int* data, const std::valarray<float>* params, const std::valarray<int>* intParams) override {
+            source->fillData(x, z, data, params, intParams);
+            // Early exit
+            if((*intParams)[seaLevel] == 0)
+                return;
+            for(int y = 0; y < (*intParams)[seaLevel]; ++y) if (data[y] == 0) data[y] = 10;
+        }
+
+    private:
+        FunctionTerrain* source;
+        BiomeIntParam seaLevel;
+};
+
 #endif // TERRAINFUNCTION_HPP

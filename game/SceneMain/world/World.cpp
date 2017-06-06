@@ -112,16 +112,89 @@ void World::fixedUpdate(float deltaTime) {
 void World::draw() const {
     if(!chunksExist) return;
     switch(renderer->getMode()) {
-        case DeferredContainer::Deferred:
+        case DeferredContainer::Deferred: {
             Debugger::pushMark("Player Cam World Draw", "Time spent drawing chunks from the player camera");
-            drawPlayerCam((Camera*)getGame()->getObjectByName("playerCam"));
+
+            // get the player cam
+            Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
+
+            // get the list of chunks to draw
+            std::list<Chunk*> chunksToDraw = getPerspectiveCamChunks(pCam);
+
+            // setup shaders for batching
+            VBE_ASSERT_SIMPLE(Programs.exists("deferredChunk"));
+            Programs.get("deferredChunk").uniform("V")->set(pCam->getView());
+            Programs.get("deferredChunk").uniform("VP")->set(pCam->projection*pCam->getView());
+            Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
+
+            // send commands
+            unsigned int numDrawn = sendDrawCommands(chunksToDraw, Programs.get("deferredChunk"));
+            Debugger::numChunksDrawn = numDrawn;
             Debugger::popMark(); //world draw
             break;
+        }
+        case DeferredContainer::TransShadowMap:
         case DeferredContainer::ShadowMap: {
             Debugger::pushMark("Sun Cam World Draw", "Time spent drawing chunks from the sun camera");
+
+            // update sun cameras
             Sun* sun = (Sun*)getGame()->getObjectByName("sun");
             sun->updateCameras();
-            drawSunCam(sun->getGlobalCam());
+
+            // get the list of chunks to draw
+            std::list<Chunk*> chunksToDraw = getSunCamChunks(sun->getGlobalCam());
+
+            //setup shaders for batching
+            VBE_ASSERT_SIMPLE(Programs.exists("depthShader"));
+            Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
+
+            // send commands
+            unsigned int numDrawn = sendDrawCommands(chunksToDraw, Programs.get("depthShader"));
+            Debugger::numChunksDrawnShadow = numDrawn;
+            Debugger::popMark(); //world draw
+            break;
+        }
+        case DeferredContainer::Forward: {
+            Debugger::pushMark("Forward World Draw", "Time spent drawing transparent geometry");
+
+            // get the player cam
+            Camera* pCam = (Camera*)getGame()->getObjectByName("playerCam");
+            Sun* sun = (Sun*)getGame()->getObjectByName("sun");
+
+            // get the list of chunks to draw (reversed for correct alpha blending)
+            std::list<Chunk*> chunksToDraw = getPerspectiveCamChunks(pCam);
+            chunksToDraw.reverse();
+
+            // setup shaders for batching
+            VBE_ASSERT_SIMPLE(Programs.exists("forwardChunk"));
+            //compute each of the cascaded cameras's matrices
+            glm::mat4 biasMatrix( //gets coords from [-1..1] to [0..1]
+                                  0.5, 0.0, 0.0, 0.0,
+                                  0.0, 0.5, 0.0, 0.0,
+                                  0.0, 0.0, 0.5, 0.0,
+                                  0.5, 0.5, 0.5, 1.0
+                                  );
+            std::vector<mat4f> depthMVP(NUM_SUN_CASCADES);
+            for(int i = 0; i < NUM_SUN_CASCADES; ++i)
+                depthMVP[i] = biasMatrix*(sun->getVPMatrices()[i]*fullTransform);
+            const RenderTargetBase* screen = RenderTargetBase::getCurrent();
+            Programs.get("forwardChunk").uniform("V")->set(pCam->getView());
+            Programs.get("forwardChunk").uniform("VP")->set(pCam->projection*pCam->getView());
+            Programs.get("forwardChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
+            Programs.get("forwardChunk").uniform("camMV")->set(pCam->getView()*fullTransform);
+            Programs.get("forwardChunk").uniform("invResolution")->set(vec2f(1.0f/screen->getSize().x, 1.0f/screen->getSize().y));
+            Programs.get("forwardChunk").uniform("invCamProj")->set(glm::inverse(pCam->projection));
+            Programs.get("forwardChunk").uniform("invCamView")->set(glm::inverse(pCam->getView()));
+            Programs.get("forwardChunk").uniform("lightDir")->set(sun->getCam(0)->getForward());
+            Programs.get("forwardChunk").uniform("worldsize")->set(WORLDSIZE);
+            Programs.get("forwardChunk").uniform("depthMVP")->set(depthMVP);
+            Programs.get("forwardChunk").uniform("depthPlanes")->set(sun->getDepthPlanes());
+            Programs.get("forwardChunk").uniform("sunDepthTrans")->set(renderer->getTransSunDepth());
+            Programs.get("forwardChunk").uniform("sunDepth")->set(renderer->getSunDepth());
+
+            // send commands
+            unsigned int numDrawn = sendDrawCommands(chunksToDraw, Programs.get("forwardChunk"));
+            Debugger::numChunksDrawn = numDrawn;
             Debugger::popMark(); //world draw
             break;
         }
@@ -568,12 +641,12 @@ namespace {
     Square squares[WORLDSIZE][WORLDSIZE][WORLDSIZE];
 }
 
-void World::drawPlayerCam(const Camera* cam) const{
-    VBE_ASSERT_SIMPLE(renderer->getMode() == DeferredContainer::Deferred);
+std::list<Chunk*> World::getPerspectiveCamChunks(const Camera* cam) const {
     int skippedChunks = 0;
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     vec3i initialChunkPos(vec3i(glm::floor(cam->getWorldPos())) >> CHUNKSIZE_POW2);
-    std::queue<vec3i> q; //bfs queue, each node is (entry face, chunkPos, distance to source), in chunk coords
+    //bfs queue, each node is chunkPos, in chunk coord space
+    std::queue<vec3i> q;
     //bounds for out-of bound-checking
     AABB bounds = AABB(minLoadedCoords, maxLoadedCoords);
     bounds.extend(initialChunkPos);
@@ -581,7 +654,7 @@ void World::drawPlayerCam(const Camera* cam) const{
     vec3i maxBounds = bounds.getMax();
     //memset stuff to 0
     memset(visited, 0, sizeof(visited));
-    memset(cones, 0, sizeof(cones));
+    if(USE_CPU_VISIBILITY) memset(cones, 0, sizeof(cones));
     //collider
     Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
     vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
@@ -602,11 +675,9 @@ void World::drawPlayerCam(const Camera* cam) const{
         visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK] = true;
         const Cone& currentCone = cones[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK];
         Chunk* currentChunk = getChunkCC(current); //used later inside neighbor loop
-        if(USE_CPU_VISIBILITY) {
-            if(!currentCone.full && currentCone.halfCone == 0.0f) {
-                if(currentChunk != nullptr) skippedChunks++;
-                continue;
-            }
+        if(USE_CPU_VISIBILITY && !currentCone.full && currentCone.halfCone == 0.0f) {
+            if(currentChunk != nullptr) skippedChunks++;
+            continue;
         }
         if(currentChunk != nullptr) {
             Debugger::pushMark("Geometry rebuild", "Time spent rebuilding chunk geometry");
@@ -640,20 +711,12 @@ void World::drawPlayerCam(const Camera* cam) const{
             q.push(neighbor);
         }
     }
+    if(renderer->getMode() == DeferredContainer::Deferred) Debugger::numChunksSkipped = skippedChunks;
     Debugger::popMark(); //BFS time
-    Debugger::pushMark("Batching", "Time spent actually sending chunk geometry to the GPU");
-    //setup shaders for batching
-    VBE_ASSERT_SIMPLE(Programs.exists("deferredChunk"));
-    Programs.get("deferredChunk").uniform("V")->set(cam->getView());
-    Programs.get("deferredChunk").uniform("VP")->set(cam->projection*cam->getView());
-    Programs.get("deferredChunk").uniform("diffuseTex")->set(Textures2D.get("blocks"));
-    sendDrawCommands(chunksToDraw, Programs.get("deferredChunk"));
-    Debugger::popMark(); //batching
-    Debugger::numChunksSkipped = skippedChunks;
+    return chunksToDraw;
 }
 
-void World::drawSunCam(const Camera* cam) const{
-    VBE_ASSERT_SIMPLE(renderer->getMode() == DeferredContainer::ShadowMap);
+std::list<Chunk*> World::getSunCamChunks(const Camera* cam) const {
     int skippedChunks = 0;
     std::list<Chunk*> chunksToDraw; //push all the chunks that must be drawn here
     //memset stuff to 0
@@ -664,7 +727,7 @@ void World::drawSunCam(const Camera* cam) const{
     //collider
     Sphere colliderSphere(vec3f(0.0f), (CHUNKSIZE >> 1)*1.74f);
     vec3i colliderOffset = vec3i(CHUNKSIZE >> 1);
-    //since the shadow frustum is hacked to only be as deep as the player view, to keep accurracy high,
+    //since the shadow frustum is hacked to only be as deep as the view, to keep accurracy high,
     //chunks that are behind the near plane must be considered.
     std::bitset<6> ommitedPlanes;
     ommitedPlanes.set(Frustum::NEAR_PLANE);
@@ -722,11 +785,9 @@ void World::drawSunCam(const Camera* cam) const{
         visited[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK] = true;
         const Square& currentSquare = squares[current.x & WORLDSIZE_MASK][current.y & WORLDSIZE_MASK][current.z & WORLDSIZE_MASK];
         Chunk* currentChunk = getChunkCC(current); //used later inside neighbor loop
-        if(USE_CPU_VISIBILITY) {
-            if(currentSquare.d == vec2f(0.0f)) {
-                if(currentChunk != nullptr) skippedChunks++;
-                continue;
-            }
+        if(USE_CPU_VISIBILITY && currentSquare.d == vec2f(0.0f)) {
+            if(currentChunk != nullptr) skippedChunks++;
+            continue;
         }
         if(currentChunk != nullptr) {
             Debugger::pushMark("Geometry rebuild", "Time spent rebuilding chunk geometry");
@@ -763,17 +824,12 @@ void World::drawSunCam(const Camera* cam) const{
     }
     Debugger::popMark(); //BFS main loop
     Debugger::popMark(); //BFS time
-    Debugger::pushMark("Batching", "Time spent actually sending chunk geometry to the GPU");
-    //setup shaders for batching
-    VBE_ASSERT_SIMPLE(Programs.exists("depthShader"));
-    Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
-    Programs.get("depthShader").uniform("VP")->set(sun->getVPMatrices());
-    sendDrawCommands(chunksToDraw, Programs.get("depthShader"));
-    Debugger::popMark(); //batching
     Debugger::numChunksSkippedShadow = skippedChunks;
+    return chunksToDraw;
 }
 
-void World::sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const ShaderProgram& program) const {
+unsigned int World::sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const ShaderProgram& program) const {
+    Debugger::pushMark("Batching", "Time spent actually sending chunk geometry to the GPU");
     int numDrawn = 0;
     Sun* sun = ((Sun*)getGame()->getObjectByName("sun"));
     static std::vector<vec3i> transforms(400);
@@ -798,8 +854,8 @@ void World::sendDrawCommands(const std::list<Chunk*>& chunksToDraw, const Shader
         program.uniform("transforms")->set(transforms);
     }
     MeshBatched::endBatch();
-    if(renderer->getMode() == DeferredContainer::Deferred) Debugger::numChunksDrawn = numDrawn;
-    else Debugger::numChunksDrawnShadow = numDrawn;
+    Debugger::popMark(); //batching
+    return numDrawn;
 }
 
 bool World::batchChunk(Chunk* c, std::vector<vec3i>& transforms, const int batchCount, const Sun* sun) const {

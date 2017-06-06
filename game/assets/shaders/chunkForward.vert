@@ -10,8 +10,8 @@ in vec2 a_texCoord;
 in float a_light;
 in uint draw_index;
 
-out vec3 v_normal;
 out vec2 v_texCoord;
+out vec3 v_normal;
 out float v_light;
 
 const vec3[6] normals = {
