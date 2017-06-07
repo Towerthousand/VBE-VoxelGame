@@ -2,6 +2,7 @@
 #include "World.hpp"
 #include "../DeferredContainer.hpp"
 #include "../Manager.hpp"
+#include "Cube.hpp"
 
 DeferredCubeLight::DeferredCubeLight(const vec3f& pos, const vec3f& color) : pos(pos), color(color) {
     renderer = (DeferredContainer*)getGame()->getObjectByName("deferred");
@@ -53,7 +54,7 @@ void DeferredCubeLight::calcQuadrant(int cx, int cy, int cz, int dx, int dy, int
 
                 if((x == 0 && y == 0 && z == 0) || sqrt(x*x + y*y + z*z) > LIGHTSIZE) continue;
 
-                if(world->getCube(x+x0, y+y0, z+z0) != 0)
+                if(!Cube::getFlag((Cube::Type)world->getCube(x+x0, y+y0, z+z0), Cube::TRANSPARENT))
                     light[x+LIGHTSIZE][y+LIGHTSIZE][z+LIGHTSIZE] = 0;
                 else
                 {
