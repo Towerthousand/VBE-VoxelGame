@@ -3,7 +3,7 @@
 
 inline bool shouldDraw(Cube::Type c, Cube::Type n) {
     VBE_ASSERT_SIMPLE(c != Cube::AIR);
-    return (c != n && Cube::getFlag(n, Cube::TRANSPARENT));
+    return (c != n && (Cube::getFlag(c, Cube::TRANSPARENT) || Cube::getFlag(n, Cube::TRANSPARENT)));
 }
 
 void Cube::pushCubeToArray(short x, short y, short z, Cube::Type cubeID, const Chunk* c, std::vector<Cube::Vert>& renderData) {
