@@ -86,7 +86,7 @@ void main(void) {
     // Abs distance to player:
     vec4 camPos = invCamView * vec4(vec3(0.0), 1.0);
 
-    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/(worldsize << 3), 0.0, 1.0);
+    float fog = clamp(length(fragmentWorldPos - camPos.xyz)/((worldsize*8)-48), 0.0, 1.0);
     fog = pow(fog, 5);
     vec4 albedo = texture(diffuseTex, v_texCoord);
     float light = v_light;
