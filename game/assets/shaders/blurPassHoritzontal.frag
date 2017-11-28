@@ -5,9 +5,8 @@ uniform vec2 invResolution;
 
 out vec4 color;
 
-const float blurSize = invResolution.x; // I've chosen this size because this will result in that every step will be one pixel wide if the RTScene texture is of size 512x512
-
 void main(void) {
+   float blurSize = invResolution.x; // I've chosen this size because this will result in that every step will be one pixel wide if the RTScene texture is of size 512x512
    vec2 texCoord = gl_FragCoord.xy * invResolution;
    vec4 sum = vec4(0.0);
    // blur in y (vertical)

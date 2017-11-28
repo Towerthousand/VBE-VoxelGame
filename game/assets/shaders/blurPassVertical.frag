@@ -5,9 +5,8 @@ uniform vec2 invResolution;
 
 out vec4 color;
 
-const float blurSize = invResolution.y;
-
 void main(void) {
+   float blurSize = invResolution.y;
    vec2 texCoord = gl_FragCoord.xy * invResolution;
    vec4 sum = vec4(0.0);
 
