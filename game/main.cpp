@@ -5,6 +5,7 @@ int main() {
     ContextSettings s;
     s.versionMajor = 4;
     s.versionMinor = 3;
+    s.requestSRGB = true;
     Game* game = new Game(Window::getFullscreenModes()[0], s);
     game->setFixedUpdateRate(20);
     SceneMain* sc = new SceneMain();
