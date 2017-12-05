@@ -86,7 +86,7 @@ void BlurContainer::draw() const {
 
     //BLUR + SCENE
     RenderTargetBase::bind(nullptr);
-    GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT));
+    GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     Programs.get("textureToScreen").uniform("MVP")->set(mat4f(1.0f));
     Programs.get("textureToScreen").uniform("tex1")->set(noBlur.getTexture(RenderTargetBase::COLOR0));
     Programs.get("textureToScreen").uniform("tex2")->set(blurred.getTexture(RenderTargetBase::COLOR0));
