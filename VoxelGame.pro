@@ -14,6 +14,3 @@ SUBDIRS = VBE \
 VBE-Scenegraph.depends = VBE
 VBE-Profiler.depends = VBE-Scenegraph VBE
 game.depends = VBE VBE-Scenegraph VBE-Profiler
-
-OTHER_FILES += \
-        common.pri
