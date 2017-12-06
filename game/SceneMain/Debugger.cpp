@@ -13,11 +13,11 @@ Debugger::~Debugger() {
 
 void Debugger::renderCustomInterface() const {
     ImGui::Begin("Controls", nullptr, ImVec2(0.18f*Window::getInstance()->getSize().x, 0.21f*Window::getInstance()->getSize().y), 0.9f, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-    ImGui::SetWindowPos(ImVec2(0.78f*Window::getInstance()->getSize().x, 0.05f*Window::getInstance()->getSize().y), ImGuiSetCondition_FirstUseEver);
-    ImGui::Text(std::string("ChunksDrawnDeferred: " + Utils::toString(numChunksDrawn)).c_str());
-    ImGui::Text(std::string("ChunksSkippedDeferred: " + Utils::toString(numChunksSkipped)).c_str());
-    ImGui::Text(std::string("ChunksDrawnShadow: " + Utils::toString(numChunksDrawnShadow)).c_str());
-    ImGui::Text(std::string("ChunksSkippedShadow: " + Utils::toString(numChunksSkippedShadow)).c_str());
+    ImGui::SetWindowPos(ImVec2(0.78f*Window::getInstance()->getSize().x, 0.05f*Window::getInstance()->getSize().y), ImGuiCond_FirstUseEver);
+    ImGui::Text("%s", std::string("ChunksDrawnDeferred: " + Utils::toString(numChunksDrawn)).c_str());
+    ImGui::Text("%s", std::string("ChunksSkippedDeferred: " + Utils::toString(numChunksSkipped)).c_str());
+    ImGui::Text("%s", std::string("ChunksDrawnShadow: " + Utils::toString(numChunksDrawnShadow)).c_str());
+    ImGui::Text("%s", std::string("ChunksSkippedShadow: " + Utils::toString(numChunksSkippedShadow)).c_str());
     ImGui::Separator();
     ImGui::Columns(2, nullptr, true);
     ImGui::SetColumnOffset(0,0);
